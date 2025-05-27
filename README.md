@@ -48,6 +48,6 @@
 
 ---
 
-<p align="center"> <img src="https://avatars.githubusercontent.com/u/12345678?v=4" width="120" style="border-radius:50%;"/> </p> <p align="center"> <b>Dungha</b><br> 💻 Frontend Developer | 📚 Open Source Contributor | 🚀 Yêu thích công nghệ và chia sẻ<br> 🔗 <a href="https://gitlab.com/Dungha125">GitLab: Dungha125</a> | <a href="mailto:dungha122405@gmail.com">Email</a> | <a href="https://facebook.com/dungha">Facebook</a> </p>
+<p align="center"> <b>Dungha</b><br> 💻 Frontend Developer | 📚 Open Source Contributor | 🚀 Yêu thích công nghệ và chia sẻ<br> 🔗 <a href="https://gitlab.com/Dungha125">GitLab: Dungha125</a> | <a href="mailto:dungha122405@gmail.com">Email</a> | <a href="https://facebook.com/dungha">Facebook</a> </p>
 
 NoCopyRight@2025
