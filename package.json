@@ -1,0 +1,38 @@
+{
+  "name": "hvnh-fe",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ant-design/charts": "^2.3.0",
+    "@ant-design/icons-vue": "^7.0.1",
+    "@ckeditor/ckeditor5-vue": "^7.3.0",
+    "@f3ve/vue-markdown-it": "^0.2.3",
+    "@headlessui/vue": "^1.7.23",
+    "ant-design-vue": "^4.2.6",
+    "axios": "^1.9.0",
+    "ckeditor5": "^44.3.0",
+    "dayjs": "^1.11.13",
+    "hvnh-fe": "file:",
+    "lodash": "^4.17.21",
+    "marked": "^15.0.12",
+    "monaco-editor-vue3": "^0.1.10",
+    "monaco-vue3-editor": "^2.3.3",
+    "pinia": "^2.3.1",
+    "vue": "^3.5.15",
+    "vue-request": "^2.0.4",
+    "vue-router": "^4.5.1",
+    "vue3-markdown": "^1.2.12",
+    "vue3-number-animation": "^2.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.4",
+    "unplugin-vue-components": "^0.27.5",
+    "vite": "^6.3.5"
+  }
+}

@@ -1,0 +1,210 @@
+/* color palette from <https://github.com/vuejs/theme> */
+:root
+{
+    --vt-c-white: #ffffff;
+    --vt-c-white-soft: #f6f6f6;
+    --vt-c-white-mute: #ffffff;
+
+    --vt-c-black: #ffffff;
+    --vt-c-black-soft: #222222;
+    --vt-c-black-mute: #282828;
+
+    --vt-c-indigo: #2c3e50;
+
+    --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
+    --vt-c-divider-light-2: rgba(0, 0, 0, 0.12);
+    --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
+    --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+
+    --vt-c-text-light-1: var(--vt-c-indigo);
+    --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
+    --vt-c-text-dark-1: var(--vt-c-white);
+    --vt-c-text-dark-2: rgba(0, 0, 0, 0.64);
+}
+
+:root
+{
+    --color-background: var(--vt-c-white);
+    --color-background-soft: var(--vt-c-white-soft);
+    --color-background-mute: var(--vt-c-white-mute);
+
+    --color-border: var(--vt-c-divider-light-2);
+    --color-border-hover: var(--vt-c-divider-light-1);
+
+    --color-heading: var(--vt-c-text-light-1);
+    --color-text: var(--vt-c-text-light-1);
+}
+
+*,
+*::before,
+*::after
+{
+    box-sizing: border-box;
+    margin: 0;
+    font-weight: normal;
+}
+
+body
+{
+    min-height: 100vh;
+    color: var(--color-text);
+    background: var(--color-background);
+    transition: color 0.5s,
+    background-color 0.5s;
+    line-height: 1.6;
+    font-family: Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+    font-size: 15px;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+:where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table
+{
+    font-size: 120%;
+    line-height: 200% !important;
+}
+
+:where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table-thead > tr > th,
+:where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table-thead th.ant-table-column-sort
+{
+    background-color: #fbdedd;
+    color: #5e5e5e;
+}
+
+:where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table-thead th.ant-table-column-sort:hover,
+:where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table-thead th.ant-table-column-has-sorters:hover
+{
+    background-color: #fdd3d2;
+    color: #5e5e5e;
+}
+
+.ant-btn-link
+{
+    color: #A7453C;
+}
+
+:where(.css-dev-only-do-not-override-1792ce6).ant-dropdown .ant-dropdown-menu .ant-dropdown-menu-item-selected
+{
+    background-color: #ffeae9;
+}
+
+:where(.css-dev-only-do-not-override-1792ce6).ant-collapse .ant-collapse-content
+{
+    border-top: None;
+}
+
+:where(.css-dev-only-do-not-override-1792ce6).ant-collapse > .ant-collapse-item > .ant-collapse-header
+{
+    background-color: white;
+}
+
+:where(.css-dev-only-do-not-override-1792ce6).ant-collapse > .ant-collapse-item > .ant-collapse-header .ant-collapse-header-text
+{
+    font-weight: bold;
+}
+
+:where(.css-dev-only-do-not-override-1792ce6).ant-collapse
+{
+    border: None;
+    background-color: rgba(255, 255, 255, 0.35);
+    border-radius: 10px;
+    box-shadow: 2px 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+:where(.css-1792ce6).ant-collapse
+{
+    border: None;
+    background-color: rgba(255, 255, 255, 0.35);
+    border-radius: 10px;
+    box-shadow: 2px 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+:where(.css-dev-only-do-not-override-1792ce6).ant-checkbox-group
+{
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    margin-left: 10px;
+}
+
+:where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table-thead > tr > th, :where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table-thead th.ant-table-column-sort
+{
+    text-align: center;
+}
+
+:where(.css-dev-only-do-not-override-1792ce6)[class^="ant-table"] [class^="ant-table"], :where(.css-dev-only-do-not-override-1792ce6)[class*=" ant-table"] [class^="ant-table"], :where(.css-dev-only-do-not-override-1792ce6)[class^="ant-table"] [class*=" ant-table"], :where(.css-dev-only-do-not-override-1792ce6)[class*=" ant-table"] [class*=" ant-table"]
+{
+    text-align: center;
+}
+
+:where(.css-dev-only-do-not-override-1792ce6) a
+{
+    color: rgb(115, 115, 116);
+}
+
+:where(.css-dev-only-do-not-override-1792ce6) a:hover
+{
+    color: rgb(115, 115, 116);
+}
+
+.ant-spin .ant-spin-dot-item {
+    background-color: #a7453c;
+}
+
+.ant-upload-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.ant-table-thead > tr > th {
+    background-color: #fbdedd !important;
+    color: #5e5e5e;
+    text-align: center;
+    font-weight: bold;
+}
+
+:where(.css-1792ce6).ant-checkbox-group
+{
+    display: flex;
+    flex-direction: column;
+}
+
+:where(.css-dev-only-do-not-override-1792ce6).ant-collapse > .ant-collapse-item > .ant-collapse-header
+{
+    background-color: white !important;
+}
+
+:where(.css-1792ce6).ant-table-wrapper .ant-table-thead >tr>th, :where(.css-1792ce6).ant-table-wrapper .ant-table-thead >tr>td
+{
+    text-align: center;
+    color: rgb(115, 115, 116);
+}
+
+:where(.css-1792ce6)[class^="ant-table"] [class^="ant-table"], :where(.css-1792ce6)[class*=" ant-table"] [class^="ant-table"], :where(.css-1792ce6)[class^="ant-table"] [class*=" ant-table"], :where(.css-1792ce6)[class*=" ant-table"] [class*=" ant-table"]
+{
+    text-align: center;
+}
+
+:where(.css-1792ce6).ant-collapse>.ant-collapse-item >.ant-collapse-header .ant-collapse-header-text
+{
+    font-weight: bold;
+}
+
+:where(.css-1792ce6).ant-collapse .ant-collapse-content
+{
+    border-top: None;
+}
