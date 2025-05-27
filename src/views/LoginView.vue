@@ -110,253 +110,242 @@ const togglePassword = () => {
 <template>
   <div class="login">
     <div class="content-wrapper">
-      <img class="image" alt="Image" src="../static/img/image-1.png"/>
-      <div class="log-in">
-        <img class="imageLogoPTIT" src="../static/img/logo-ptit.svg" alt="Image">
-        <div class="text-wrapper">Đăng nhập CodePtit</div>
-        <div class="input-text">
-          <div class="label">
-            <p class="p">
-              <span class="span">Tài khoản </span>
-              <span class="text-wrapper-2">*</span>
-            </p>
-          </div>
-          <input v-model="username" type="text" class="placeholder"/>
+      <div class="login-card">
+        <h1 class="title">Đăng nhập Hệ thống Thi trực tuyến</h1>
+        <div class="input-group">
+          <label>Tài khoản <span>*</span></label>
+          <input v-model="username" type="text" placeholder="Nhập tài khoản" />
         </div>
-        <div class="input-text">
-          <div class="label">
-            <p class="p">
-              <span class="span">Mật khẩu </span>
-              <span class="text-wrapper-2">*</span>
-            </p>
+        <div class="input-group">
+          <label>Mật khẩu <span>*</span></label>
+          <div class="password-wrapper ">
+            <input v-model="password" :type="passwordInputType" placeholder="Nhập mật khẩu" />
+            <EyeOutlined v-if="passwordInputType !== 'password'" @click="togglePassword"/>
+            <EyeInvisibleOutlined v-else @click="togglePassword" />
           </div>
-          <div class="password-wrapper">
-            <input v-model="password" :type="passwordInputType" class="placeholder-2"/>
-            <EyeOutlined v-if="passwordInputType !== 'password'" style="font-size: 20px"
-                         class="vuesax-linear-eye" @click="togglePassword"/>
-            <EyeInvisibleOutlined v-else style="font-size: 20px" class="vuesax-linear-eye"
-                                  @click="togglePassword"/>
-          </div>
-          <!--                    <div class="label-2">-->
-          <!--                        <div class="text-wrapper-5">Quên mật khẩu?</div>-->
-          <!--                    </div>-->
         </div>
-
-        <a-button :loading="isLoading" type="primary"
-                  style="font-size: 100%; width: 100%; min-height: 45px; color: white !important;" @click="login"
-                  @keyup.enter="login">
-          <LoginOutlined/>
-          Đăng nhập
+        <a-button
+          :loading="isLoading"
+          type="primary"
+          class="login-button"
+          @click="login"
+          @keyup.enter="login"
+        >
+          <LoginOutlined /> Đăng nhập
         </a-button>
-
-        <div class="frame-2">
-          <div class="frame-3">
-            <img class="vector" alt="Vector" src="../static/img/vector-1.svg"/>
-            <div class="text-wrapper-7">Hoặc đăng nhập với</div>
-            <img class="img" alt="Vector" src="../static/img/vector-2.svg"/>
-          </div>
-          <a-button
-              type="primary"
-              style="font-size: 100%; width: 100%; min-height: 45px; color: white !important; background-color: #2d73ed ;"
-              @click="loginWithMS"
-          >
-            PTIT MICROSOFT OFFICE 365
-          </a-button>
+        <div class="or-divider">
+          <span>Hoặc đăng nhập bằng</span>
         </div>
+        <a-button
+          class="login-ms"
+          @click="loginWithMS"
+        >
+          HVNH MICROSOFT OFFICE 365
+        </a-button>
       </div>
     </div>
-
-    <a-config-provider
-        :theme="{
-                token: {
-                    colorPrimary: '#A7453C',
-                    colorTextHeading: '#000000',
-                    colorText: '#A7453C',
-                    colorBorderSecondary: 'rgba(186,151,147,0.45)'
-                },
-            }"
-    />
   </div>
 </template>
 
-
 <style scoped>
 .login {
-  background-color: #f6f6f6;
+  position: relative;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 15px;
+  overflow: hidden;
+}
+
+/* Background ảnh với blur */
+.login::before {
+  content: "";
+  position: fixed; /* full màn hình */
+  top: 0;
+  left: 0;
   width: 100vw;
   height: 100vh;
-  padding: 20px;
-  /* Thêm padding để tạo khoảng cách khi trên màn hình nhỏ */
+  background-image: url('../static/img/unnamed.jpg');
+  background-size: cover;
+  background-position: center;
+  filter: blur(8px);
+  z-index: -2;
 }
 
+/* Lớp phủ gradient xanh trong suốt */
+.login::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(0deg, rgba(0, 51, 102, 0.6), rgba(0, 85, 165, 0));
+  z-index: -1;
+}
 .content-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 50px;
-  /* Khoảng cách giữa hình ảnh và form đăng nhập */
   width: 100%;
+  max-width: 420px;
+  padding: 25px;
 }
 
-.image {
-  height: auto;
-  max-height: 100%;
-  width: auto;
-  max-width: 50%;
-  /* Điều chỉnh tỷ lệ hình ảnh */
-  object-fit: cover;
-}
-
-.imageLogoPTIT {
-  height: auto;
-  max-height: 50%;
-  width: auto;
-  max-width: 20%;
-  /* Điều chỉnh tỷ lệ hình ảnh */
-  object-fit: cover;
-}
-
-.log-in {
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0px 4px 8px #424f5b40;
-  padding: 40px 30px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  width: 100%;
-  max-width: 400px;
-}
-
-.text-wrapper {
-  color: #282828;
-  font-family: "Inter-Bold", Helvetica;
-  font-size: 22px;
-  font-weight: 700;
+.login-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(255, 140, 0, 0.25);
+  padding: 40px 35px;
   text-align: center;
+  transition: box-shadow 0.3s ease;
+}
+
+.login-card:hover {
+  box-shadow: 0 16px 48px rgba(255, 140, 0, 0.4);
+}
+
+.logo-banking {
+  max-width: 110px;
+  margin-bottom: 28px;
+  filter: drop-shadow(0 0 3px rgba(255, 140, 0, 0.6));
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #FF6F00; /* vàng cam nổi bật */
+  margin-bottom: 32px;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-shadow: 1px 1px 2px rgba(255,111,0,0.4);
+}
+
+.input-group {
+  text-align: left;
   margin-bottom: 20px;
-  color: #A7453C;
 }
 
-.input-text {
+.input-group label {
+  font-weight: 600;
+  color: #333333;
+  font-size: 15px;
+}
+
+.input-group label span {
+  color: #FF6F00;
+}
+
+.input-group input {
   width: 100%;
+  padding: 14px 16px;
+  margin-top: 6px;
+  border: 2px solid #E0E0E0;
+  border-radius: 12px;
+  font-size: 15px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
 }
 
-.label {
-  display: flex;
-  justify-content: space-between;
-  padding: 0px 5px;
+.input-group input::placeholder {
+  color: #bbb;
+  font-style: italic;
 }
 
-.p {
-  font-family: "Inter-Regular", Helvetica;
-  font-size: 16px;
-  font-weight: 400;
-  color: #282828;
-  margin: 0;
-}
-
-.span {
-  letter-spacing: -0.13px;
-}
-
-.text-wrapper-2 {
-  color: #ec4782;
-}
-
-.placeholder,
-.placeholder-2 {
-  width: 100%;
-  padding: 14px;
-  border: 1px solid #ec4782;
-  border-radius: 8px;
-  background-color: #ffffff;
-  box-sizing: border-box;
+.input-group input:focus {
+  border-color: #FF6F00;
+  box-shadow: 0 0 10px rgba(255, 111, 0, 0.3);
+  outline: none;
 }
 
 .password-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
+}
+
+.password-wrapper input {
+  flex: 1;
+  padding-right: 44px;
+}
+
+.password-wrapper .anticon {
+  position: absolute;
+  right: 14px;
+  cursor: pointer;
+  color: #FF6F00;
+  font-size: 20px;
+  transition: color 0.3s ease;
+}
+
+.password-wrapper .anticon:hover {
+  color: #ff8c00;
+}
+
+.login-button {
   width: 100%;
+  height: 48px;
+  background: linear-gradient(90deg, #FF6F00, #FF8C00);
+  color: white !important;
+  font-weight: 700;
+  font-size: 17px;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(255, 111, 0, 0.5);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-button:hover {
+  background: linear-gradient(90deg, #ff8c00, #ff9d1a);
+  box-shadow: 0 8px 24px rgba(255, 141, 0, 0.7);
+}
+
+.or-divider {
+  display: flex;
+  align-items: center;
+  margin: 26px 0 24px;
+  color: #888;
+  font-size: 14px;
+  user-select: none;
+}
+
+.or-divider span {
+  flex: 1;
+  text-align: center;
   position: relative;
 }
 
-.vuesax-linear-eye {
-  position: absolute;
-  right: 15px;
+.or-divider span::before,
+.or-divider span::after {
+  content: "";
+  flex: 1;
+  height: 1.5px;
+  background: #ccc;
+  margin: 0 12px;
+  border-radius: 2px;
 }
 
-.label-2 {
-  display: flex;
-  justify-content: flex-end;
+.login-ms {
   width: 100%;
-  padding: 0px 5px;
-}
-
-.text-wrapper-5 {
-  color: #282828;
-  font-family: "Inter-Regular", Helvetica;
-  font-size: 12px;
-}
-
-.text-wrapper-6 {
-  font-family: "Inter-Regular", Helvetica;
-  font-size: 16px;
-  font-weight: 400;
-}
-
-.frame-2 {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-
-.frame-3 {
+  height: 45px;
+  background-color: #0078D4;
+  color: #FFFFFF;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 10px;
+  font-size: 15px;
+  box-shadow: 0 5px 15px rgba(0, 120, 212, 0.5);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.vector,
-.img {
-  height: 3px;
-  width: 85px;
+.login-ms:hover {
+  background-color: #005a9e;
+  box-shadow: 0 7px 20px rgba(0, 90, 158, 0.7);
 }
-
-.text-wrapper-7 {
-  color: #000000;
-  font-family: "Inter-Light", Helvetica;
-  font-size: 14px;
-  font-weight: 300;
-  opacity: 0.5;
-  text-align: center;
-}
-
-.bar-icon {
-  width: 100%;
-}
-
-
-/* Responsive styles */
-@media (max-width: 768px) {
-  .content-wrapper {
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .image {
-    display: none;
-  }
-
-  .log-in {
-    max-width: 100%;
-  }
-}
-
 </style>
