@@ -62,19 +62,13 @@
   </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from '@/configs/axios.js'
+import { message } from 'ant-design-vue'
 
-const subjects = [
-  'BASIC - LẬP TRÌNH CƠ BẢN',
-  'ADVANCED - LẬP TRÌNH NÂNG CAO',
-  'DOTNET - Lập trình ASP.NET',
-  'OOP - Lập trình hướng đối tượng'
-]
-
-const topics = ref([
-  { code: 'B1', name: 'B1', subject: 'BASIC - LẬP TRÌNH CƠ BẢN', order: 1, status: 'Hoạt động' },
-  { code: 'A1', name: 'A1', subject: 'ADVANCED - LẬP TRÌNH NÂNG CAO', order: 1, status: 'Hoạt động' }
-])
+const topics = ref([])
+const loading = ref(false)
+const subjects = ref([])
 
 const columns = [
   { title: 'Mã', dataIndex: 'code', key: 'code' },
@@ -87,50 +81,146 @@ const columns = [
 
 const showModal = ref(false)
 const isEditing = ref(false)
-const editingCode = ref('')
+const editingId = ref(null)
 const form = ref({
   code: '',
   name: '',
-  subject: '',
+  subject_id: null,
   description: '',
   order: 0,
   status: 'Hoạt động'
 })
 
-// Thêm hoặc Sửa
-const onSubmit = () => {
-  if (!form.value.code || !form.value.name || !form.value.subject) {
-    alert('Vui lòng nhập đầy đủ Mã, Tên và Môn học!');
-    return;
+// Fetch all subjects
+const fetchSubjects = async () => {
+  try {
+    const response = await axios.get('/subjects')
+    if (response.data.code === 200) {
+      subjects.value = response.data.data.map(subject => ({
+        id: subject.id,
+        name: `${subject.code} - ${subject.name}`
+      }))
+    } else {
+      message.error('Không thể tải danh sách môn học')
+    }
+  } catch (error) {
+    console.error('Error fetching subjects:', error)
+    message.error('Lỗi khi tải danh sách môn học')
   }
-  if (isEditing.value) {
-    const index = topics.value.findIndex(t => t.code === editingCode.value)
-    if (index !== -1) topics.value[index] = { ...form.value }
-  } else {
-    topics.value.push({ ...form.value })
-  }
-  resetForm()
-  showModal.value = false
 }
 
-// Xóa
-const onDelete = (code) => {
-  topics.value = topics.value.filter(t => t.code !== code)
+// Fetch all question groups (topics)
+const fetchQuestionGroups = async () => {
+  loading.value = true
+  try {
+    const response = await axios.get('/question_groups')
+    if (response.data.code === 200) {
+      topics.value = response.data.data.map(group => ({
+        id: group.id,
+        code: group.code,
+        name: group.name,
+        subject: group.subject ? `${group.subject.code} - ${group.subject.name}` : 'N/A',
+        subject_id: group.subject_id,
+        description: group.description || '',
+        order: group.order || 0,
+        status: group.status === 1 ? 'Hoạt động' : 'Không hoạt động'
+      }))
+    } else {
+      message.error('Không thể tải danh sách chủ đề bài tập')
+    }
+  } catch (error) {
+    console.error('Error fetching question groups:', error)
+    message.error('Lỗi khi tải danh sách chủ đề bài tập')
+  } finally {
+    loading.value = false
+  }
 }
 
-// Sửa
+// Add or update question group
+const onSubmit = async () => {
+  if (!form.value.code || !form.value.name || !form.value.subject_id) {
+    message.error('Vui lòng nhập đầy đủ Mã, Tên và Môn học!')
+    return
+  }
+  
+  const payload = {
+    code: form.value.code,
+    name: form.value.name,
+    subject_id: form.value.subject_id,
+    description: form.value.description,
+    order: form.value.order,
+    status: form.value.status === 'Hoạt động' ? 1 : 0
+  }
+  
+  try {
+    if (isEditing.value) {
+      // Update existing question group
+      const response = await axios.put(`/question_groups/${editingId.value}`, payload)
+      if (response.data.code === 200) {
+        message.success('Cập nhật chủ đề bài tập thành công!')
+        await fetchQuestionGroups()
+      } else {
+        message.error('Lỗi khi cập nhật chủ đề bài tập')
+      }
+    } else {
+      // Create new question group
+      const response = await axios.post('/question_groups', payload)
+      if (response.data.code === 200) {
+        message.success('Thêm chủ đề bài tập thành công!')
+        await fetchQuestionGroups()
+      } else {
+        message.error('Lỗi khi thêm chủ đề bài tập')
+      }
+    }
+    showModal.value = false
+    resetForm()
+  } catch (error) {
+    console.error('Error submitting question group:', error)
+    message.error('Lỗi khi lưu chủ đề bài tập')
+  }
+}
+
+// Delete question group
+const onDelete = async (id) => {
+  try {
+    const response = await axios.delete(`/question_groups/${id}`)
+    if (response.data.code === 200) {
+      message.success('Xóa chủ đề bài tập thành công!')
+      await fetchQuestionGroups()
+    } else {
+      message.error('Lỗi khi xóa chủ đề bài tập')
+    }
+  } catch (error) {
+    console.error('Error deleting question group:', error)
+    message.error('Lỗi khi xóa chủ đề bài tập')
+  }
+}
+
+// Edit question group
 const onEdit = (record) => {
   isEditing.value = true
-  editingCode.value = record.code
-  form.value = { ...record }
+  editingId.value = record.id
+  form.value = {
+    code: record.code,
+    name: record.name,
+    subject_id: record.subject_id,
+    description: record.description,
+    order: record.order,
+    status: record.status
+  }
   showModal.value = true
 }
 
 const resetForm = () => {
   isEditing.value = false
-  editingCode.value = ''
-  form.value = { code: '', name: '', subject: '', description: '', order: 0, status: 'Hoạt động' }
+  editingId.value = null
+  form.value = { code: '', name: '', subject_id: null, description: '', order: 0, status: 'Hoạt động' }
 }
+
+onMounted(() => {
+  fetchSubjects()
+  fetchQuestionGroups()
+})
 </script>
 
 <style scoped>

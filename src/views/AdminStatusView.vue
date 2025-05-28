@@ -1,7 +1,6 @@
 <script setup>
 
 import {computed, onBeforeMount, onBeforeUnmount, reactive, ref} from 'vue';
-import {usePagination} from 'vue-request';
 import axios from "@/configs/axios.js";
 import {LoadingOutlined} from "@ant-design/icons-vue";
 import AdminHeader from "@/components/AdminHeader.vue";
@@ -13,6 +12,14 @@ const status = reactive([]);
 let intervalId = null;
 
 const router = useRouter();
+
+const pagination = reactive({
+  current: 1,
+  pageSize: 50,
+  total: 0,
+  showSizeChanger: true,
+  pageSizeOptions: ['10', '20', '50', '100'],
+});
 
 onBeforeMount(async () =>
 {
@@ -41,13 +48,19 @@ onBeforeUnmount(() =>
 
 const fetchSolution = async () =>
 {
-    await axios.get('solutions').then(response =>
-    {
-        const tempStatus = [];
-        if (response.status === 200)
-        {
+    try {
+        const response = await axios.get('solutions', {
+            params: {
+                page: pagination.current,
+                per_page: pagination.pageSize
+            }
+        });
+        
+        if (response.status === 200) {
             isLoading.value = false;
             const statusResponse = response.data.data;
+            const tempStatus = [];
+            
             statusResponse.forEach(sts =>
             {
                 let runTime = sts.run_time;
@@ -75,35 +88,14 @@ const fetchSolution = async () =>
             });
 
             status.splice(0, status.length, ...tempStatus);
+            
+            pagination.current = response.data.current_page;
+            pagination.total = response.data.total;
         }
-    }).catch(error =>
-    {
+    } catch (error) {
         console.log(error);
-    });
+    }
 }
-
-
-const queryData = async params =>
-{
-    return status;
-};
-
-const {data: dataSource, run, loading, current, pageSize} = usePagination(queryData, {
-    formatResult: res =>
-    {
-        return Array.isArray(res) ? res : [];
-    },
-    pagination: {
-        currentKey: 'page',
-        pageSizeKey: 'results',
-    },
-});
-
-const pagination = computed(() => ({
-    total: queryData().length,
-    current: current.value,
-    pageSize: pageSize.value,
-}));
 
 const genUuid = () =>
 {
@@ -112,13 +104,9 @@ const genUuid = () =>
 
 const handleTableChange = (pag, filters, sorter) =>
 {
-    run({
-        results: pag.pageSize,
-        page: pag?.current,
-        sortField: sorter.field,
-        sortOrder: sorter.order,
-        ...filters,
-    });
+    pagination.current = pag.current;
+    pagination.pageSize = pag.pageSize;
+    fetchSolution();
 };
 
 const activeKey = ref([1]);
@@ -137,9 +125,9 @@ const activeKey = ref([1]);
                         <div class="table-container">
                             <a-table
                                 :row-key="genUuid()"
-                                :data-source="dataSource"
+                                :data-source="status"
                                 :pagination="pagination"
-                                :loading="loading"
+                                :loading="isLoading"
                                 @change="handleTableChange"
                             >
                                 <a-table-column data-index="id">

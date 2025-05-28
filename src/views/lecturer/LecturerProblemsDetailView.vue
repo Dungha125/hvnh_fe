@@ -188,54 +188,55 @@ onBeforeMount(async () => {
       chosenCompiler.value = compilers.value[0].value;
     }
 
-    await axios.get(`questions/${id}/top`).then(response => {
-      if (response.status === 200) {
-        isLoading.value = false;
-        const statusResponse = response.data.data;
-        statusResponse.forEach(sts => {
-          let runTime = sts.run_time;
-          if (runTime)
-            runTime = runTime.toFixed(2);
+    // await axios.get(`questions/${id}/top`).then(response => {
+    //   if (response.status === 200) {
+    //     isLoading.value = false;
+    //     const statusResponse = response.data.data;
+    //     statusResponse.forEach(sts => {
+    //       let runTime = sts.run_time;
+    //       if (runTime)
+    //         runTime = runTime.toFixed(2);
 
-          let createdDate = new Date(sts.created_at);
-          sts.created_at = (createdDate.getDate() > 9 ? createdDate.getDate() : '0' + createdDate.getDate()) + '/' + (createdDate.getMonth() > 9 ? createdDate.getMonth() : '0' + createdDate.getMonth()) + '/' + createdDate.getFullYear();
+    //       let createdDate = new Date(sts.created_at);
+    //       sts.created_at = (createdDate.getDate() > 9 ? createdDate.getDate() : '0' + createdDate.getDate()) + '/' + (createdDate.getMonth() > 9 ? createdDate.getMonth() : '0' + createdDate.getMonth()) + '/' + createdDate.getFullYear();
 
 
-          let username = sts.user.username + ' - ' + sts.user.last_name + ' ' + sts.user.first_name;
+    //       let username = sts.user.username + ' - ' + sts.user.last_name + ' ' + sts.user.first_name;
 
-          status.push({
-            id: sts.id,
-            date: sts.created_at,
-            account: username,
-            result: sts.result,
-            problem: sts.question.code + ' - ' + sts.question.name,
-            time: runTime + 's',
-            memory: sts.memory + 'Kb',
-            compiler: sts.compiler.code,
-          });
-        });
+    //       status.push({
+    //         id: sts.id,
+    //         date: sts.created_at,
+    //         account: username,
+    //         result: sts.result,
+    //         problem: sts.question.code + ' - ' + sts.question.name,
+    //         time: runTime + 's',
+    //         memory: sts.memory + 'Kb',
+    //         compiler: sts.compiler.code,
+    //       });
+    //     });
 
-        const uniqueSubmissions = [];
-        const map = new Map();
-        for (const item of status) {
-          if (!map.has(item.account)) {
-            map.set(item.account, true);
-            uniqueSubmissions.push(item);
-          }
-        }
+    //     const uniqueSubmissions = [];
+    //     const map = new Map();
+    //     for (const item of status) {
+    //       if (!map.has(item.account)) {
+    //         map.set(item.account, true);
+    //         uniqueSubmissions.push(item);
+    //       }
+    //     }
 
-        status.length = 0;
+    //     status.length = 0;
 
-        status.push(...uniqueSubmissions);
-        isLoadingTopSubmissions.value = false;
-      }
-    }).catch(error => {
-      router.push('/not-found');
-    });
+    //     status.push(...uniqueSubmissions);
+    //     isLoadingTopSubmissions.value = false;
+    //   }
+    // }).catch(error => {
+    //   router.push('/not-found');
+    // });
   } catch (error) {
     router.push('/not-found');
   }
 
+  
   try {
     // Fetch question levels (difficulties)
     const resLevels = await axios.get("/question_levels");

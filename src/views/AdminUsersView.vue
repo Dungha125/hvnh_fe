@@ -1,6 +1,6 @@
 <script setup>
 import AdminHeader from "@/components/AdminHeader.vue";
-import {onBeforeMount, ref, h, computed, reactive} from "vue";
+import {onBeforeMount, ref, h, computed, reactive, watch} from "vue";
 import {useRouter} from "vue-router";
 import {
   AppstoreOutlined,
@@ -10,7 +10,6 @@ import {
   DownloadOutlined,
   UploadOutlined
 } from "@ant-design/icons-vue";
-import {usePagination} from "vue-request";
 import axios from "@/configs/axios.js";
 import {message} from "ant-design-vue";
 
@@ -21,6 +20,16 @@ const usersList = reactive([]);
 const userListLoading = ref(false);
 const searchQuery = ref('');
 const isUploadFile = ref(false);
+const searchTimeout = ref(null);
+
+// Thêm các biến cho phân trang
+const pagination = reactive({
+  current: 1,
+  pageSize: 50,
+  total: 0,
+  showSizeChanger: true,
+  pageSizeOptions: ['10', '20', '50', '100'],
+});
 
 const tabs = ref([
   {
@@ -98,6 +107,83 @@ const statuses = ref([
 ]);
 
 
+const handleLoginStudent = async (studentID) => {
+  try {
+    const response = await axios.get(`/users/${studentID}/login`);
+    const admin_access_token = localStorage.getItem("access_token");
+    const admin_user = JSON.parse(localStorage.getItem("user"));
+    const admin_username = localStorage.getItem("username");
+    if (response.status === 200) {
+      const { access_token, user } = response.data.data;
+      localStorage.setItem("admin_access_token", admin_access_token);
+      localStorage.setItem("admin_user", JSON.stringify(admin_user));
+      localStorage.setItem("admin_username", admin_username);
+      if (!sessionStorage.getItem("teacher_access_token")) {
+        sessionStorage.setItem("teacher_access_token", localStorage.getItem("access_token"));
+        sessionStorage.setItem("user_teacher", localStorage.getItem("user"));
+        sessionStorage.setItem("username_teacher", localStorage.getItem("username"));
+      }
+      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("username", user.username);
+      message.info(`Đăng nhập vào tài khoản: ${user.username}`);
+      if(user.member_group === 1) {
+        router.push(`/problems`);
+      } else {
+        router.push(`/lecturer/questions`);
+      }
+    }
+  } catch (error) {
+    console.error("Login Error:", error);
+    message.error("Đăng nhập thất bại!");
+  }
+};
+
+const fetchUsers = async (page = 1, size = 50, search = '') => {
+  userListLoading.value = true;
+  usersList.splice(0, usersList.length);
+  
+  try {
+    const params = {
+      page: page,
+      per_page: size
+    };
+    
+    if (search && search.trim() !== '') {
+      params.s = search.trim();
+    }
+    
+    const response = await axios.get('/users', { params });
+    
+    const responseData = response.data;
+    
+    if (responseData.data) {
+      usersList.push(...responseData.data.map((user, index) => {
+        return {
+          stt: (page - 1) * size + index + 1,
+          code: user.id,
+          username: user.username,
+          lastname: user.last_name,
+          firstname: user.first_name,
+          email: user.email,
+          class: user.class,
+          status: user.status,
+        };
+      }));
+      
+      // Cập nhật thông tin phân trang
+      pagination.current = responseData.current_page;
+      pagination.total = responseData.total;
+      pagination.pageSize = size;
+    }
+  } catch (error) {
+    message.error('Lỗi khi lấy danh sách người dùng');
+    console.error(error);
+  } finally {
+    userListLoading.value = false;
+  }
+};
+
 onBeforeMount(async () => {
   if (!localStorage.getItem('access_token'))
     router.push('/login');
@@ -107,102 +193,34 @@ onBeforeMount(async () => {
   if (currentUser.member_group === 1)
     router.push('/not-found');
 
-  await fetchUsers();
+  await fetchUsers(pagination.current, pagination.pageSize);
 
   isLoading.value = false;
 });
 
-const fetchUsers = async () => {
-  let cntUser = 0;
-  usersList.splice(0, usersList.length);
-  userListLoading.value = true;
-  await axios.get('/users?per_page=500')
-      .then(response => {
-        const responseDate = response.data;
-        const currentPage = 1;
-        const lastPage = responseDate.last_page;
-
-        if (responseDate.data) {
-          usersList.push(...responseDate.data.map((user, index) => {
-            cntUser++;
-            return {
-              stt: cntUser,
-              code: user.id,
-              username: user.username,
-              lastname: user.last_name,
-              firstname: user.first_name,
-              email: user.email,
-              class: user.class,
-              status: user.status,
-            };
-          }));
-        }
-
-        for (let i = currentPage + 1; i <= lastPage; i++) {
-          axios.get(`/users?per_page=500&page=${i}`)
-              .then(response => {
-                const responseDate = response.data;
-
-                if (responseDate.data) {
-                  usersList.push(...responseDate.data.map((user, index) => {
-                    cntUser++;
-                    return {
-                      stt: cntUser,
-                      code: user.id,
-                      username: user.username,
-                      lastname: user.last_name,
-                      firstname: user.first_name,
-                      email: user.email,
-                      class: user.class,
-                      status: user.status,
-                    };
-                  }));
-                }
-              })
-              .catch(error => {
-                message.error('Lỗi khi lấy danh sách người dùng');
-              });
-        }
-
-        userListLoading.value = false;
-      })
-      .catch(error => {
-        message.error('Lỗi khi lấy danh sách người dùng');
-      });
-}
-
-const queryData = async params => {
-  return usersList;
+const handleTableChange = (pag, filters, sorter) => {
+  fetchUsers(pag.current, pag.pageSize, searchQuery.value);
 };
 
-const {data: dataSource, run, loading, current, pageSize} = usePagination(queryData, {
-  formatResult: res => {
-    return Array.isArray(res) ? res : [];
-  },
-  pagination: {
-    currentKey: 'page',
-    pageSizeKey: 'results',
-  },
-});
+const handleSearch = (value) => {
+  // Hủy timeout trước đó nếu có
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value);
+  }
+  
+  // Đặt timeout mới để tránh gửi request liên tục khi người dùng đang gõ
+  searchTimeout.value = setTimeout(() => {
+    fetchUsers(1, pagination.pageSize, value);
+  }, 500);
+};
 
-const pagination = computed(() => ({
-  total: queryData().length,
-  current: current.value,
-  pageSize: pageSize.value,
-}));
+// Thay đổi watcher
+watch(searchQuery, (newVal) => {
+  handleSearch(newVal);
+});
 
 const genUuid = () => {
   return Math.random().toString(36).substring(7);
-};
-
-const handleTableChange = (pag, filters, sorter) => {
-  run({
-    results: pag.pageSize,
-    page: pag?.current,
-    sortField: sorter.field,
-    sortOrder: sorter.order,
-    ...filters,
-  });
 };
 
 const handleAddUser = async () => {
@@ -293,7 +311,7 @@ const handleAddUser = async () => {
             birthDate: null,
           };
 
-          await fetchUsers();
+          await fetchUsers(pagination.current, pagination.pageSize, searchQuery.value);
         } else {
           message.error('Lỗi khi thêm người dùng, vui lòng thử lại!');
         }
@@ -303,15 +321,6 @@ const handleAddUser = async () => {
         message.error('Lỗi khi thêm người dùng, vui lòng thử lại!');
       });
 }
-
-const filteredUsersList = computed(() => {
-  const query = searchQuery.value.toLowerCase();
-  return usersList.filter(user =>
-      user.username.toLowerCase().includes(query) ||
-      user.lastname.toLowerCase().includes(query) ||
-      user.firstname.toLowerCase().includes(query)
-  );
-});
 
 const addUsersForm = ref({
   file: null,
@@ -353,7 +362,7 @@ const handleAddUsers = async () => {
 
     if (response.data.code === 200) {
       message.success("Tải tệp thành công và xử lý dữ liệu.");
-      await fetchUsers();
+      await fetchUsers(pagination.current, pagination.pageSize, searchQuery.value);
     } else {
       message.error("Có lỗi xảy ra khi xử lý tệp.");
     }
@@ -362,6 +371,56 @@ const handleAddUsers = async () => {
   }
 
   isUploadFile.value = false;
+};
+
+// Hàm lấy thông tin profile người dùng bằng token
+const fetchUserProfile = async (userId) => {
+  try {
+    const adminToken = localStorage.getItem('admin_user_access_token');
+    
+    if (!adminToken) {
+      message.error('Token không tồn tại, vui lòng đăng nhập lại');
+      return null;
+    }
+    
+    const response = await axios.get('/auth/profile', {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`
+      }
+    });
+    
+    if (response.data.code === 200) {
+      return response.data.data;
+    } else {
+      message.error('Không thể lấy thông tin profile');
+      return null;
+    }
+  } catch (error) {
+    console.error('Lỗi khi lấy thông tin profile:', error);
+    message.error('Lỗi khi lấy thông tin profile');
+    return null;
+  }
+};
+
+const handleViewUserProfile = async (record) => {
+  try {
+    const response = await axios.get(`/users/${record.code}/login`);
+    
+    if (response.data.code === 200) {
+      const { access_token, user } = response.data.data;
+      
+      // Lưu token và thông tin user vào localStorage
+      localStorage.setItem('admin_user_access_token', access_token);
+      localStorage.setItem('admin_user', JSON.stringify(user));
+      
+      router.push(`/admin/users/${record.code}`);
+    } else {
+      message.error('Không thể đăng nhập với tài khoản này');
+    }
+  } catch (error) {
+    console.error('Lỗi khi lấy thông tin đăng nhập:', error);
+    message.error('Lỗi khi lấy thông tin đăng nhập');
+  }
 };
 
 </script>
@@ -388,7 +447,8 @@ const handleAddUsers = async () => {
                   <div class="search-container">
                     <img src="../static/img/search_icon.svg" alt=""/>
                     <a-input type="text" style="border: none; height: 100%; width: 100%"
-                             placeholder="Tìm kiếm..." v-model:value="searchQuery" allow-clear/>
+                             placeholder="Tìm kiếm..." v-model:value="searchQuery" 
+                             @pressEnter="handleSearch(searchQuery)" @change="handleSearch(searchQuery)" allow-clear/>
                   </div>
 
                   <div>
@@ -399,7 +459,7 @@ const handleAddUsers = async () => {
 
                 <a-table
                     :row-key="genUuid()"
-                    :data-source="filteredUsersList"
+                    :data-source="usersList"
                     :pagination="pagination"
                     :loading="userListLoading"
                     @change="handleTableChange"
@@ -413,6 +473,9 @@ const handleAddUsers = async () => {
                   <a-table-column data-index="username" width="12%">
                     <template #title>
                       <span style="font-weight: bold">Tài khoản</span>
+                    </template>
+                    <template #default="{ text, record }">
+                      <a @click="handleViewUserProfile(record)" style="cursor: pointer; color: #A7453C;">{{ text }}</a>
                     </template>
                   </a-table-column>
 
@@ -458,8 +521,8 @@ const handleAddUsers = async () => {
 
                     <template #default="{ record }">
                       <a-button type="primary"
-                                @click="message.warning('Tính năng đang được phát triển')">Đăng
-                        nhập
+                                @click="handleLoginStudent(record.code)">
+                                Đăng nhập
                       </a-button>
                     </template>
                   </a-table-column>

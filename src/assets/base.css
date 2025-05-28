@@ -9,7 +9,7 @@
     --vt-c-black-soft: #222222;
     --vt-c-black-mute: #282828;
 
-    --vt-c-indigo: #2c3e50;
+    --vt-c-indigo: rgb(14, 62, 110);
 
     --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
     --vt-c-divider-light-2: rgba(0, 0, 0, 0.12);
@@ -79,20 +79,20 @@ body
 :where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table-thead > tr > th,
 :where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table-thead th.ant-table-column-sort
 {
-    background-color: #fbdedd;
+    background-color: #d2e3fd;
     color: #5e5e5e;
 }
 
 :where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table-thead th.ant-table-column-sort:hover,
 :where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table-thead th.ant-table-column-has-sorters:hover
 {
-    background-color: #fdd3d2;
+    background-color: #d2e3fd;
     color: #5e5e5e;
 }
 
 .ant-btn-link
 {
-    color: #A7453C;
+    color: #3c51a7;
 }
 
 :where(.css-dev-only-do-not-override-1792ce6).ant-dropdown .ant-dropdown-menu .ant-dropdown-menu-item-selected
@@ -160,7 +160,7 @@ body
 }
 
 .ant-spin .ant-spin-dot-item {
-    background-color: #a7453c;
+    background-color: #3c51a7;
 }
 
 .ant-upload-wrapper {
@@ -171,7 +171,7 @@ body
 }
 
 .ant-table-thead > tr > th {
-    background-color: #fbdedd !important;
+    background-color: #d2e3fd !important;
     color: #5e5e5e;
     text-align: center;
     font-weight: bold;

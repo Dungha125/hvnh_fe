@@ -45,7 +45,7 @@ const courses = ref([]);
 const current_course = ref(null);
 const questionCode = ref(null);
 const listStudyingCourses = ref([]);
-const course_id = ref(null)
+let course_id = ref(null)
 
 const problemDetailEdit = ref({
   id: "",
@@ -300,7 +300,7 @@ onBeforeMount(async () => {
       // console.log(semesters.value);
       if (courses.value.length > 0) {
         current_course.value = courses.value[0].value;
-        course_id.value = current_course.value.id;
+        course_id.value = current_course.value;
       }
     } else {
       message.error("Không tìm thấy dữ liệu môn học từ API");
@@ -999,7 +999,7 @@ const changeDetailProblem = (questionID) => {
 
 const handleCourseChange = (value) => {
   localStorage.setItem('course_id', value);
-  course_id = localStorage.getItem('course_id');
+  course_id.value = localStorage.getItem('course_id');
 };
 
 </script>

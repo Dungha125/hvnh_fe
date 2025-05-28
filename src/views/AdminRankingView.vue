@@ -135,12 +135,18 @@ const {data: dataSource, run, loading, current, pageSize} = usePagination(queryD
         currentKey: 'page',
         pageSizeKey: 'results',
     },
+    defaultParams: [{
+        results: 50,
+        page: 1
+    }]
 });
 
 const pagination = computed(() => ({
     total: queryData().length,
     current: current.value,
     pageSize: pageSize.value,
+    showSizeChanger: true,
+    pageSizeOptions: ['10', '20', '50', '100'],
 }));
 
 const genUuid = () =>

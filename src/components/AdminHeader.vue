@@ -22,10 +22,10 @@ const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
 const styleNavItem = (path) => {
   return {
-    color: currentPath.includes(path) && !isHover.value ? "#A7453C" : "#737374",
+    color: currentPath.includes(path) && !isHover.value ? "#0055A5" : "#737374",
     filter:
       currentPath.includes(path) && !isHover.value
-        ? "invert(32%) sepia(64%) saturate(506%) hue-rotate(330deg) brightness(70%) contrast(95%)"
+        ? "invert(33%) sepia(83%) saturate(612%) hue-rotate(190deg) brightness(60%) contrast(95%)"
         : "",
     transition: "color 0.3s ease, filter 0.3s ease",
   };
@@ -67,7 +67,7 @@ const getAvatarName = (name) => {
 <template>
   <header class="header">
     <div class="header-content">
-      <div class="logo" @click="goTo('/problems')">CodePtit.</div>
+      <div class="logo" @click="goTo('/admin/users')">Học viện Ngân Hàng</div>
       <nav class="navigation">
         <!--                <div class="nav-item"-->
         <!--                     :style="styleNavItem('/home')"-->
@@ -206,17 +206,19 @@ const getAvatarName = (name) => {
 
 .header-content {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   align-items: center;
-  padding: 10px 20px;
+  padding: 10px 50px;
 }
 
 .logo {
-  font-family: "Montserrat Alternates", Helvetica, serif;
-  font-size: 32px;
+  font-family: 'Montserrat Alternates', Helvetica, serif;
+  font-size: 20px;
+  white-space: nowrap;
   font-weight: 700;
-  padding-left: 2%;
-  color: #a7453c;
+  /* padding-left: 2%; */
+  cursor:pointer;
+  color: #005a9e;
 }
 
 .navigation {
@@ -240,7 +242,7 @@ const getAvatarName = (name) => {
 }
 
 .nav-item:hover {
-  color: #a7453c !important;
+  color: #005a9e !important;
   transition: color 0.3s ease, filter 0.3s ease;
 }
 

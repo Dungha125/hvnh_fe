@@ -58,14 +58,13 @@
   </template>
   
   <script setup>
-  import { ref } from 'vue'
-  
-  const problemTypes = ref([
-    { code: 'LUYENTAP', name: 'Luyện tập', order: 0, status: 'Hoạt động' },
-    { code: 'THUCHANH', name: 'Thực hành', order: 0, status: 'Hoạt động' },
-    { code: 'THI', name: 'Thi', order: 0, status: 'Hoạt động' }
-  ])
-  
+  import { ref, onMounted } from 'vue'
+  import axios from '@/configs/axios.js'
+  import { message } from 'ant-design-vue'
+
+  const problemTypes = ref([])
+  const loading = ref(false)
+
   const columns = [
     { title: 'Mã', dataIndex: 'code', key: 'code' },
     { title: 'Tên', dataIndex: 'name', key: 'name' },
@@ -73,10 +72,10 @@
     { title: 'Trạng thái', dataIndex: 'status', key: 'status' },
     { title: 'Thao tác', dataIndex: 'actions', key: 'actions' }
   ]
-  
+
   const showModal = ref(false)
   const isEditing = ref(false)
-  const editingCode = ref('')
+  const editingId = ref(null)
   const newType = ref({
     code: '',
     name: '',
@@ -84,41 +83,108 @@
     order: 0,
     status: 'Hoạt động'
   })
-  
-  // Thêm mới hoặc update
-  const onSubmit = () => {
+
+  // Fetch all question types
+  const fetchQuestionTypes = async () => {
+    loading.value = true
+    try {
+      const response = await axios.get('/question_types')
+      if (response.data.code === 200) {
+        problemTypes.value = response.data.data.map(type => ({
+          id: type.id,
+          code: type.code,
+          name: type.name,
+          description: type.description || '',
+          order: type.order || 0,
+          status: type.status === 1 ? 'Hoạt động' : 'Không hoạt động'
+        }))
+      } else {
+        message.error('Không thể tải danh sách loại bài tập')
+      }
+    } catch (error) {
+      console.error('Error fetching question types:', error)
+      message.error('Lỗi khi tải danh sách loại bài tập')
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Add or update question type
+  const onSubmit = async () => {
     if (!newType.value.code || !newType.value.name) {
-      alert('Vui lòng nhập Mã và Tên loại bài tập!');
-      return;
+      message.error('Vui lòng nhập Mã và Tên loại bài tập!')
+      return
     }
-    if (isEditing.value) {
-      const index = problemTypes.value.findIndex(p => p.code === editingCode.value)
-      if (index !== -1) problemTypes.value[index] = { ...newType.value }
-    } else {
-      problemTypes.value.push({ ...newType.value })
+    
+    const payload = {
+      code: newType.value.code,
+      name: newType.value.name,
+      description: newType.value.description,
+      order: newType.value.order,
+      status: newType.value.status === 'Hoạt động' ? 1 : 0
     }
-    showModal.value = false
-    resetForm()
+    
+    try {
+      if (isEditing.value) {
+        // Update existing question type
+        const response = await axios.put(`/question_types/${editingId.value}`, payload)
+        if (response.data.code === 200) {
+          message.success('Cập nhật loại bài tập thành công!')
+          await fetchQuestionTypes()
+        } else {
+          message.error('Lỗi khi cập nhật loại bài tập')
+        }
+      } else {
+        // Create new question type
+        const response = await axios.post('/question_types', payload)
+        if (response.data.code === 200) {
+          message.success('Thêm loại bài tập thành công!')
+          await fetchQuestionTypes()
+        } else {
+          message.error('Lỗi khi thêm loại bài tập')
+        }
+      }
+      showModal.value = false
+      resetForm()
+    } catch (error) {
+      console.error('Error submitting question type:', error)
+      message.error('Lỗi khi lưu loại bài tập')
+    }
   }
-  
-  // Xóa
-  const onDelete = (code) => {
-    problemTypes.value = problemTypes.value.filter(p => p.code !== code)
+
+  // Delete question type
+  const onDelete = async (id) => {
+    try {
+      const response = await axios.delete(`/question_types/${id}`)
+      if (response.data.code === 200) {
+        message.success('Xóa loại bài tập thành công!')
+        await fetchQuestionTypes()
+      } else {
+        message.error('Lỗi khi xóa loại bài tập')
+      }
+    } catch (error) {
+      console.error('Error deleting question type:', error)
+      message.error('Lỗi khi xóa loại bài tập')
+    }
   }
-  
-  // Sửa
+
+  // Edit question type
   const onEdit = (record) => {
     isEditing.value = true
-    editingCode.value = record.code
+    editingId.value = record.id
     newType.value = { ...record }
     showModal.value = true
   }
-  
+
   const resetForm = () => {
     isEditing.value = false
-    editingCode.value = ''
+    editingId.value = null
     newType.value = { code: '', name: '', description: '', order: 0, status: 'Hoạt động' }
   }
+
+  onMounted(() => {
+    fetchQuestionTypes()
+  })
   </script>
   
   <style scoped>

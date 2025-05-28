@@ -20,6 +20,9 @@ const router = useRouter();
 const currentCourse = ref(null);
 const listStudyingCourses = ref([]);
 const searchText = ref('')
+const totalItems = ref(0);
+const sortOrder = ref('asc');
+const sortBy = ref('code');
 
 const initialPage = parseInt(localStorage.getItem('currentPage')) || 1;
 const initialPageSize = parseInt(localStorage.getItem('pageSize')) || 50;
@@ -77,9 +80,15 @@ const getRecommendedQuestions = async () => {
 if (listStudyingCourses.value.length === 0)
 		return;
   try {
-    const response = await axios.get(`questions/recommend?course_id=${currentCourse.value.id}`)
+    // Xây dựng query string chuẩn
+    let queryParams = new URLSearchParams();
+    queryParams.append('course_id', currentCourse.value.id);
+    queryParams.append('page', 1);
+    queryParams.append('per_page', 5);
+    
+    const response = await axios.get(`questions/recommend?${queryParams.toString()}`)
     if (response.data.code === 200) {
-      recommendedQuestions.value = response.data.data.slice(0, 5)
+      recommendedQuestions.value = response.data.data
     }
   } catch (error) {
     console.error(error)
@@ -100,83 +109,121 @@ const columns = [
   }
 ]
 
-const fetchProblems = async () =>
-{
-	if (listStudyingCourses.value.length === 0)
-		return;
+// Lấy danh sách các mức độ khó và chủ đề con
+const fetchFilters = async () => {
+  if (listStudyingCourses.value.length === 0) return;
+  
+  isLoading.value = true;
+  filterData.value = [];
+  difficulties.value = [];
+  subTopics.value = [];
+  
+  try {
+    // Xây dựng query string chuẩn
+    let queryParams = new URLSearchParams();
+    queryParams.append('page', 1);
+    queryParams.append('per_page', 50);
+    queryParams.append('order', 'asc');
+    queryParams.append('by', 'code');
+    queryParams.append('course_id', currentCourse.value.id);
+    
+    // Lấy tất cả dữ liệu để trích xuất bộ lọc
+    const response = await axios.get(`questions?${queryParams.toString()}`);
+    const listProblems = response.data.data;
+    let subGroup = new Set();
+    let difficultySet = new Set();
+    
+    listProblems.forEach(problem => {
+      if (problem.sub_group?.name) {
+        subGroup.add(problem.sub_group?.name);
+      }
+      if (problem.question_level?.name) {
+        difficultySet.add(problem.question_level?.name);
+      }
+    });
+    
+    subGroup.forEach(subTopic => {
+      filterData.value.push({
+        text: subTopic,
+        value: subTopic
+      });
+    });
+    
+    difficulties.value = Array.from(difficultySet);
+    difficulties.value.sort((a, b) => a.localeCompare(b));
+    
+    subTopics.value = Array.from(subGroup);
+    subTopics.value.sort((a, b) => a.localeCompare(b));
+    
+    checkboxListState1.checkedList = [...difficulties.value];
+    checkboxListState1.indeterminate = false;
+    checkboxListState1.checkAll = true;
+    
+    checkboxListState2.checkedList = [...subTopics.value];
+    checkboxListState2.indeterminate = false;
+    checkboxListState2.checkAll = true;
+  } catch (error) {
+    console.log(error);
+  }
+  
+  isLoading.value = false;
+};
 
-	isLoading.value = true;
-	problems.splice(0, problems.length);
-	filterData.value.splice(0, filterData.value.length);
-	difficulties.value.splice(0, difficulties.value.length);
-	subTopics.value.splice(0, subTopics.value.length);
-
-	try
-	{
-		const response = await axios.get(`questions?page=1&per_page=500&order=asc&by=code&course_id=${currentCourse.value.id}`);
-		const listProblems = response.data.data;
-		let subGroup = new Set();
-
-		listProblems.forEach(problem =>
-		{
-			problems.push({
-				code: problem.code,
-				title: problem.name,
-				group: problem.group?.name,
-				subTopic: problem.sub_group?.name,
-				difficulty: problem.question_level?.name,
-				correct: problem.ac_user_count,
-				is_solved: problem.is_solved,
-				is_tried: problem.is_tried
-			});
-
-			if (problem.sub_group?.name)
-			{
-				subGroup.add(problem.sub_group?.name);
-			}
-		});
-
-		subGroup.forEach(subTopic =>
-		{
-			filterData.value.push({
-				text: subTopic,
-				value: subTopic
-			});
-		});
-
-		difficulties.value = Array.from(new Set(problems
-			.map(problem => problem?.difficulty)
-			.filter(difficulty => difficulty != null)));
-		difficulties.value.sort((a, b) => a.localeCompare(b));
-
-		subTopics.value = Array.from(new Set(problems
-			.map(problem => problem?.subTopic)
-			.filter(subTopic => subTopic != null)));
-		subTopics.value.sort((a, b) => a.localeCompare(b));
-
-		checkboxListState1.checkedList = [...difficulties.value];
-		checkboxListState1.indeterminate = false;
-		checkboxListState1.checkAll = true;
-
-		checkboxListState2.checkedList = [...subTopics.value];
-		checkboxListState2.indeterminate = false;
-		checkboxListState2.checkAll = true;
-
-		problems.sort((a, b) =>
-		{
-			if (a.difficulty === b.difficulty)
-			{
-				return a.code.localeCompare(b.code);
-			}
-			return a.difficulty.localeCompare(b.difficulty);
-		});
-	}
-	catch (error)
-	{
-		console.log(error);
-	}
-
-	isLoading.value = false;
+// Lấy danh sách bài tập với phân trang
+const queryData = async (params) => {
+  const { page = 1, results = 50 } = params || {};
+  
+  if (listStudyingCourses.value.length === 0) return [];
+  
+  problems.splice(0, problems.length);
+  isLoading.value = true;
+  
+  try {
+    const selectedDifficulties = checkboxListState1.checkedList;
+    const selectedSubTopics = checkboxListState2.checkedList;
+    
+    // Xây dựng query string
+    let queryParams = new URLSearchParams();
+    queryParams.append('page', page);
+    queryParams.append('per_page', results);
+    queryParams.append('order', sortOrder.value);
+    queryParams.append('by', sortBy.value);
+    queryParams.append('course_id', currentCourse.value.id);
+    
+    // Thêm tham số tìm kiếm nếu có
+    if (searchText.value.trim()) {
+      queryParams.append('s', searchText.value.trim());
+    }
+    
+    // Thêm bộ lọc nếu có
+    if (selectedDifficulties.length > 0 && selectedDifficulties.length < difficulties.value.length) {
+      queryParams.append('difficulties', selectedDifficulties.join(','));
+    }
+    
+    if (selectedSubTopics.length > 0 && selectedSubTopics.length < subTopics.value.length) {
+      queryParams.append('sub_topics', selectedSubTopics.join(','));
+    }
+    
+    const response = await axios.get(`questions?${queryParams.toString()}`);
+    const listProblems = response.data.data;
+    totalItems.value = response.data.meta?.total || listProblems.length;
+    
+    return listProblems.map(problem => ({
+      code: problem.code,
+      title: problem.name,
+      group: problem.group?.name,
+      subTopic: problem.sub_group?.name,
+      difficulty: problem.question_level?.name,
+      correct: problem.ac_user_count,
+      is_solved: problem.is_solved,
+      is_tried: problem.is_tried
+    }));
+  } catch (error) {
+    console.log(error);
+    return [];
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const checkboxListState1 = reactive({
@@ -223,35 +270,6 @@ const toggleChecked2 = () =>
 	}
 };
 
-const queryData = async (params) =>
-{
-	const selectedDifficulties = checkboxListState1.checkedList;
-	const selectedSubTopics = checkboxListState2.checkedList;
-
-	let filteredProblems = problems;
-
-	if (selectedDifficulties.length > 0)
-	{
-		filteredProblems = filteredProblems.filter(problem => selectedDifficulties.includes(problem.difficulty));
-	}
-
-	if (selectedSubTopics.length > 0)
-	{
-		filteredProblems = filteredProblems.filter(problem => selectedSubTopics.includes(problem.subTopic));
-	}
-
-	if (searchText.value.trim())
-	{
-		const searchLower = searchText.value.toLowerCase();
-		filteredProblems = filteredProblems.filter(problem =>
-			problem.code.toLowerCase().includes(searchLower) ||
-			problem.title.toLowerCase().includes(searchLower)
-		);
-	}
-
-	return filteredProblems;
-};
-
 const {data: dataSource, run, loading, current, pageSize} = usePagination(queryData, {
 	defaultParams: [{
 		page: initialPage,
@@ -265,9 +283,9 @@ const {data: dataSource, run, loading, current, pageSize} = usePagination(queryD
 });
 
 const pagination = computed(() => ({
-	total: queryData().length,
-	current: current.value,
-	pageSize: pageSize.value,
+  total: totalItems.value,
+  current: current.value,
+  pageSize: pageSize.value,
 }));
 
 const genUuid = () =>
@@ -277,19 +295,22 @@ const genUuid = () =>
 
 const handleTableChange = (pag, filters, sorter) =>
 {
+  if (sorter && sorter.field) {
+    sortBy.value = sorter.field === 'difficulty' ? 'level' : 
+                  sorter.field === 'title' ? 'name' : sorter.field;
+    sortOrder.value = sorter.order === 'ascend' ? 'asc' : 'desc';
+  }
+  
 	run({
 		results: pag.pageSize,
 		page: pag?.current,
-		sortField: sorter.field,
-		sortOrder: sorter.order,
-		...filters,
 	});
 };
 
 const handleCourseSelect = (courseId) => {
   currentCourse.value = listStudyingCourses.value.find(course => course.id === courseId);
   localStorage.setItem('currentCourse', JSON.stringify(currentCourse.value));
-  run(); // gọi hàm giống như khi chọn từ menu
+  fetchFilters().then(() => run({ page: 1 }));
 };
 
 const navigateToProblem = code =>
@@ -299,13 +320,13 @@ const navigateToProblem = code =>
 
 watch(currentCourse, async () =>
 {
-	await fetchProblems();
-	run();
+	await fetchFilters();
+	run({ page: 1 });
 });
 
 watch([() => checkboxListState1.checkedList, () => checkboxListState2.checkedList], () =>
 {
-	run();
+	run({ page: 1 });
 });
 
 watch(() => checkboxListState1.checkedList, (newVal) =>
@@ -326,7 +347,7 @@ watch(() => checkboxListState2.checkedList, (newVal) =>
 
 watch(searchText, () =>
 {
-	run();
+	run({ page: 1 });
 });
 
 watch(current, (newPage) =>
@@ -339,7 +360,6 @@ watch(pageSize, (newSize) =>
 	current.value = 1;
 	localStorage.setItem('pageSize', newSize);
 });
-
 </script>
 
 <template>

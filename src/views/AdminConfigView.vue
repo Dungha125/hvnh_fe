@@ -66,7 +66,7 @@ import AdminProblemTypeConfigView from '@/views/AdminProblemTypeConfigView.vue';
 import AdminProblemTopicConfigView from '@/views/AdminProblemTopicConfigView.vue';
 import AdminProblemSubtopicConfigView from '@/views/AdminProblemSubtopicConfigView.vue';
 import AdminProblemDifficultConfigView from './AdminProblemDifficultConfigView.vue';
-import AdnimCompilerConfigView from './AdnimCompilerConfigView.vue';
+import AdnimCompilerConfigView from './AdminCompilerConfigView.vue';
 import AdminJudgeConfigView from './AdminJudgeConfigView.vue';
 
 // Import icon

@@ -57,15 +57,13 @@
   </template>
   
   <script setup>
-  import { ref } from 'vue'
-  
-  const levels = ref([
-    { code: '1', name: '1', order: 0, status: 'Hoạt động' },
-    { code: '2', name: '2', order: 0, status: 'Hoạt động' },
-    { code: '3', name: '3', order: 0, status: 'Hoạt động' },
-    { code: '4', name: '4', order: 0, status: 'Hoạt động' }
-  ])
-  
+  import { ref, onMounted } from 'vue'
+  import axios from '@/configs/axios.js'
+  import { message } from 'ant-design-vue'
+
+  const levels = ref([])
+  const loading = ref(false)
+
   const columns = [
     { title: 'Mã', dataIndex: 'code', key: 'code' },
     { title: 'Tên', dataIndex: 'name', key: 'name' },
@@ -73,10 +71,10 @@
     { title: 'Trạng thái', dataIndex: 'status', key: 'status' },
     { title: 'Thao tác', dataIndex: 'actions', key: 'actions' }
   ]
-  
+
   const showModal = ref(false)
   const isEditing = ref(false)
-  const editingCode = ref('')
+  const editingId = ref(null)
   const form = ref({
     code: '',
     name: '',
@@ -84,41 +82,114 @@
     order: 0,
     status: 'Hoạt động'
   })
-  
-  // Thêm hoặc Sửa
-  const onSubmit = () => {
+
+  // Fetch all question levels
+  const fetchQuestionLevels = async () => {
+    loading.value = true
+    try {
+      const response = await axios.get('/question_levels')
+      if (response.data.code === 200) {
+        levels.value = response.data.data.map(level => ({
+          id: level.id,
+          code: level.code,
+          name: level.name,
+          description: level.description || '',
+          order: level.order || 0,
+          status: level.status === 1 ? 'Hoạt động' : 'Không hoạt động'
+        }))
+      } else {
+        message.error('Không thể tải danh sách độ khó bài tập')
+      }
+    } catch (error) {
+      console.error('Error fetching question levels:', error)
+      message.error('Lỗi khi tải danh sách độ khó bài tập')
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Add or update question level
+  const onSubmit = async () => {
     if (!form.value.code || !form.value.name) {
-      alert('Vui lòng nhập đủ Mã và Tên!');
-      return;
+      message.error('Vui lòng nhập đủ Mã và Tên!')
+      return
     }
-    if (isEditing.value) {
-      const idx = levels.value.findIndex(l => l.code === editingCode.value)
-      if (idx !== -1) levels.value[idx] = { ...form.value }
-    } else {
-      levels.value.push({ ...form.value })
+    
+    const payload = {
+      code: form.value.code,
+      name: form.value.name,
+      description: form.value.description,
+      order: form.value.order,
+      status: form.value.status === 'Hoạt động' ? 1 : 0
     }
-    resetForm()
-    showModal.value = false
+    
+    try {
+      if (isEditing.value) {
+        // Update existing question level
+        const response = await axios.put(`/question_levels/${editingId.value}`, payload)
+        if (response.data.code === 200) {
+          message.success('Cập nhật độ khó bài tập thành công!')
+          await fetchQuestionLevels()
+        } else {
+          message.error('Lỗi khi cập nhật độ khó bài tập')
+        }
+      } else {
+        // Create new question level
+        const response = await axios.post('/question_levels', payload)
+        if (response.data.code === 200) {
+          message.success('Thêm độ khó bài tập thành công!')
+          await fetchQuestionLevels()
+        } else {
+          message.error('Lỗi khi thêm độ khó bài tập')
+        }
+      }
+      showModal.value = false
+      resetForm()
+    } catch (error) {
+      console.error('Error submitting question level:', error)
+      message.error('Lỗi khi lưu độ khó bài tập')
+    }
   }
-  
-  // Xóa
-  const onDelete = (code) => {
-    levels.value = levels.value.filter(l => l.code !== code)
+
+  // Delete question level
+  const onDelete = async (id) => {
+    try {
+      const response = await axios.delete(`/question_levels/${id}`)
+      if (response.data.code === 200) {
+        message.success('Xóa độ khó bài tập thành công!')
+        await fetchQuestionLevels()
+      } else {
+        message.error('Lỗi khi xóa độ khó bài tập')
+      }
+    } catch (error) {
+      console.error('Error deleting question level:', error)
+      message.error('Lỗi khi xóa độ khó bài tập')
+    }
   }
-  
-  // Sửa
+
+  // Edit question level
   const onEdit = (record) => {
     isEditing.value = true
-    editingCode.value = record.code
-    form.value = { ...record }
+    editingId.value = record.id
+    form.value = { 
+      code: record.code,
+      name: record.name,
+      description: record.description,
+      order: record.order,
+      status: record.status
+    }
     showModal.value = true
   }
-  
+
   const resetForm = () => {
     isEditing.value = false
-    editingCode.value = ''
+    editingId.value = null
     form.value = { code: '', name: '', description: '', order: 0, status: 'Hoạt động' }
   }
+
+  onMounted(() => {
+    fetchQuestionLevels()
+  })
   </script>
 
 <style scoped>

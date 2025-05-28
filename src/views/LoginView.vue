@@ -111,7 +111,7 @@ const togglePassword = () => {
   <div class="login">
     <div class="content-wrapper">
       <div class="login-card">
-        <h1 class="title">Đăng nhập Hệ thống Thi trực tuyến</h1>
+        <h1 class="title">Đăng nhập</h1>
         <div class="input-group">
           <label>Tài khoản <span>*</span></label>
           <input v-model="username" type="text" placeholder="Nhập tài khoản" />
@@ -348,4 +348,5 @@ const togglePassword = () => {
   background-color: #005a9e;
   box-shadow: 0 7px 20px rgba(0, 90, 158, 0.7);
 }
+
 </style>

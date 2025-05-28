@@ -9,30 +9,54 @@ const isModalVisible = ref(false)
 const isEditing = ref(false)
 const tempSemester = ref({})
 let editingCode = null
+const loading = ref(false)
 
 const columns = [
   { title: 'Mã', dataIndex: 'code', key: 'code' },
   { title: 'Học kỳ', dataIndex: 'name', key: 'name' },
+  { title: 'Tên rút gọn', dataIndex: 'short_name', key: 'short_name' },
   { title: 'Trạng thái', dataIndex: 'status', key: 'status' },
   { title: 'Thao tác', dataIndex: 'actions', key: 'actions' },
 ]
 
-onBeforeMount(async () => {
+const fetchSemesters = async () => {
+  loading.value = true
   try {
     const res = await axios.get('/semesters')
     if (res.data.code === 200 && res.data.data) {
-      semesters.value = res.data.data
+      semesters.value = res.data.data.map(item => ({
+        ...item,
+        // Convert date strings to dayjs objects for editing
+        startTime: item.start_time ? dayjs(item.start_time) : null,
+        scoringTime: item.scoring_time ? dayjs(item.scoring_time) : null,
+        endTime: item.end_time ? dayjs(item.end_time) : null,
+        // Map API fields to form fields
+        shortName: item.short_name,
+        dailyAcLimit: item.daily_ac_limit || 1
+      }))
+    } else {
+      message.error('Không thể tải dữ liệu học kỳ')
     }
   } catch (error) {
     message.error('Lỗi khi tải danh sách học kỳ')
     console.error(error)
+  } finally {
+    loading.value = false
   }
+}
+
+onBeforeMount(() => {
+  fetchSemesters()
 })
 
 const showModalAdd = () => {
   isEditing.value = false
   editingCode = null
-  tempSemester.value = { status: 'Hoạt động' }
+  tempSemester.value = { 
+    status: 'Hoạt động',
+    shortName: 'HK',
+    dailyAcLimit: 1
+  }
   isModalVisible.value = true
 }
 
@@ -44,28 +68,28 @@ const onSubmit = async () => {
     return
   }
 
-  // FIX: Đúng field short_name, ép kiểu, default nếu thiếu
   const payload = {
     code: String(tempSemester.value.code),
     name: String(tempSemester.value.name),
     description: tempSemester.value.description || '',
     short_name: tempSemester.value.shortName?.trim() || 'HK',
     status: tempSemester.value.status === 'Hoạt động' ? 1 : 0,
-    dailyAcLimit: Number(tempSemester.value.dailyAcLimit) || 1,
-    startTime: tempSemester.value.startTime ? dayjs(tempSemester.value.startTime).format('YYYY-MM-DD HH:mm:ss') : null,
-    scoringTime: tempSemester.value.scoringTime ? dayjs(tempSemester.value.scoringTime).format('YYYY-MM-DD HH:mm:ss') : null,
-    endTime: tempSemester.value.endTime ? dayjs(tempSemester.value.endTime).format('YYYY-MM-DD HH:mm:ss') : null,
+    daily_ac_limit: Number(tempSemester.value.dailyAcLimit) || 1,
+    start_time: tempSemester.value.startTime ? dayjs(tempSemester.value.startTime).format('YYYY-MM-DD HH:mm:ss') : null,
+    scoring_time: tempSemester.value.scoringTime ? dayjs(tempSemester.value.scoringTime).format('YYYY-MM-DD HH:mm:ss') : null,
+    end_time: tempSemester.value.endTime ? dayjs(tempSemester.value.endTime).format('YYYY-MM-DD HH:mm:ss') : null,
   }
 
   console.log('🔥 Payload gửi lên:', JSON.stringify(payload, null, 2))
+  loading.value = true
 
   try {
     if (!isEditing.value) {
       const res = await axios.post('/semesters', payload)
       console.log('API Response:', res.data)
       if (res.data.code === 200) {
-        semesters.value.push(res.data.data)
         message.success('Thêm học kỳ thành công')
+        await fetchSemesters() // Refresh data
       } else {
         message.error(`Thêm thất bại: ${res.data.message || 'Không rõ lỗi'}`)
       }
@@ -73,40 +97,46 @@ const onSubmit = async () => {
       const res = await axios.put(`/semesters/${editingCode}`, payload)
       console.log('API Response:', res.data)
       if (res.data.code === 200) {
-        const idx = semesters.value.findIndex((s) => s.code === editingCode)
-        if (idx !== -1) semesters.value[idx] = res.data.data
         message.success('Cập nhật học kỳ thành công')
+        await fetchSemesters() // Refresh data
       } else {
         message.error(`Cập nhật thất bại: ${res.data.message || 'Không rõ lỗi'}`)
       }
     }
+    closeModal()
   } catch (error) {
     message.error('Có lỗi xảy ra khi gọi API')
     console.error(error)
+  } finally {
+    loading.value = false
   }
-
-  closeModal()
 }
 
 const onEdit = (record) => {
   isEditing.value = true
   editingCode = record.code
-  tempSemester.value = { ...record }
+  tempSemester.value = { 
+    ...record,
+    status: statusText(record.status)
+  }
   isModalVisible.value = true
 }
 
 const onDelete = async (code) => {
   try {
+    loading.value = true
     const res = await axios.delete(`/semesters/${code}`)
     if (res.data.code === 200) {
-      semesters.value = semesters.value.filter((s) => s.code !== code)
       message.success('Xóa học kỳ thành công')
+      await fetchSemesters() // Refresh data
     } else {
       message.error(`Xóa thất bại: ${res.data.message || 'Không rõ lỗi'}`)
     }
   } catch (error) {
     message.error('Lỗi khi gọi API xóa')
     console.error(error)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -133,7 +163,8 @@ const statusClass = (status) => {
       :dataSource="semesters"
       rowKey="code"
       bordered
-      :pagination="false"
+      :pagination="{ pageSize: 10 }"
+      :loading="loading"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.dataIndex === 'status'">
@@ -141,12 +172,17 @@ const statusClass = (status) => {
         </template>
 
         <template v-else-if="column.dataIndex === 'actions'">
-          <a-button @click="onEdit(record)">Sửa</a-button>
-          <a-button danger @click="onDelete(record.code)">Xóa</a-button>
-        </template>
-
-        <template v-else>
-          {{ record[column.dataIndex] }}
+          <a-space>
+            <a-button type="primary" @click="onEdit(record)">Sửa</a-button>
+            <a-popconfirm
+              title="Bạn có chắc chắn muốn xóa học kỳ này?"
+              ok-text="Có"
+              cancel-text="Không"
+              @confirm="onDelete(record.code)"
+            >
+              <a-button danger>Xóa</a-button>
+            </a-popconfirm>
+          </a-space>
         </template>
       </template>
     </a-table>
@@ -158,19 +194,21 @@ const statusClass = (status) => {
       @cancel="closeModal"
       okText="Lưu"
       cancelText="Hủy"
+      :confirmLoading="loading"
+      width="600px"
     >
       <a-form layout="vertical">
         <a-form-item label="Mã" required>
-          <a-input v-model:value="tempSemester.code" placeholder="Nhập mã học kỳ" />
+          <a-input v-model:value="tempSemester.code" placeholder="Nhập mã học kỳ" :disabled="isEditing" />
         </a-form-item>
         <a-form-item label="Tên" required>
           <a-input v-model:value="tempSemester.name" placeholder="Nhập tên học kỳ" />
         </a-form-item>
+        <a-form-item label="Tên rút gọn (short name)" required>
+          <a-input v-model:value="tempSemester.shortName" placeholder="Tên rút gọn" />
+        </a-form-item>
         <a-form-item label="Mô tả">
           <a-textarea v-model:value="tempSemester.description" placeholder="Mô tả (nếu có)" />
-        </a-form-item>
-        <a-form-item label="Tên rút gọn (short name)">
-          <a-input v-model:value="tempSemester.shortName" placeholder="Tên rút gọn (bắt buộc)" />
         </a-form-item>
         <a-form-item label="Trạng thái">
           <a-select v-model:value="tempSemester.status">
@@ -178,15 +216,23 @@ const statusClass = (status) => {
             <a-select-option value="Đóng">Đóng</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="Ngày bắt đầu">
-          <a-date-picker v-model:value="tempSemester.startTime" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
-        </a-form-item>
-        <a-form-item label="Ngày chấm điểm">
-          <a-date-picker v-model:value="tempSemester.scoringTime" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
-        </a-form-item>
-        <a-form-item label="Ngày kết thúc">
-          <a-date-picker v-model:value="tempSemester.endTime" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
-        </a-form-item>
+        <a-row :gutter="16">
+          <a-col :span="8">
+            <a-form-item label="Ngày bắt đầu">
+              <a-date-picker v-model:value="tempSemester.startTime" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="8">
+            <a-form-item label="Ngày chấm điểm">
+              <a-date-picker v-model:value="tempSemester.scoringTime" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="8">
+            <a-form-item label="Ngày kết thúc">
+              <a-date-picker v-model:value="tempSemester.endTime" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
+            </a-form-item>
+          </a-col>
+        </a-row>
         <a-form-item label="Giới hạn AC hàng ngày" required>
           <a-input-number v-model:value="tempSemester.dailyAcLimit" :min="1" style="width: 100%" />
         </a-form-item>

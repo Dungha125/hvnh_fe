@@ -3,7 +3,6 @@ import AdminHeader from "@/components/AdminHeader.vue";
 import {onBeforeMount, ref, computed, reactive, watch, createVNode} from "vue";
 import {useRouter} from "vue-router";
 import {EllipsisOutlined, ExclamationCircleOutlined} from "@ant-design/icons-vue";
-import {usePagination} from "vue-request";
 import axios from "@/configs/axios.js";
 import {message, Modal} from "ant-design-vue";
 import {Ckeditor, useCKEditorCloud} from "@ckeditor/ckeditor5-vue";
@@ -168,7 +167,7 @@ const handleAddProblems = async () => {
       .then(async (response) => {
         if (response.data.code === 200) {
           message.success("Thêm bài tập thành công!");
-          await fetchProblems(current_subject.value);
+          await fetchProblems(current_subject.value, pagination.current, pagination.pageSize, searchQuery.value);
         } else {
           message.error("Lỗi khi thêm bài tập, vui lòng thử lại!");
           console.log(response.data);
@@ -299,19 +298,41 @@ onBeforeMount(async () => {
     isLoading.value = false;
   }
 });
-const fetchProblems = async (subjectId) => {
+
+const searchQuery = ref("");
+
+const pagination = reactive({
+  current: 1,
+  pageSize: 50,
+  total: 0,
+  showSizeChanger: true,
+  pageSizeOptions: ['10', '20', '50', '100'],
+});
+
+const fetchProblems = async (subjectId, page = 1, pageSize = 50, search = '') => {
   isLoading.value = true;
   problemListLoading.value = true;
   problemsList.splice(0, problemsList.length); // Xóa danh sách hiện tại
 
   try {
-    const response = await axios.get(
-        `/questions?page=1&per_page=500&order=asc&by=code&subject_id=${subjectId}`
-    );
-    const listProblems = response.data.data;
+    const params = {
+      page: page,
+      per_page: pageSize,
+      order: 'asc',
+      by: 'code',
+      subject_id: subjectId
+    };
+    
+    if (search && search.trim() !== '') {
+      params.s = search.trim();
+    }
+    
+    const response = await axios.get(`/questions`, { params });
+    
+    const responseData = response.data;
+    const listProblems = responseData.data;
 
-    let subGroup = new Set();
-    listProblems.forEach((problem) => {
+    listProblems.forEach((problem, index) => {
       problemsList.push({
         id: problem.id,
         code: problem.code,
@@ -323,84 +344,45 @@ const fetchProblems = async (subjectId) => {
         type: problem.question_type?.name || "",
         status: problem.status,
       });
-
-      if (problem.sub_group) {
-        subGroup.add(problem.sub_group.name);
-      }
     });
+
+    // Cập nhật thông tin phân trang
+    pagination.current = responseData.current_page;
+    pagination.total = responseData.total;
+    pagination.pageSize = pageSize;
   } catch (error) {
-    message.error("Lỗi khi lấy danh sách bài tập");
     console.log(error.message);
   } finally {
     problemListLoading.value = false;
+    isLoading.value = false;
   }
-  isLoading.value = false;
 };
 
 watch(
     () => current_subject.value,
     async (newSubject) => {
       if (newSubject) {
-        await fetchProblems(newSubject);
+        await fetchProblems(newSubject, pagination.current, pagination.pageSize, searchQuery.value);
       }
     },
     {immediate: true}
 );
 
-const searchQuery = ref("");
-
-const filteredProblems = computed(() => {
-  if (!searchQuery.value) {
-    return problemsList;
-  }
-
-  const query = searchQuery.value.toLowerCase();
-  return problemsList.filter((problem) => {
-    return (
-        problem.code.toLowerCase().includes(query) ||
-        problem.title.toLowerCase().includes(query)
-    );
-  });
-});
-
-const queryData = async (params) => {
-  return problemsList;
-};
-
-const {
-  data: dataSource,
-  run,
-  loading,
-  current,
-  pageSize,
-} = usePagination(queryData, {
-  formatResult: (res) => {
-    return Array.isArray(res) ? res : [];
-  },
-  pagination: {
-    currentKey: "page",
-    pageSizeKey: "results",
-  },
-});
-
-const pagination = computed(() => ({
-  total: queryData().length,
-  current: current.value,
-  pageSize: pageSize.value,
-}));
+watch(
+    () => searchQuery.value,
+    (newSearch) => {
+      if (current_subject.value) {
+        fetchProblems(current_subject.value, 1, pagination.pageSize, newSearch);
+      }
+    }
+);
 
 const genUuid = () => {
   return Math.random().toString(36).substring(7);
 };
 
 const handleTableChange = (pag, filters, sorter) => {
-  run({
-    results: pag.pageSize,
-    page: pag?.current,
-    sortField: sorter.field,
-    sortOrder: sorter.order,
-    ...filters,
-  });
+  fetchProblems(current_subject.value, pag.current, pag.pageSize, searchQuery.value);
 };
 
 const cloud = useCKEditorCloud({
@@ -601,7 +583,7 @@ const handleDeleteProblem = async (questionID) => {
       .then(async (response) => {
         if (response.data.code === 200) {
           message.success("Xóa bài tập thành công!");
-          await fetchProblems(current_subject.value);
+          await fetchProblems(current_subject.value, pagination.current, pagination.pageSize, searchQuery.value);
         } else {
           message.error("Lỗi khi xóa bài tập, vui lòng thử lại!");
           console.log(response.data);
@@ -730,7 +712,7 @@ const handleEditProblem = async (problemAfterEdit, questionID) => {
       .then(async (response) => {
         if (response.data.code === 200) {
           message.success("Cập nhật bài tập thành công!");
-          await fetchProblems(current_subject.value);
+          await fetchProblems(current_subject.value, pagination.current, pagination.pageSize, searchQuery.value);
         } else {
           message.error("Lỗi khi cập nhật bài tập, vui lòng thử lại!");
           console.log(response.data);
@@ -879,9 +861,9 @@ watch(
                 <div class="table-container">
                   <a-table
                       :row-key="genUuid()"
-                      :data-source="filteredProblems"
+                      :data-source="problemsList"
                       :pagination="pagination"
-                      :loading="loading"
+                      :loading="problemListLoading"
                       @change="handleTableChange"
                   >
                     <a-table-column data-index="code" width="12%">
