@@ -111,14 +111,14 @@ const togglePassword = () => {
   <div class="login">
     <div class="content-wrapper">
       <div class="login-card">
-        <h1 class="title">Đăng nhập</h1>
+        <h1 class="title">ĐĂNG NHẬP</h1>
         <div class="input-group">
           <label>Tài khoản <span>*</span></label>
           <input v-model="username" type="text" placeholder="Nhập tài khoản" />
         </div>
         <div class="input-group">
           <label>Mật khẩu <span>*</span></label>
-          <div class="password-wrapper ">
+          <div class="password-wrapper">
             <input v-model="password" :type="passwordInputType" placeholder="Nhập mật khẩu" />
             <EyeOutlined v-if="passwordInputType !== 'password'" @click="togglePassword"/>
             <EyeInvisibleOutlined v-else @click="togglePassword" />
@@ -148,6 +148,10 @@ const togglePassword = () => {
 </template>
 
 <style scoped>
+/* For a true Neo-Futuristic feel, consider importing a sleek, geometric sans-serif font */
+/* @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600;700&display=swap'); */
+/* body { font-family: 'Rajdhani', sans-serif; } */
+
 .login {
   position: relative;
   min-height: 100vh;
@@ -156,9 +160,10 @@ const togglePassword = () => {
   align-items: center;
   padding: 15px;
   overflow: hidden;
+  /* background-color: #05080d; /* Fallback if image fails */
 }
 
-/* Background ảnh với blur */
+/* Background ảnh với blur - Neo-Futuristic often uses abstract or cityscape backgrounds */
 .login::before {
   content: "";
   position: fixed; /* full màn hình */
@@ -166,14 +171,14 @@ const togglePassword = () => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-image: url('../static/img/unnamed.jpg');
+  background-image: url('../static/img/unnamed.jpg'); /* Consider a more techy/abstract image */
   background-size: cover;
   background-position: center;
-  filter: blur(8px);
+  filter: blur(8px) brightness(0.7); /* Slightly darker and blurred */
   z-index: -2;
 }
 
-/* Lớp phủ gradient xanh trong suốt */
+/* Lớp phủ gradient - cooler, darker tones */
 .login::after {
   content: "";
   position: fixed;
@@ -181,78 +186,81 @@ const togglePassword = () => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(0deg, rgba(0, 51, 102, 0.6), rgba(0, 85, 165, 0));
+  background: linear-gradient(0deg, rgba(10, 20, 40, 0.85), rgba(5, 10, 20, 0.3)); /* Dark blue/grey overlay */
   z-index: -1;
 }
+
 .content-wrapper {
   width: 100%;
-  max-width: 420px;
-  padding: 25px;
+  max-width: 400px; /* Slightly smaller for a sleeker feel */
+  padding: 20px;
 }
 
 .login-card {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 12px 40px rgba(255, 140, 0, 0.25);
-  padding: 40px 35px;
+  background: rgba(247, 247, 247, 0.9); /* Dark, slightly transparent card */
+  border-radius: 12px; /* Sharper, but still modern */
+  border: 1px solid rgba(0, 175, 255, 0.3); /* Accent color border */
+  box-shadow: 0 0 30px rgba(0, 175, 255, 0.15), 0 0 50px rgba(0, 175, 255, 0.1); /* Accent glow */
+  padding: 35px 30px;
   text-align: center;
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .login-card:hover {
-  box-shadow: 0 16px 48px rgba(255, 140, 0, 0.4);
-}
-
-.logo-banking {
-  max-width: 110px;
-  margin-bottom: 28px;
-  filter: drop-shadow(0 0 3px rgba(255, 140, 0, 0.6));
+  box-shadow: 0 0 40px rgba(0, 175, 255, 0.25), 0 0 60px rgba(0, 175, 255, 0.2);
+  border-color: rgba(0, 175, 255, 0.5);
 }
 
 .title {
-  font-size: 24px;
+  font-size: 26px; /* Slightly larger for impact */
   font-weight: 700;
-  color: #FF6F00; /* vàng cam nổi bật */
-  margin-bottom: 32px;
+  /* font-family: 'Orbitron', sans-serif; /* Example of a futuristic font */
+  color: #00AFFF; /* Bright accent blue/cyan */
+  margin-bottom: 35px;
   line-height: 1.2;
-  letter-spacing: 0.04em;
-  text-shadow: 1px 1px 2px rgba(255,111,0,0.4);
+  letter-spacing: 0.05em; /* More spacing for a futuristic look */
+  text-shadow: 0 0 8px rgba(0, 175, 255, 0.5), 0 0 12px rgba(0, 175, 255, 0.3); /* Glow effect */
+  text-transform: uppercase; /* Common in futuristic UI */
 }
 
 .input-group {
   text-align: left;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .input-group label {
   font-weight: 600;
-  color: #333333;
-  font-size: 15px;
+  color: #38649e; /* Light steel blue - readable on dark */
+  font-size: 14px;
+  margin-bottom: 8px; /* Added margin for clarity */
+  display: block; /* Ensure it takes its own line */
 }
 
 .input-group label span {
-  color: #FF6F00;
+  color: #ff0000; /* Accent color for asterisk */
 }
 
 .input-group input {
   width: 100%;
-  padding: 14px 16px;
-  margin-top: 6px;
-  border: 2px solid #E0E0E0;
-  border-radius: 12px;
+  padding: 12px 15px;
+  margin-top: 4px; /* Reduced from 6px */
+  background-color: #fafafa; /* Dark input background */
+  border: 1px solid #444; /* Subtler border */
+  border-radius: 8px; /* Sharper corners */
+  color: #00AFFF; /* Light text color */
   font-size: 15px;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
 }
 
 .input-group input::placeholder {
-  color: #bbb;
-  font-style: italic;
+  color: #777;
+  font-style: normal; /* Less italic, more direct */
 }
 
 .input-group input:focus {
-  border-color: #FF6F00;
-  box-shadow: 0 0 10px rgba(255, 111, 0, 0.3);
+  border-color: #00AFFF; /* Accent color focus */
+  box-shadow: 0 0 12px rgba(0, 175, 255, 0.4), inset 0 1px 3px rgba(0,0,0,0.3);
   outline: none;
 }
 
@@ -264,56 +272,62 @@ const togglePassword = () => {
 
 .password-wrapper input {
   flex: 1;
-  padding-right: 44px;
+  padding-right: 40px; /* Space for the icon */
 }
 
 .password-wrapper .anticon {
   position: absolute;
-  right: 14px;
+  right: 12px;
   cursor: pointer;
-  color: #FF6F00;
-  font-size: 20px;
+  color: #00AFFF; /* Accent color for icon */
+  font-size: 18px; /* Slightly smaller */
   transition: color 0.3s ease;
 }
 
 .password-wrapper .anticon:hover {
-  color: #ff8c00;
+  color: #33CFFF; /* Brighter accent on hover */
 }
 
 .login-button {
   width: 100%;
-  height: 48px;
-  background: linear-gradient(90deg, #FF6F00, #FF8C00);
+  height: 45px;
+  background: linear-gradient(90deg, #007ACC, #00AFFF); /* Accent blue gradient */
   color: white !important;
   font-weight: 700;
-  font-size: 17px;
+  font-size: 16px;
   border: none;
-  border-radius: 12px;
-  box-shadow: 0 6px 15px rgba(255, 111, 0, 0.5);
-  transition: background 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 8px; /* Sharper corners */
+  box-shadow: 0 4px 12px rgba(0, 122, 204, 0.4);
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.1s ease;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .login-button:hover {
-  background: linear-gradient(90deg, #ff8c00, #ff9d1a);
-  box-shadow: 0 8px 24px rgba(255, 141, 0, 0.7);
+  background: linear-gradient(90deg, #0088DD, #33CFFF);
+  box-shadow: 0 6px 18px rgba(0, 136, 221, 0.6);
+  transform: translateY(-1px);
+}
+.login-button:active {
+  transform: translateY(0px);
+  box-shadow: 0 3px 10px rgba(0, 122, 204, 0.3);
 }
 
+
 .or-divider {
-  display: flex;
   align-items: center;
-  margin: 26px 0 24px;
+  margin: 28px 0 ;
   color: #888;
-  font-size: 14px;
+  font-size: 13px;
   user-select: none;
 }
 
 .or-divider span {
-  flex: 1;
-  text-align: center;
+  padding: 0 10px; /* Space around text */
   position: relative;
 }
 
@@ -321,32 +335,50 @@ const togglePassword = () => {
 .or-divider span::after {
   content: "";
   flex: 1;
-  height: 1.5px;
-  background: #ccc;
-  margin: 0 12px;
-  border-radius: 2px;
+  height: 1px; /* Thinner line */
+  background: #ececec; /* Darker line */
+  /* margin: 0 10px; /* Replaced by padding on span */
 }
+/* Need to handle the flex distribution with the span in middle */
+.or-divider span::before {
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    width: 80px; /* Adjust as needed */
+    margin-left: 10px;
+}
+.or-divider span::after {
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    width: 80px; /* Adjust as needed */
+    margin-right: 10px;
+}
+
 
 .login-ms {
   width: 100%;
   height: 45px;
-  background-color: #0078D4;
-  color: #FFFFFF;
-  font-weight: 700;
-  border: none;
-  border-radius: 12px;
+  background-color: #1e3a5f; /* Darker, desaturated blue */
+  color: #E0E0E0; /* Lighter text for contrast */
+  font-weight: 600; /* Slightly less bold */
+  border: 1px solid #0078D4; /* MS Blue border for subtle branding */
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  font-size: 15px;
-  box-shadow: 0 5px 15px rgba(0, 120, 212, 0.5);
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  font-size: 14px;
+  box-shadow: 0 4px 10px rgba(0, 120, 212, 0.2);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  text-transform: uppercase;
 }
 
 .login-ms:hover {
-  background-color: #005a9e;
-  box-shadow: 0 7px 20px rgba(0, 90, 158, 0.7);
+  background-color: #2a4c7c;
+  border-color: #33A1FF;
+  color: #FFFFFF;
+  box-shadow: 0 6px 15px rgba(0, 120, 212, 0.3);
 }
 
 </style>

@@ -75,7 +75,7 @@ const getAvatarName = (name) => {
 <template>
   <header class="header">
     <div class="header-content">
-      <div class="logo" @click="goTo('/problems')">Hệ thống thực hành ảo CNTT</div>
+      <div class="logo" @click="goTo('/problems')">Học viện Ngân Hàng</div>
       <nav class="navigation">
         <!--                <div class="nav-item"-->
         <!--                     :style="styleNavItem('/home')"-->

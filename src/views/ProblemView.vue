@@ -363,347 +363,404 @@ watch(pageSize, (newSize) =>
 </script>
 
 <template>
-	<Header/>
-	<a-spin :spinning="isLoading">
-		<div class="body">
-			<div class="part-left">
-				<div class="body-header">
-					<h2>Danh sách bài tập</h2>
-					<div class="underline"></div>
-					<div class="problem-container">
-						<div v-if="currentCourse">
-							<h2 style="color: #A7453C; margin-bottom: 10px">{{ currentCourse?.subject.name }} - Nhóm
-								{{ currentCourse?.name }}</h2>
-						</div>
-						<div style="display: flex; align-items: center ;margin-bottom: 10px;">
-							<p style="
-								margin-top: 10px;
-								font-size: 110%;
-								font-weight: bold;
-								margin-right: 8px;
-								">
-								Môn học:
-							</p>
-							<a-select
-							style="width: 45%; margin-top: 10px"
-							placeholder="Chọn khóa học"
-							:value="currentCourse?.id"
-							@change="handleCourseSelect"
-							:dropdownMatchSelectWidth="false"
-							>
-							<a-select-option
-								v-for="course in listStudyingCourses"
-								:key="course.id"
-								:value="course.id"
-							>
-								{{ course.subject.name }} - Nhóm {{ course.name }}
-							</a-select-option>
-							</a-select>
-						</div>
-						<div class="search-container">
-							<img src="../static/img/search_icon.svg" alt=""/>
-							<a-input v-model:value="searchText"
-							         type="text"
-							         placeholder="Tìm kiếm theo mã hoặc tiêu đề..."/>
-						</div>
-						<div class="table-container">
-							<a-table
-								:row-key="genUuid()"
-								:data-source="dataSource"
-								:pagination="pagination"
-								:loading="loading"
-								@change="handleTableChange"
-							>
-								<a-table-column data-index="code" width="12%">
-									<template #title>
-										<span style="font-weight: bold">Mã</span>
-									</template>
+  <Header/>
+  <a-config-provider
+    :theme="{
+      token: {
+        colorPrimary: '#00AFFF', /* Main accent color */
+        colorLink: '#007ACC',     /* Darker accent for links on light bg */
+        colorLinkHover: '#005C9E',/* Even darker for hover */
+        colorText: '#2c3e50',     /* Dark grey for main text */
+        colorTextSecondary: '#5A738E', /* Lighter dark grey for secondary text */
+        colorTextHeading: '#1A2B3C', /* Very dark grey/off-black for headings */
+        colorBgContainer: '#FFFFFF', /* Default background for components */
+        colorBgElevated: '#FFFFFF',  /* Background for popovers, dropdowns */
+        colorBorder: '#D9E2EC',      /* Light grey for borders */
+        colorBorderSecondary: '#E8EFF5', /* Lighter grey for secondary borders (e.g., table cell lines) */
+        controlItemBgActive: 'rgba(0, 175, 255, 0.1)', /* Light accent for active items */
+        controlItemBgHover: 'rgba(0, 175, 255, 0.05)',/* Very light accent for hover */
+      }
+    }"
+  >
+    <a-spin :spinning="isLoading">
+      <div class="body-wrapper">
+        <div class="part-left">
+          <div class="body-header">
+            <h2>Danh sách bài tập</h2>
+            <div class="underline"></div>
+            <div class="problem-container">
+              <div v-if="currentCourse">
+                <h2 class="course-title">{{ currentCourse?.subject.name }} - Nhóm {{ currentCourse?.name }}</h2>
+              </div>
+              <div class="course-select-wrapper">
+                <p class="course-select-label">Môn học:</p>
+                <a-select
+                  style="width: 45%;"
+                  placeholder="Chọn khóa học"
+                  :value="currentCourse?.id"
+                  @change="handleCourseSelect"
+                  :dropdownMatchSelectWidth="false"
+                >
+                  <a-select-option
+                    v-for="course in listStudyingCourses"
+                    :key="course.id"
+                    :value="course.id"
+                  >
+                    {{ course.subject.name }} - Nhóm {{ course.name }}
+                  </a-select-option>
+                </a-select>
+              </div>
+              <div class="search-container">
+                <img src="../static/img/search_icon.svg" alt="Search" class="search-icon"/>
+                <a-input v-model:value="searchText"
+                         type="text"
+                         placeholder="Tìm kiếm theo mã hoặc tiêu đề..."/>
+              </div>
+              <div class="table-container">
+                <a-table
+                  :row-key="record => record.id || genUuid()"
+                  :data-source="dataSource"
+                  :pagination="pagination"
+                  :loading="loading"
+                  @change="handleTableChange"
+                >
+                  <a-table-column data-index="code" width="12%">
+                    <template #title>
+                      <span class="table-header-title">Mã</span>
+                    </template>
+                    <template #default="{ record, index }">
+                      <a @click="navigateToProblem(record.code)" class="table-link">
+                        <CheckCircleTwoTone v-if="record.is_solved" two-tone-color="#52c41a"/>
+                        <CloseCircleTwoTone v-else-if="!record.is_solved && record.is_tried"
+                                            two-tone-color="#ff4d4f"/>
+                        {{ index + 1 }}
+                      </a>
+                    </template>
+                  </a-table-column>
 
-									<template #default="{ record, index }">
-										<a @click="navigateToProblem(record.code)"
-										   style="cursor: pointer; color: #A7453C;">
-											<CheckCircleTwoTone v-if="record.is_solved" two-tone-color="#52c41a"/>
-											<CloseCircleTwoTone v-else-if="!record.is_solved && record.is_tried"
-											                    two-tone-color="#fc031c"/>
-											{{ index + 1 }}
-										</a>
-									</template>
-								</a-table-column>
+                  <a-table-column width="30%" data-index="title">
+                    <template #title>
+                      <span class="table-header-title">Tiêu đề</span>
+                    </template>
+                    <template #default="{ record }">
+                      <a @click="navigateToProblem(record.code)" class="table-link">
+                        {{ record.title.toUpperCase() }}
+                      </a>
+                    </template>
+                  </a-table-column>
 
-								<a-table-column width="30%" data-index="title">
-									<template #title>
-										<span style="font-weight: bold">Tiêu đề</span>
-									</template>
+                  <a-table-column width="20%" data-index="group">
+                     <template #title>
+                      <span class="table-header-title">Nhóm</span>
+                    </template>
+                  </a-table-column>
 
-									<template #default="{ record }">
-										<a @click="navigateToProblem(record.code)"
-										   style="cursor: pointer; color: #A7453C;">
-											{{ record.title.toUpperCase() }}
-										</a>
-									</template>
-								</a-table-column>
+                  <a-table-column data-index="subTopic">
+                     <template #title>
+                      <span class="table-header-title">Chủ đề con</span>
+                    </template>
+                  </a-table-column>
 
-								<a-table-column width="20%" data-index="group">
-									<template #title>
-										<span style="font-weight: bold">Nhóm</span>
-									</template>
-								</a-table-column>
-
-								<a-table-column data-index="subTopic">
-									<template #title>
-										<span style="font-weight: bold">Chủ đề con</span>
-									</template>
-								</a-table-column>
-
-								<a-table-column width="10%" data-index="difficulty">
-									<template #title>
-										<span style="font-weight: bold">Độ khó</span>
-									</template>
-								</a-table-column>
-
-<!--								<a-table-column width="10%" data-index="correct">-->
-<!--									<template #title>-->
-<!--										<span style="font-weight: bold">Làm đúng</span>-->
-<!--									</template>-->
-<!--								</a-table-column>-->
-							</a-table>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="part-right">
-				<!-- <div class="group-icon-container">
-					<a-dropdown :arrow="{ pointAtCenter: true }" placement="bottom">
-						<a class="ant-dropdown-link" @click.prevent>
-							<div class="group-icon">
-								<img style="margin-right: 7%" src="../static/img/group_icon.svg">
-								<p style="margin-right: 7%; font-size: 100%; margin-bottom: 10px">Nhóm</p>
-								<img src="../static/img/dropdown_icon.svg">
-							</div>
-						</a>
-						<template #overlay>
-							<a-menu @click="onClick">
-								<a-menu-item v-for="group in groupList" :key="group.id">{{ group.name }}</a-menu-item>
-							</a-menu>
-						</template>
-					</a-dropdown>
-				</div> -->
-
-				<div class="collapse-options" style="background-color: white !important;">
-					<a-collapse v-model:activeKey="activeKey" accordion>
-						<a-collapse-panel key="1" header="Độ khó">
-							<div class="options-container">
-								<a-checkbox-group v-model:value="checkboxListState1.checkedList"
-								                  :options="difficulties"/>
-							</div>
-							<div class="button-group">
-								<a-button type="primary" size="small" @click="toggleChecked1">{{
-										checkboxListState1.checkAll ? "Bỏ chọn tất cả" : "Chọn tất cả"
-									}}
-								</a-button>
-							</div>
-						</a-collapse-panel>
-						<a-collapse-panel key="2" header="Chủ đề con">
-							<div class="options-container">
-								<a-checkbox-group v-model:value="checkboxListState2.checkedList" :options="subTopics"/>
-							</div>
-							<div class="button-group">
-								<a-button type="primary" size="small" @click="toggleChecked2">{{
-										checkboxListState2.checkAll ? "Bỏ chọn tất cả" : "Chọn tất cả"
-									}}
-								</a-button>
-							</div>
-						</a-collapse-panel>
-					</a-collapse>
-				</div>
-				<div class="next-problems" style="background-color: white !important; margin-top: 2%;">
-
-				<p style="font-weight: 700; font-size: 18px; margin: 2% 0; text-align: center;">Tư vấn tiến trình</p>
-				<table class="custom-table" @click="handleTableClick">
-					<thead>
-					<tr>
-						<th>Bài tập</th>
-					</tr>
-					</thead>
-					<tbody>
-					<tr
-						v-for="record in recommendedQuestions"
-						:key="record.id"
-						class="pointer-row"
-						@click="navigateToProblem(record.code)"
-					>
-						<td>{{ record.name }}</td>
-					</tr>
-					</tbody>
-				</table>
-				</div>
-			</div>
-		</div>
-		<a-config-provider
-			:theme="{
-              token: {
-                colorPrimary: '#A7453C',
-                colorTextHeading: '#000000',
-                colorText: '#A7453C',
-                colorBorderSecondary: 'rgba(186,151,147,0.45)'
-              }
-            }"
-		/>
-	</a-spin>
+                  <a-table-column width="10%" data-index="difficulty">
+                     <template #title>
+                      <span class="table-header-title">Độ khó</span>
+                    </template>
+                  </a-table-column>
+                </a-table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="part-right">
+          <div class="collapse-options">
+            <a-collapse v-model:activeKey="activeKey" accordion>
+              <a-collapse-panel key="1" header="ĐỘ KHÓ">
+                <div class="options-container">
+                  <a-checkbox-group v-model:value="checkboxListState1.checkedList"
+                                    :options="difficulties"/>
+                </div>
+                <div class="button-group">
+                  <a-button type="primary" size="small" @click="toggleChecked1">
+                    {{ checkboxListState1.checkAll ? "Bỏ chọn tất cả" : "Chọn tất cả" }}
+                  </a-button>
+                </div>
+              </a-collapse-panel>
+              <a-collapse-panel key="2" header="CHỦ ĐỀ CON">
+                <div class="options-container">
+                  <a-checkbox-group v-model:value="checkboxListState2.checkedList" :options="subTopics"/>
+                </div>
+                <div class="button-group">
+                  <a-button type="primary" size="small" @click="toggleChecked2">
+                    {{ checkboxListState2.checkAll ? "Bỏ chọn tất cả" : "Chọn tất cả" }}
+                  </a-button>
+                </div>
+              </a-collapse-panel>
+            </a-collapse>
+          </div>
+          <div class="next-problems">
+            <p class="next-problems-title">TƯ VẤN TIẾN TRÌNH</p>
+            <table class="custom-table">
+              <thead>
+              <tr>
+                <th>BÀI TẬP</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr
+                v-for="record in recommendedQuestions"
+                :key="record.id"
+                class="pointer-row"
+                @click="navigateToProblem(record.code)"
+              >
+                <td>{{ record.name }}</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </a-spin>
+  </a-config-provider>
 </template>
 
 <style scoped>
-.template
-{
-	height: 100vh;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
+
+.body-wrapper {
+  display: flex;
+  margin-top: 90px;
+  min-height: calc(100vh - 90px);
+  color: #2c3e50; /* Default dark text color */
+  padding: 20px;
+  gap: 20px;
 }
 
-.body
-{
-	display: flex;
-	margin-top: 90px;
+.part-left {
+  width: 78%;
+  height: 100%;
 }
 
-.part-left
-{
-	width: 80%;
-	height: 100%;
+.body-header {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-.body-header
-{
-	margin-left: 50px;
-	display: flex;
-	flex-direction: column;
-	height: 100%;
+.body-header > h2 { /* Main page title "Danh sách bài tập" */
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #007ACC; /* Darker accent blue for titles on light bg */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  /* text-shadow: 0 0 5px rgba(0, 175, 255, 0.3); Removed for light theme */
 }
 
-.body-header h2
-{
-	font-size: 1.3rem;
-	font-weight: 600;
-	color: black;
+.underline {
+  width: 100%;
+  height: 2px;
+  margin-top: 5px;
+  background: linear-gradient(90deg, #00AFFF, #B3E5FC); /* Accent to light accent */
+  margin-bottom: 25px;
 }
 
-.problem-container
-{
-	margin-top: 20px;
-	background-color: rgba(255, 255, 255, 0.35);
-	border-radius: 10px;
-	box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.2);
-	padding: 2%;
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	margin-bottom: 5%;
+.problem-container {
+  margin-top: 10px;
+  background-color: #FFFFFF; /* White card background */
+  border-radius: 10px;
+  border: 1px solid #D9E2EC; /* Light grey border */
+  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08); /* Subtle cool shadow */
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-.search-container
-{
-	display: flex;
-	border: 1px solid #cacaca;
-	width: 25%;
-	height: 40px;
-	padding: 10px;
-	background-color: #fff;
-	border-radius: 10px;
+.course-title {
+  color: #006BB3; /* Darker accent for course name */
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
 }
 
-.search-container input
-{
-	margin-left: 3px;
-	border: none;
-	width: 100%;
-	height: 100%;
+.course-select-wrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-.table-container
-{
-	margin-top: 20px;
-	flex: 1;
+.course-select-label {
+  margin-top: 0;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #4A5C6D; /* Darker grey for labels */
+  margin-right: 12px;
+  margin-bottom: 0;
 }
 
-.search-container input:focus
-{
-	outline: none;
+.search-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #B0C4DE; /* Light grey-blue border */
+  width: 35%;
+  height: 38px;
+  padding: 0 12px;
+  background-color: #FFFFFF; /* White background */
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+.search-container:focus-within {
+  border-color: #00AFFF; /* Accent blue on focus */
+  box-shadow: 0 0 0 2px rgba(0, 175, 255, 0.2); /* Subtle focus ring */
 }
 
-.underline
-{
-	width: 100%;
-	height: 1px;
-	margin-top: 5px;
-	background-color: #cacaca;
+.search-icon {
+  margin-right: 8px;
+  width: 16px;
+  height: 16px;
+  /* Assuming original SVG is black/dark. This filter makes it a dark blue. */
+  /* If original is black & you want black, use filter:none or filter: brightness(0.2) */
+  filter: brightness(0) saturate(100%) invert(29%) sepia(97%) saturate(1508%) hue-rotate(181deg) brightness(97%) contrast(101%); /* Makes it #0072C6 */
 }
 
-.part-right
-{
-	width: 20%;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
+.search-container input {
+  margin-left: 3px;
+  border: none;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  color: #2c3e50; /* Dark text color */
+  font-size: 0.95rem;
 }
 
-.group-icon-container
-{
-	display: flex;
-	align-items: center;
-	margin-top: 20px;
-	margin-left: 10px;
+.search-container input::placeholder {
+  color: #90A4AE; /* Lighter grey for placeholder */
 }
 
-.group-icon
-{
-	display: flex;
-	align-items: center;
-	margin-left: 20%;
+.search-container input:focus {
+  outline: none;
 }
 
-.group-icon
-{
-	color: rgb(115, 115, 116);
-	display: flex;
-	align-items: center;
-}
-
-.group-icon:hover p
-{
-	cursor: pointer;
-	color: #A7453C;
-}
-
-.group-icon:hover img
-{
-	filter: invert(32%) sepia(64%) saturate(506%) hue-rotate(330deg) brightness(70%) contrast(95%);
-}
-
-.group-icon-container p
-{
-	margin-top: 12px;
-}
-
-.collapse-options
-{
-	margin-left: 5%;
-	margin-right: 5%;
-}
-
-.next-problems
-{
-	margin-left: 5%;
-	margin-right: 5%;
-	padding: 5px;
+.table-container {
+  margin-top: 10px;
+  flex: 1;
 }
 
 
+.table-header-title {
+  font-weight: bold;
+  color: #007ACC; /* Darker accent blue for table headers */
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
 
-.button-group
-{
-	margin-top: 15px;
-	margin-left: 5px;
+.table-link {
+  cursor: pointer;
+  color: #007ACC; /* Darker accent blue for links */
+  transition: color 0.3s ease;
+  font-weight: 500;
+}
+.table-link:hover {
+  color: #005C9E; /* Even darker on hover */
+}
+.table-link .anticon {
+  margin-right: 6px;
+  font-size: 1.1em;
+}
+
+.part-right {
+  width: 22%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.collapse-options, .next-problems {
+  background-color: #FFFFFF; /* White background */
+  border-radius: 10px;
+  padding: 15px;
+  border: 1px solid #D9E2EC; /* Light grey border */
+  box-shadow: 0 3px 10px rgba(0, 91, 170, 0.07); /* Subtle cool shadow */
+}
+
+/* Override Ant Collapse styles for light theme */
+:global(.ant-collapse) {
+  background-color: transparent; /* Handled by .collapse-options bg */
+  border-color: #D9E2EC;
+}
+:global(.ant-collapse > .ant-collapse-item) {
+   border-bottom-color: #E8EFF5; /* Lighter separator */
+}
+:global(.ant-collapse > .ant-collapse-item:last-child) {
+   border-bottom: none;
+}
+:global(.ant-collapse > .ant-collapse-item > .ant-collapse-header) {
+  color: #007ACC; /* Dark accent for header text */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+:global(.ant-collapse-content) {
+  background-color: transparent; /* Content background */
+  color: #33475B; /* Dark text for content */
+  border-top-color: #E8EFF5;
+}
+:global(.ant-collapse-content > .ant-collapse-content-box) {
+  padding-top: 15px;
+  padding-bottom: 10px;
+}
+
+/* Override Ant Checkbox styles for light theme */
+:global(.ant-checkbox-wrapper) {
+  color: #33475B; /* Checkbox label color */
+}
+/* Hover/focus/checked states are mostly handled by a-config-provider's colorPrimary */
+
+.options-container {
+  max-height: 150px;
+  overflow-y: auto;
+  padding-right: 10px; /* Space for scrollbar */
+}
+/* Custom scrollbar for options container - light theme */
+.options-container::-webkit-scrollbar {
+  width: 8px;
+}
+.options-container::-webkit-scrollbar-track {
+  background: #E8EFF5;
+  border-radius: 4px;
+}
+.options-container::-webkit-scrollbar-thumb {
+  background: #B0C4DE; /* Light grey-blue thumb */
+  border-radius: 4px;
+}
+.options-container::-webkit-scrollbar-thumb:hover {
+  background: #007ACC; /* Dark accent blue on hover */
+}
+
+.button-group {
+  margin-top: 15px;
+  text-align: right;
+}
+.button-group .ant-btn-primary {
+  background: linear-gradient(90deg, #007ACC, #00AFFF); /* Blue gradient */
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 122, 204, 0.3);
+  color: white; /* Ensure text is white */
+}
+.button-group .ant-btn-primary:hover {
+  background: linear-gradient(90deg, #0088DD, #33CFFF);
+  box-shadow: 0 4px 12px rgba(0, 136, 221, 0.4);
+}
+
+.next-problems-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin: 0 0 15px 0;
+  text-align: center;
+  color: #007ACC; /* Dark accent blue */
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .custom-table {
@@ -711,25 +768,21 @@ watch(pageSize, (newSize) =>
   border-collapse: collapse;
 }
 
-.custom-table td {
-  padding: 8px 12px;
-  border: 1px solid #f07a7a;
+.custom-table td, .custom-table th {
+  padding: 10px 12px;
+  border: 1px solid #D0E0F0; /* Light blue-grey border */
   text-align: left;
-  color: #af4747;
 }
 
-.custom-table thead
-{
-	background: #ffe1e1;
-	color:#333333 ;
-	font-weight: 700;
-	text-align: center;
+.custom-table th {
+  background: #EBF4FA; /* Very light blue header background */
+  color: #006BB3; /* Dark accent blue for header text */
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
 }
-
-.custom-table th
-{
-	font-weight: 700;
-	border: 1px solid #f07a7a;
+.custom-table td {
+  color: #33475B; /* Dark grey-blue for table data */
 }
 
 .pointer-row {
@@ -737,6 +790,58 @@ watch(pageSize, (newSize) =>
 }
 
 .pointer-row:hover {
-  background-color: #f5f5f5;
+  background-color: #E6F7FF; /* Very light accent hover (Ant default light blue) */
+}
+.pointer-row:hover td {
+  color: #005C9E; /* Darker accent text on hover */
+}
+
+/* Ant Table Overrides for Neo-Futuristic light theme */
+:global(.ant-table) {
+  background: transparent; /* Table wrapper background */
+}
+:global(.ant-table-thead > tr > th) {
+  background-color: #F0F5FA !important; /* Light header background for Ant Table */
+  border-bottom: 1px solid #D9E2EC !important; /* Border from config */
+  color: #007ACC !important; /* Header text color from .table-header-title or direct */
+}
+:global(.ant-table-tbody > tr > td) {
+  border-bottom: 1px solid #E8EFF5 !important; /* Row separator from config */
+  color: #33475B; /* Text color */
+}
+:global(.ant-table-tbody > tr.ant-table-row:hover > td) {
+  background: #E6F7FF !important; /* Row hover background (Ant default light blue) */
+}
+
+/* Ant Pagination for light theme - relies heavily on a-config-provider */
+:global(.ant-pagination-item a) {
+  color: #5A738E; /* Default item color */
+}
+/* Active & hover states handled by colorPrimary from config provider */
+:global(.ant-pagination-disabled .ant-pagination-item-link) {
+   color: #B0C4DE !important; /* Disabled color */
+}
+
+/* Ant Select Dropdown for light theme - relies heavily on a-config-provider */
+:global(.ant-select-selector) {
+    background-color: #FFFFFF !important; /* Ensure select bg is white */
+    border-color: #D9E2EC !important; /* Default border from config */
+}
+:global(.ant-select-focused .ant-select-selector),
+:global(.ant-select-selector:focus),
+:global(.ant-select-selector:hover) {
+    border-color: #00AFFF !important; /* Accent color on hover/focus */
+}
+:global(.ant-select-arrow) {
+    color: #5A738E !important; /* Default arrow color */
+}
+:global(.ant-select-focused .ant-select-arrow) {
+    color: #00AFFF !important;
+}
+
+
+/* Ant Spin - colorPrimary from config provider should style this */
+:global(.ant-spin-dot-item) {
+  background-color: #00AFFF; /* Explicitly set if needed */
 }
 </style>
