@@ -604,7 +604,7 @@ watch(pageSize, (newSize) =>
   border: 1px solid #B0C4DE; /* Light grey-blue border */
   width: 35%;
   height: 38px;
-  padding: 0 12px;
+  padding: 5px;
   background-color: #FFFFFF; /* White background */
   border-radius: 8px;
   margin-bottom: 20px;
@@ -653,6 +653,7 @@ watch(pageSize, (newSize) =>
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
+
 
 .table-link {
   cursor: pointer;
