@@ -588,7 +588,8 @@ const showEditor = async (id) => {
 
 
 <style scoped>
-template {
+/* Assuming 'template' is a class name for a general wrapper */
+.template {
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -598,6 +599,7 @@ template {
 .body {
   display: flex;
   margin-top: 90px;
+  color: #2c3e50;          /* THEMED: Default text color */
 }
 
 .part-left {
@@ -615,33 +617,43 @@ template {
 .body-header h2 {
   font-size: 1.3rem;
   font-weight: 600;
-  color: black;
+  color: #007ACC; /* THEMED: Darker accent blue for section titles */
 }
 
-.problem-container {
-  margin-top: 20px;
-  background-color: rgba(255, 255, 255, 0.35);
+.problem-container,
+.card-content, /* Grouping similar card-like elements */
+.comment-container,
+.editor-container {
+  margin-top: 20px; /* Retained from problem-container */
+  background-color: #FFFFFF; /* THEMED: Solid white background */
   border-radius: 10px;
-  box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.2);
-  padding: 2%;
+  box-shadow: 0 4px 12px rgba(0, 90, 170, 0.08); /* THEMED: Subtle, cool shadow */
+  border: 1px solid #D9E2EC; /* THEMED: Light grey border for definition */
+  padding: 2%; /* Retained from problem-container, card-content had 10px, editor 10px */
   display: flex;
   flex-direction: column;
-  height: 100%;
-  margin-bottom: 3%;
+  height: 100%; /* May need adjustment based on content if not truly 100% */
+  margin-bottom: 3%; /* Retained from problem-container & comment-container */
 }
-
 .search-container input {
   margin-left: 3px;
   border: none;
   width: 100%;
   height: 100%;
+  color: #2c3e50; /* THEMED: Dark text for input */
+  background-color: transparent; /* Assuming container provides background */
 }
+/* THEMED: Added placeholder color for consistency */
+.search-container input::placeholder {
+  color: #90A4AE;
+}
+
 
 .underline {
   width: 100%;
   height: 1px;
   margin-top: 5px;
-  background-color: #cacaca;
+  background-color: #D9E2EC; /* THEMED: Light grey, matching themed borders (was #cacaca) */
 }
 
 .part-right {
@@ -653,7 +665,8 @@ template {
 }
 
 .group-icon:hover img {
-  filter: invert(32%) sepia(64%) saturate(506%) hue-rotate(330deg) brightness(70%) contrast(95%);
+  /* THEMED: Filter for #00AFFF (Vibrant Accent Blue) - assuming original icon is black */
+  filter: brightness(0) saturate(100%) invert(72%) sepia(99%) saturate(4463%) hue-rotate(165deg) brightness(102%) contrast(104%);
 }
 
 .group-icon-container {
@@ -669,20 +682,26 @@ template {
   width: 100%;
   margin-top: 5px;
   margin-bottom: 13px;
+  color: #5A738E; /* THEMED: Default icon text color (was not specified, adding for theme) */
+  transition: color 0.3s ease; /* THEMED: Added transition for text color */
+}
+.group-icon img {
+  filter: opacity(0.7); /* THEMED: Default subdued icon appearance (was not specified, adding for theme) */
+  transition: filter 0.3s ease; /* THEMED: Added transition for filter */
 }
 
 .group-icon:hover {
   cursor: pointer;
-  color: #A7453C;
+  color: #00AFFF; /* THEMED: Vibrant Accent Blue for text on hover (was #A7453C) */
 }
 
 .card-content {
   margin-left: 20px;
   margin-right: 20px;
-  background-color: rgba(255, 255, 255, 0.35);
+  background-color: #FFFFFF; /* THEMED: Solid white background (was rgba(255, 255, 255, 0.35)) */
   border-radius: 10px;
-  box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.2);
-  padding: 10px;
+  box-shadow: 0 4px 12px rgba(0, 90, 170, 0.08); /* THEMED: Subtle, cool shadow (was 2px 10px 20px rgba(0, 0, 0, 0.2)) */
+  padding: 10px; /* Original padding: 10px */
   display: flex;
   flex-direction: column;
   margin-bottom: 10%;
@@ -697,21 +716,26 @@ table {
 }
 
 th, td {
-  border: 1px solid #ddd;
-  padding: 8px;
+  border: 1px solid #E8EFF5; /* THEMED: Very light grey cell borders (was #ddd) */
+  padding: 8px; /* Original padding: 8px */
+}
+/* THEMED: Added default text color for table data cells */
+td {
+  color: #33475B;
 }
 
 th {
-  background-color: #f4f4f4;
-  font-weight: bold;
+  background-color: #F0F5FA; /* THEMED: Very light blue/grey background (was #f4f4f4) */
+  font-weight: bold; /* Original font-weight: bold */
+  color: #007ACC; /* THEMED: Darker accent blue for header text (was not specified) */
 }
 
 tr:nth-child(even) {
-  background-color: #f9f9f9;
+  background-color: #F8F9FB; /* THEMED: Themed subtle striping (was #f9f9f9) */
 }
 
 tr:hover {
-  background-color: #f1f1f1;
+  background-color: rgba(0, 175, 255, 0.05); /* THEMED: Light accent blue hover (was #f1f1f1) */
 }
 
 .compiler-container {
@@ -741,13 +765,14 @@ tr:hover {
 
 .submit-status-container p {
   margin: 0;
+  color: #5A738E; /* THEMED: Secondary text color (was not specified) */
 }
 
 .comment-container {
-  background-color: rgba(255, 255, 255, 0.35);
+  background-color: #FFFFFF; /* THEMED: Solid white background (was rgba(255, 255, 255, 0.35)) */
   border-radius: 10px;
-  box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.1);
-  padding: 2%;
+  box-shadow: 0 3px 10px rgba(0, 90, 170, 0.07); /* THEMED: Slightly lighter cool shadow (was 2px 10px 20px rgba(0, 0, 0, 0.1)) */
+  padding: 2%; /* Original padding: 2% */
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -756,10 +781,10 @@ tr:hover {
 
 .editor-container {
   width: 100%;
-  background-color: rgba(255, 255, 255, 0.35);
+  background-color: #FFFFFF; /* THEMED: Solid white background (was rgba(255, 255, 255, 0.35)) */
   border-radius: 10px;
-  box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.2);
-  padding: 10px;
+  box-shadow: 0 4px 12px rgba(0, 90, 170, 0.08); /* THEMED: Subtle, cool shadow (was 2px 10px 20px rgba(0, 0, 0, 0.2)) */
+  padding: 10px; /* Original padding: 10px */
   margin-bottom: 40px;
   margin-top: 20px;
 }
