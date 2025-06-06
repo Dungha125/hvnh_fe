@@ -1635,150 +1635,156 @@ const handleCourseChange = (value) => {
         <a-config-provider
           :theme="{
             token: {
-              colorPrimary: '#A7453C',
-              colorTextHeading: '#000000',
-              colorText: '#A7453C',
-              colorBorderSecondary: 'rgba(186,151,147,0.45)',
+              colorPrimary: '#00AFFF', /* Màu nhấn chính, rực rỡ */
+              colorTextHeading: '#007ACC',  /* Màu cho tiêu đề */
+              colorText: '#2c3e50',       /* Màu chữ chính */
+              colorBorderSecondary: '#D9E2EC', /* Màu viền phụ, nhạt */
             },
           }"
         />
       </div>
 
-      <a-config-provider
-        :theme="{
-          token: {
-            colorPrimary: '#A7453C',
-            colorTextHeading: '#000000',
-            colorText: '#A7453C',
-            colorBorderSecondary: 'rgba(186,151,147,0.45)',
-          },
-        }"
-      />
     </div>
   </a-spin>
 </template>
 
 <style scoped>
 .body {
-  color: #a7453c;
+  /* THEMED: Màu chữ mặc định cho phần body này, có thể được ghi đè bởi các quy tắc cụ thể hơn */
+  color: #2c3e50;
   display: flex;
   margin-top: 90px;
+  background-color: #f5f7fa; /* Thêm màu nền cho trang */
+  padding: 24px 40px; /* Thêm padding để nội dung không bị dính vào cạnh */
 }
 
 .part-left {
-  width: 96%;
+  width: 100%; /* Đổi thành 100% để tận dụng padding của .body */
   margin-bottom: 5%;
 }
 
+/* === Tiêu đề & Phân cách === */
 .body-header {
-  margin-left: 50px;
+  margin-left: 0; /* Bỏ margin để căn chỉnh theo padding của .body */
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
 .body-header h2 {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: black;
+  font-size: 1.6rem; /* Tăng kích thước cho tiêu đề chính */
+  font-weight: 700;
+  color: #007acc; /* THEMED: Màu xanh nhấn đậm */
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .underline {
   width: 100%;
-  height: 1px;
-  margin-top: 5px;
-  background-color: #cacaca;
+  height: 2px;
+  margin-top: 8px;
+  background: linear-gradient(90deg, #00afff, #b3e5fc); /* THEMED: Gradient màu nhấn */
 }
 
-.part-right {
-  width: 100%;
-}
-
-.group-icon:hover img {
-  filter: invert(32%) sepia(64%) saturate(506%) hue-rotate(330deg)
-    brightness(70%) contrast(95%);
-}
-
-.group-icon-container p {
-  margin-top: 12px;
-}
-
+/* === Khung nội dung chính === */
 .content-container {
   display: flex;
   flex-direction: column;
-  background-color: rgba(255, 255, 255, 0.35);
-  border-radius: 10px;
-  box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.2);
-  padding: 2%;
+  background-color: #ffffff; /* THEMED: Nền trắng */
+  border-radius: 12px; /* Tăng độ bo tròn */
+  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08); /* THEMED: Đổ bóng nhẹ, hiện đại */
+  border: 1px solid #d9e2ec; /* THEMED: Viền xám nhạt */
+  padding: 24px; /* Tăng padding */
   width: 100%;
   margin-top: 20px;
   min-height: 768px;
 }
 
+/* === Thanh tìm kiếm === */
 .search-container {
   display: flex;
-  border: 1px solid #cacaca;
-  width: 30%;
+  align-items: center;
+  border: 1px solid #d9e2ec; /* THEMED: Viền xám nhạt */
+  width: 35%; /* Tăng chiều rộng */
   height: 40px;
   padding: 10px;
   background-color: #fff;
-  border-radius: 10px;
-  margin-bottom: 10px;
+  border-radius: 8px;
+  margin-bottom: 20px; /* Tăng khoảng cách dưới */
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.search-container:focus-within {
+  border-color: #00afff;
+  box-shadow: 0 0 0 3px rgba(0, 175, 255, 0.15); /* Hiệu ứng tỏa sáng khi focus */
 }
 
-a-radio,
-a-radio-group {
-  font-size: 12px;
-}
-
-::v-deep(.ck-editor__editable) {
-  min-height: 200px;
-  max-height: 500px;
-  font-size: 18px;
-}
-
+/* === Trình soạn thảo văn bản (CKEditor) === */
 ::v-deep(.ck.ck-editor) {
   width: 100%;
   max-width: 1200px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #d9e2ec; /* THEMED: Viền xám nhạt */
+}
+::v-deep(.ck-editor__editable) {
+  min-height: 200px;
+  max-height: 500px;
+  font-size: 16px; /* Giảm kích thước font cho dễ đọc */
+  background-color: #ffffff;
+  color: #2c3e50;
+}
+::v-deep(.ck.ck-toolbar) {
+  background-color: #f8f9fc;
+  border-bottom: 1px solid #d9e2ec;
 }
 
+/* === Bố cục Form === */
 .form-container {
   display: flex;
-  gap: 20px;
-  /* Khoảng cách giữa 2 cột */
+  gap: 24px; /* Tăng khoảng cách */
 }
 
 .form-group {
   flex: 1;
-  /* Mỗi cột chiếm 50% */
   min-width: 300px;
-  /* Đảm bảo không bị co quá nhỏ */
 }
 
 .subject-dropdowns {
-  border: 1px solid #ddd;
+  border: 1px solid #d9e2ec; /* THEMED: Viền xám nhạt */
   padding: 15px;
   margin-bottom: 10px;
-  border-radius: 5px;
+  border-radius: 8px; /* Tăng độ bo tròn */
+  background-color: #fafcfe; /* Nền nhẹ nhàng */
 }
 
+/* === Bảng tùy chỉnh (.table-bordered) === */
 .table-bordered {
   width: 100%;
+  border-collapse: collapse; /* Gộp đường viền */
 }
 
 .table-bordered th {
-  font-weight: bold;
-  background-color: #d86d64;
-  color: #ffffff;
-  padding: 4px;
+  font-weight: 600;
+  background-color: #f0f5fa; /* THEMED: Nền tiêu đề bảng */
+  color: #007acc; /* THEMED: Màu chữ tiêu đề */
+  padding: 10px; /* Tăng padding */
+  border: 1px solid #e8eff5; /* Viền trong bảng */
+  text-align: center;
 }
 
 .table-bordered td {
   text-align: center;
-  padding-bottom: 8px;
+  padding: 10px; /* Tăng padding */
+  border: 1px solid #e8eff5; /* Viền trong bảng */
 }
 
+/* Bỏ đường viền dưới mặc định và sử dụng viền của ô */
 .table-bordered tbody tr {
-  border-bottom: #bdbdbd 1px solid;
+  border-bottom: none;
+}
+
+/* Hiệu ứng di chuột cho hàng */
+.table-bordered tbody tr:hover td {
+  background-color: rgba(0, 175, 255, 0.05);
 }
 </style>

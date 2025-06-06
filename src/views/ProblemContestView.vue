@@ -424,159 +424,193 @@ watchEffect(() => {
 </template>
 
 <style scoped>
-.template
-{
-	height: 100vh;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
+.template {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.countdown-time-test
-{
-	width: 100%;
-	background-color: #ffffff;
-	color: #a71d1d;
-	font-weight: bold;
+.body {
+  display: flex;
+  /* Using gap for clean spacing between left and right parts */
+  gap: 24px;
+  /* Using padding on the body for overall spacing is more flexible than margin on children */
+  padding: 24px 40px;
+  margin-top: 70px; /* Assuming a fixed header of ~70px */
+  width: 100%;
+  background-color: #F5F7FA; /* THEMED: Base page background */
+  color: #2c3e50;          /* THEMED: Default text color */
 }
 
-
-
-.body
-{
-	display: flex;
-	justify-content: center;
-	margin-top: 90px;
-	width: 100%;
+.part-left {
+  width: 78%; /* Adjusted width to account for gap */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* Space between header/content blocks inside */
 }
 
-
-
-.body-header
-{
-	margin:0 50px;
-	width: 100%;
-	min-width: 80vw;
-	display: flex;
-	flex-direction: column;
-	height: 100%;
+.part-right {
+  width: 22%; /* Adjusted width to account for gap */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Consistent spacing for items in the right column */
 }
 
-.body-header h2
-{
-	font-size: 1.3rem;
-	font-weight: 600;
-	color: black;
+/* === Urgent Countdown Timer === */
+.countdown-time-test {
+  position: sticky;
+  top: 70px; /* Sticks below the main header */
+  z-index: 900;
+  width: 100%;
+  background-color: #FFF1F0; /* THEMED: Ant Design error background */
+  color: #cf1322; /* THEMED: Strong red for urgency */
+  font-weight: 700; /* Bolder for emphasis */
+  text-align: center;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ffccc7;
+  letter-spacing: 0.05em;
+  /* Subtle pulse animation to draw attention */
+  animation: pulse 2s infinite;
 }
 
-.problem-container
-{
-	margin-top: 20px;
-	background-color: rgba(255, 255, 255, 0.35);
-	border-radius: 10px;
-	box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.2);
-	padding: 2%;
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	margin-bottom: 5%;
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(207, 19, 34, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(207, 19, 34, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(207, 19, 34, 0); }
 }
 
-.search-container
-{
-	display: flex;
-	border: 1px solid #cacaca;
-	width: 25%;
-	height: 40px;
-	padding: 10px;
-	background-color: #fff;
-	border-radius: 10px;
+/* === Page Header & Titles === */
+
+.body-header {
+  /* Removed fixed margins, handled by parent padding now */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  height: auto; /* Let it size to content */
 }
 
-.search-container input
-{
-	margin-left: 3px;
-	border: none;
-	width: 100%;
-	height: 100%;
+.body-header h2 {
+  font-size: 1.6rem; /* Slightly larger for more impact */
+  font-weight: 700;
+  color: #007ACC; /* THEMED: Darker accent blue */
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.table-container
-{
-	margin-top: 20px;
-	flex: 1;
+.underline {
+  width: 100%;
+  height: 2px;
+  margin-top: 8px;
+  /* THEMED: Accent gradient for a more futuristic feel */
+  background: linear-gradient(90deg, #00AFFF, #B3E5FC);
 }
 
-.search-container input:focus
-{
-	outline: none;
+/* === Reusable Card Style === */
+/* Applied to .problem-container and any other similar panels */
+.problem-container {
+  margin-top: 0; /* Handled by parent gap */
+  background-color: #FFFFFF;
+  border-radius: 12px; /* Slightly more rounded */
+  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08); /* THEMED: Subtle, cool shadow */
+  border: 1px solid #D9E2EC; /* THEMED: Light grey border */
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin-bottom: 0; /* Handled by parent gap */
 }
 
-.underline
-{
-	width: 100%;
-	height: 1px;
-	margin-top: 5px;
-	background-color: #cacaca;
+.table-container {
+  margin-top: 20px;
+  flex: 1;
 }
 
-.part-right
-{
-	width: 20%;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
+/* === Modern Search Input === */
+
+.search-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #D9E2EC; /* THEMED: Standard border */
+  width: 35%; /* Adjusted for better proportion */
+  height: 40px;
+  padding: 0 12px;
+  background-color: #fff;
+  border-radius: 8px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.search-container:focus-within {
+  border-color: #00AFFF;
+  box-shadow: 0 0 0 3px rgba(0, 175, 255, 0.15); /* Glowing effect */
 }
 
-.group-icon-container
-{
-	display: flex;
-	align-items: center;
-	margin-top: 20px;
-	margin-left: 10px;
+.search-container input {
+  margin-left: 3px;
+  border: none;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  color: #2c3e50;
 }
 
-.group-icon
-{
-	display: flex;
-	align-items: center;
-	margin-left: 20%;
+.search-container input:focus {
+  outline: none;
+}
+.search-container input::placeholder {
+  color: #90A4AE;
 }
 
-.group-icon
-{
-	color: rgb(115, 115, 116);
-	display: flex;
-	align-items: center;
+/* === Custom Icon Buttons === */
+
+.group-icon-container {
+  display: flex;
+  align-items: center;
+  margin-top: 0; /* Handled by parent gap */
+  margin-left: 0; /* Handled by parent gap/padding */
 }
 
-.group-icon:hover p
-{
-	cursor: pointer;
-	color: #A7453C;
+.group-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Use gap for spacing icon and text */
+  color: #5A738E; /* THEMED: Default text color */
+  cursor: pointer;
+  transition: color 0.3s ease;
 }
 
-.group-icon:hover img
-{
-	filter: invert(32%) sepia(64%) saturate(506%) hue-rotate(330deg) brightness(70%) contrast(95%);
+.group-icon p {
+  margin: 0 !important; /* Override other margin rules */
+  font-weight: 600;
 }
 
-.group-icon-container p
-{
-	margin-top: 12px;
+.group-icon img {
+  filter: opacity(0.7);
+  transition: filter 0.3s ease;
 }
 
-.collapse-options
-{
-	margin-left: 5%;
-	margin-right: 5%;
+.group-icon:hover, .group-icon:hover p {
+  color: #00AFFF; /* THEMED: Vibrant accent blue on hover */
 }
 
+.group-icon:hover img {
+  /* THEMED: Filter for #00AFFF (Vibrant Accent Blue) */
+  filter: brightness(0) saturate(100%) invert(72%) sepia(99%) saturate(4463%) hue-rotate(165deg) brightness(102%) contrast(104%);
+}
 
+/* === Right Column Wrappers === */
 
-.button-group
-{
-	margin-top: 15px;
-	margin-left: 5px;
+.collapse-options {
+  /* Removed specific margins, assuming parent .part-right has a 'gap' */
+  margin: 0;
+  width: 100%;
+}
+
+.button-group {
+  margin-top: 15px;
+  /* Removed margin-left, prefer text-align or flexbox for alignment */
+  text-align: right;
 }
 </style>

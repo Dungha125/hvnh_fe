@@ -186,7 +186,7 @@ const togglePassword = () => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(0deg, rgba(10, 20, 40, 0.85), rgba(5, 10, 20, 0.3)); /* Dark blue/grey overlay */
+  background: linear-gradient(0deg, rgba(249, 249, 249, 0.904), rgba(62, 62, 62, 0.3),rgba(62, 62, 62, 0.06)); /* Dark blue/grey overlay */
   z-index: -1;
 }
 

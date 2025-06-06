@@ -1,7 +1,7 @@
 <template>
   <LecturerHeader/>
   <div class="container">
-    <div class="sidebar" style="margin-top: 70px">
+    <div class="sidebar" style="margin-top: 50px">
       <h2 class="title">Cấu hình</h2>
       <div class="side-bar">
         <!-- Cấu hình học tập -->

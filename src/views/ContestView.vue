@@ -118,72 +118,121 @@ onMounted(fetchContests);
   max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
-  color: #333;
-  font-family: Arial, sans-serif;
+  /* THEMED: Updated font stack and default text color */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #2c3e50;
 }
 
 .body {
   display: flex;
   margin-top: 90px;
+  /* THEMED: Set base page background */
+  background-color: #F5F7FA;
 }
 
 .part-left {
   width: 100%;
 }
 
+/* === Card & Header Section === */
+/* Using a consistent card style for this element */
 .body-header {
-  padding: 20px;
+  padding: 24px; /* Adjusted for better spacing */
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  /* THEMED: Subtle, cool shadow and light border */
+  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08);
+  border: 1px solid #D9E2EC;
 }
 
 .body-header h2 {
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 1.6rem;
+  font-weight: 700;
   margin-bottom: 20px;
+  /* THEMED: Darker accent blue for titles */
+  color: #007ACC;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
+/* === Rules & Lists Section === */
 .rules h3 {
-  color: #a20b0b;
+  /* THEMED: Updated to a modern, clear red for warnings/rules */
+  color: #d9363e;
   font-size: 18px;
-  margin-top: 15px;
+  font-weight: 600; /* Slightly bolder */
+  margin-top: 20px;
+  margin-bottom: 10px; /* Added for spacing below heading */
 }
 
 .rules ul {
   padding-left: 20px;
   list-style: disc;
+  color: #5A738E; /* THEMED: Softer color for list text */
 }
 
+/* THEMED: Style the bullet points with the accent color */
+.rules ul li::marker {
+  color: #00AFFF;
+}
+
+
+/* === Ant Design Table Theming === */
+
 ::v-deep(.ant-table) {
-  margin-top: 15px;
+  margin-top: 20px; /* Adjusted margin */
   border-radius: 8px;
   overflow: hidden;
+  border: 1px solid #E8EFF5; /* Add a subtle outer border */
 }
 
 ::v-deep(.ant-table-thead > tr > th) {
-  background-color: #1890ff;
-  color: rgb(56, 56, 56);
+  /* THEMED: Light header background and accent text */
+  background-color: #F0F5FA !important;
+  color: #007ACC !important;
   text-align: center;
-  font-weight: bold;
+  font-weight: 600; /* Adjusted for a cleaner look */
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 ::v-deep(.ant-table-tbody > tr > td) {
   text-align: center;
-  padding: 10px;
+  padding: 12px 10px; /* Adjusted padding */
+  color: #33475B;
+  border-bottom: 1px solid #E8EFF5; /* Ensure consistent bottom border */
 }
 
+/* Removing explicit odd/even striping for a cleaner look, relying on hover */
 ::v-deep(.ant-table-tbody > tr:nth-child(odd)) {
   background-color: #ffffff;
 }
+::v-deep(.ant-table-tbody > tr:nth-child(even)) {
+  background-color: #F8F9FB; /* Adding subtle striping */
+}
+
+::v-deep(.ant-table-tbody > tr:hover > td) {
+  /* THEMED: Light accent hover for all rows */
+  background: rgba(0, 175, 255, 0.08) !important;
+}
+
+
+/* === Ant Design Button Theming === */
 
 ::v-deep(.ant-btn-primary) {
-  background-color: #c41a1a;
+  /* THEMED: Applying blue gradient for primary actions */
+  background: linear-gradient(90deg, #007ACC, #00AFFF);
   border: none;
   font-weight: bold;
+  color: #fff !important; /* Ensure text is white */
+  box-shadow: 0 2px 8px rgba(0, 122, 204, 0.3);
+  transition: all 0.3s ease;
 }
 
 ::v-deep(.ant-btn-primary:hover) {
-  background-color: #c62323;
+  /* THEMED: Brighter gradient and lift effect on hover */
+  background: linear-gradient(90deg, #0088DD, #33CFFF);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 136, 221, 0.4);
 }
 </style>

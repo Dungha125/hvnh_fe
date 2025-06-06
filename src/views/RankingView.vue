@@ -338,112 +338,177 @@ const handleTableChange = (pag, filters, sorter) =>
 </template>
 
 <style scoped>
-template
-{
-    height: 100vh;
+.template {
+  height: 100vh;
+  /* Applying page background here if it's the root */
+  background-color: #F5F7FA;
+  padding-top: 24px; /* Space from the top */
 }
 
-.ranking
-{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    width: 93%;
-    background-color: rgba(255, 255, 255, 0.35);
-    border-radius: 10px;
-    box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.2);
-    padding: 30px;
-    margin-bottom: 5%;
+/* Main ranking card container */
+.ranking {
+  display: flex;
+  flex-direction: column;
+  width: 95%; /* Using a more standard width */
+  max-width: 1200px; /* Capping width on large screens */
+  margin: 0 auto; /* Centering the container */
+  background-color: #FFFFFF; /* THEMED: Solid white */
+  border-radius: 16px; /* Slightly larger radius for a major container */
+  box-shadow: 0 8px 30px rgba(0, 90, 170, 0.1); /* THEMED: A bit more shadow for a primary container */
+  border: 1px solid #D9E2EC; /* THEMED: Light border */
+  padding: 30px 40px; /* Generous padding */
+  margin-bottom: 5%;
 }
 
-.top-3
-{
-    display: flex;
-    justify-content: center;
+/* === Title Section === */
+h2 {
+  font-size: 1.8rem; /* Larger title for the page */
+  font-weight: 700;
+  color: #007ACC; /* THEMED: Darker accent blue */
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.card-top-3
-{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 260px;
-    height: 300px;
-    box-shadow: 0 4px 8px rgba(172, 129, 129, 0.25);
+.underline {
+  width: 150px; /* Shorter underline centered under the title */
+  height: 3px;
+  margin: 8px auto 30px auto; /* Centering the underline */
+  background: linear-gradient(90deg, #00AFFF, #B3E5FC); /* THEMED: Accent gradient */
+  border-radius: 2px;
 }
 
-.card-top-3 p
-{
-    text-align: center;
-    margin: 0;
+
+/* === Top 3 Ranking Cards (Highlight of the Page) === */
+
+.top-3 {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end; /* Aligns cards at the bottom for the podium effect */
+  gap: 20px; /* Clean spacing between cards */
+  margin-bottom: 40px; /* Space between top 3 and the rest of the table */
 }
 
-.divider
-{
-    width: 1px;
-    height: 35px;
-    background-color: gray;
-    margin: 0 16px;
+/* Base style for all top 3 cards */
+.card-top-3 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* Spacing for content inside the card */
+  width: 280px; /* Slightly wider */
+  padding: 20px;
+  border-radius: 12px;
+  background-color: #F8F9FB; /* Subtle background color */
+  border: 2px solid transparent; /* Placeholder for rank-colored border */
+  box-shadow: 0 4px 10px rgba(0, 90, 170, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  text-align: center;
 }
 
-.group-icon-container
-{
-    display: flex;
-    align-items: center;
+.card-top-3:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 25px rgba(0, 90, 170, 0.15);
 }
 
-.table-container
-{
-    margin-top: 30px;
+/* Specific styles for each rank */
+/* Rank 1 - Gold */
+.card-top-3.rank-1 {
+  width: 300px;
+  padding-top: 30px;
+  padding-bottom: 30px;
+  border-color: #FFD700;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
 }
 
-.underline
-{
-    width: 100%;
-    height: 1px;
-    margin-top: 5px;
-    background-color: #cacaca;
+/* Rank 2 - Silver */
+.card-top-3.rank-2 {
+  border-color: #C0C0C0;
 }
 
-h2
-{
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: black;
+/* Rank 3 - Bronze */
+.card-top-3.rank-3 {
+  border-color: #CD7F32;
 }
 
-.table-container
-{
-    margin-top: 20px;
-    flex: 1;
+
+.card-top-3 .rank-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  font-weight: bold;
+  opacity: 0.2;
+}
+.card-top-3.rank-1 .rank-badge { color: #FFD700; }
+.card-top-3.rank-2 .rank-badge { color: #C0C0C0; }
+.card-top-3.rank-3 .rank-badge { color: #CD7F32; }
+
+
+/* Typography inside the top 3 cards */
+.card-top-3 p {
+  margin: 0;
+}
+.card-top-3 .username {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+.card-top-3 .score {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #007ACC;
 }
 
-.group-icon
-{
-    color: rgb(115, 115, 116);
-    display: flex;
-    align-items: center;
+
+/* THEMED: No longer needed, using 'gap' for spacing
+.divider {
+  width: 1px;
+  height: 35px;
+  background-color: #E8EFF5;
+  margin: 0 16px;
+}
+*/
+
+
+/* === Filters & Table Section === */
+
+.table-container {
+  margin-top: 30px;
+  flex: 1; /* Retained from original */
 }
 
-.group-icon:hover
-{
-    cursor: pointer;
-    color: #A7453C;
+.group-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Align filters to the right */
 }
 
-.group-icon:hover p
-{
-    cursor: pointer;
-    color: #A7453C;
+.group-icon {
+  color: #5A738E; /* THEMED: Default text */
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Space between icon and text */
 }
 
-.group-icon:hover img
-{
-    filter: invert(32%) sepia(64%) saturate(506%) hue-rotate(330deg) brightness(70%) contrast(95%);
+.group-icon:hover, .group-icon:hover p {
+  cursor: pointer;
+  color: #00AFFF; /* THEMED: Vibrant accent blue */
 }
 
-.group-icon-container p
-{
-    margin-top: 12px;
+.group-icon img {
+  filter: opacity(0.7);
+  transition: filter 0.3s ease;
+}
+
+.group-icon:hover img {
+  /* THEMED: Filter for #00AFFF */
+  filter: brightness(0) saturate(100%) invert(72%) sepia(99%) saturate(4463%) hue-rotate(165deg) brightness(102%) contrast(104%);
+}
+
+.group-icon-container p {
+  margin: 0; /* Removing top margin for better alignment */
+  font-weight: 600;
 }
 </style>

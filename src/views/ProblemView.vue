@@ -365,23 +365,23 @@ watch(pageSize, (newSize) =>
 <template>
   <Header/>
   <a-config-provider
-    :theme="{
-      token: {
-        colorPrimary: '#00AFFF', /* Main accent color */
-        colorLink: '#007ACC',     /* Darker accent for links on light bg */
-        colorLinkHover: '#005C9E',/* Even darker for hover */
-        colorText: '#2c3e50',     /* Dark grey for main text */
-        colorTextSecondary: '#5A738E', /* Lighter dark grey for secondary text */
-        colorTextHeading: '#1A2B3C', /* Very dark grey/off-black for headings */
-        colorBgContainer: '#FFFFFF', /* Default background for components */
-        colorBgElevated: '#FFFFFF',  /* Background for popovers, dropdowns */
-        colorBorder: '#D9E2EC',      /* Light grey for borders */
-        colorBorderSecondary: '#E8EFF5', /* Lighter grey for secondary borders (e.g., table cell lines) */
-        controlItemBgActive: 'rgba(0, 175, 255, 0.1)', /* Light accent for active items */
-        controlItemBgHover: 'rgba(0, 175, 255, 0.05)',/* Very light accent for hover */
-      }
-    }"
-  >
+      :theme="{
+        token: {
+          colorPrimary: '#00AFFF',          /* Màu nhấn chính cho các nút, trạng thái active */
+          colorLink: '#007ACC',             /* Màu cho liên kết */
+          colorLinkHover: '#005C9E',        /* Màu liên kết khi di chuột qua */
+          colorText: '#2c3e50',             /* Màu chữ chính */
+          colorTextSecondary: '#5A738E',     /* Màu chữ phụ, nhạt hơn */
+          colorTextHeading: '#007ACC',      /* Màu cho các tiêu đề lớn */
+          colorBgContainer: '#FFFFFF',      /* Màu nền cho các component như Modal, Popover */
+          colorBgElevated: '#FFFFFF',       /* Màu nền cho các component nổi như Dropdown */
+          colorBorder: '#D9E2EC',            /* Màu viền tiêu chuẩn */
+          colorBorderSecondary: '#E8EFF5',  /* Màu viền phụ (như trong bảng) */
+          controlItemBgActive: 'rgba(0, 175, 255, 0.1)',  /* Nền cho mục đang được chọn */
+          controlItemBgHover: 'rgba(0, 175, 255, 0.05)', /* Nền cho mục khi di chuột qua */
+        },
+      }"
+    >
     <a-spin :spinning="isLoading">
       <div class="body-wrapper">
         <div class="part-left">
@@ -525,18 +525,31 @@ watch(pageSize, (newSize) =>
 
 <style scoped>
 
+/*
+  CSS for Problem List Component - Light Neo-Futuristic Theme
+  Includes responsive adjustments for mobile devices.
+*/
+
 .body-wrapper {
   display: flex;
   margin-top: 90px;
   min-height: calc(100vh - 90px);
   color: #2c3e50; /* Default dark text color */
-  padding: 20px;
-  gap: 20px;
+  padding: 20px 40px; /* Increased side padding for desktop */
+  gap: 24px; /* Increased gap for desktop */
 }
 
 .part-left {
   width: 78%;
   height: 100%;
+}
+
+.part-right {
+  width: 22%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .body-header {
@@ -552,7 +565,6 @@ watch(pageSize, (newSize) =>
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 8px;
-  /* text-shadow: 0 0 5px rgba(0, 175, 255, 0.3); Removed for light theme */
 }
 
 .underline {
@@ -596,15 +608,16 @@ watch(pageSize, (newSize) =>
   color: #4A5C6D; /* Darker grey for labels */
   margin-right: 12px;
   margin-bottom: 0;
+  white-space: nowrap; /* Prevent label from breaking */
 }
 
 .search-container {
   display: flex;
   align-items: center;
   border: 1px solid #B0C4DE; /* Light grey-blue border */
-  width: 35%;
+  width: 40%; /* Adjusted width */
   height: 38px;
-  padding: 5px;
+  padding: 5px 12px; /* Adjusted padding */
   background-color: #FFFFFF; /* White background */
   border-radius: 8px;
   margin-bottom: 20px;
@@ -618,8 +631,6 @@ watch(pageSize, (newSize) =>
   margin-right: 8px;
   width: 16px;
   height: 16px;
-  /* Assuming original SVG is black/dark. This filter makes it a dark blue. */
-  /* If original is black & you want black, use filter:none or filter: brightness(0.2) */
   filter: brightness(0) saturate(100%) invert(29%) sepia(97%) saturate(1508%) hue-rotate(181deg) brightness(97%) contrast(101%); /* Makes it #0072C6 */
 }
 
@@ -646,14 +657,12 @@ watch(pageSize, (newSize) =>
   flex: 1;
 }
 
-
 .table-header-title {
   font-weight: bold;
   color: #007ACC; /* Darker accent blue for table headers */
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
-
 
 .table-link {
   cursor: pointer;
@@ -669,14 +678,6 @@ watch(pageSize, (newSize) =>
   font-size: 1.1em;
 }
 
-.part-right {
-  width: 22%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
 .collapse-options, .next-problems {
   background-color: #FFFFFF; /* White background */
   border-radius: 10px;
@@ -687,24 +688,24 @@ watch(pageSize, (newSize) =>
 
 /* Override Ant Collapse styles for light theme */
 :global(.ant-collapse) {
-  background-color: transparent; /* Handled by .collapse-options bg */
+  background-color: transparent;
   border-color: #D9E2EC;
 }
 :global(.ant-collapse > .ant-collapse-item) {
-   border-bottom-color: #E8EFF5; /* Lighter separator */
+   border-bottom-color: #E8EFF5;
 }
 :global(.ant-collapse > .ant-collapse-item:last-child) {
    border-bottom: none;
 }
 :global(.ant-collapse > .ant-collapse-item > .ant-collapse-header) {
-  color: #007ACC; /* Dark accent for header text */
+  color: #007ACC;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 :global(.ant-collapse-content) {
-  background-color: transparent; /* Content background */
-  color: #33475B; /* Dark text for content */
+  background-color: transparent;
+  color: #33475B;
   border-top-color: #E8EFF5;
 }
 :global(.ant-collapse-content > .ant-collapse-content-box) {
@@ -714,16 +715,14 @@ watch(pageSize, (newSize) =>
 
 /* Override Ant Checkbox styles for light theme */
 :global(.ant-checkbox-wrapper) {
-  color: #33475B; /* Checkbox label color */
+  color: #33475B;
 }
-/* Hover/focus/checked states are mostly handled by a-config-provider's colorPrimary */
 
 .options-container {
   max-height: 150px;
   overflow-y: auto;
-  padding-right: 10px; /* Space for scrollbar */
+  padding-right: 10px;
 }
-/* Custom scrollbar for options container - light theme */
 .options-container::-webkit-scrollbar {
   width: 8px;
 }
@@ -732,11 +731,11 @@ watch(pageSize, (newSize) =>
   border-radius: 4px;
 }
 .options-container::-webkit-scrollbar-thumb {
-  background: #B0C4DE; /* Light grey-blue thumb */
+  background: #B0C4DE;
   border-radius: 4px;
 }
 .options-container::-webkit-scrollbar-thumb:hover {
-  background: #007ACC; /* Dark accent blue on hover */
+  background: #007ACC;
 }
 
 .button-group {
@@ -744,10 +743,10 @@ watch(pageSize, (newSize) =>
   text-align: right;
 }
 .button-group .ant-btn-primary {
-  background: linear-gradient(90deg, #007ACC, #00AFFF); /* Blue gradient */
+  background: linear-gradient(90deg, #007ACC, #00AFFF);
   border: none;
   box-shadow: 0 2px 8px rgba(0, 122, 204, 0.3);
-  color: white; /* Ensure text is white */
+  color: white;
 }
 .button-group .ant-btn-primary:hover {
   background: linear-gradient(90deg, #0088DD, #33CFFF);
@@ -759,7 +758,7 @@ watch(pageSize, (newSize) =>
   font-size: 1.1rem;
   margin: 0 0 15px 0;
   text-align: center;
-  color: #007ACC; /* Dark accent blue */
+  color: #007ACC;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -771,19 +770,19 @@ watch(pageSize, (newSize) =>
 
 .custom-table td, .custom-table th {
   padding: 10px 12px;
-  border: 1px solid #D0E0F0; /* Light blue-grey border */
+  border: 1px solid #D0E0F0;
   text-align: left;
 }
 
 .custom-table th {
-  background: #EBF4FA; /* Very light blue header background */
-  color: #006BB3; /* Dark accent blue for header text */
+  background: #EBF4FA;
+  color: #006BB3;
   font-weight: 700;
   text-align: center;
   text-transform: uppercase;
 }
 .custom-table td {
-  color: #33475B; /* Dark grey-blue for table data */
+  color: #33475B;
 }
 
 .pointer-row {
@@ -791,58 +790,104 @@ watch(pageSize, (newSize) =>
 }
 
 .pointer-row:hover {
-  background-color: #E6F7FF; /* Very light accent hover (Ant default light blue) */
+  background-color: #E6F7FF;
 }
 .pointer-row:hover td {
-  color: #005C9E; /* Darker accent text on hover */
+  color: #005C9E;
 }
 
-/* Ant Table Overrides for Neo-Futuristic light theme */
+/* Ant Table Overrides */
 :global(.ant-table) {
-  background: transparent; /* Table wrapper background */
+  background: transparent;
 }
 :global(.ant-table-thead > tr > th) {
-  background-color: #F0F5FA !important; /* Light header background for Ant Table */
-  border-bottom: 1px solid #D9E2EC !important; /* Border from config */
-  color: #007ACC !important; /* Header text color from .table-header-title or direct */
+  background-color: #F0F5FA !important;
+  border-bottom: 1px solid #D9E2EC !important;
+  color: #007ACC !important;
 }
 :global(.ant-table-tbody > tr > td) {
-  border-bottom: 1px solid #E8EFF5 !important; /* Row separator from config */
-  color: #33475B; /* Text color */
+  border-bottom: 1px solid #E8EFF5 !important;
+  color: #33475B;
 }
 :global(.ant-table-tbody > tr.ant-table-row:hover > td) {
-  background: #E6F7FF !important; /* Row hover background (Ant default light blue) */
+  background: #E6F7FF !important;
 }
 
-/* Ant Pagination for light theme - relies heavily on a-config-provider */
+/* Ant Pagination */
 :global(.ant-pagination-item a) {
-  color: #5A738E; /* Default item color */
+  color: #5A738E;
 }
-/* Active & hover states handled by colorPrimary from config provider */
 :global(.ant-pagination-disabled .ant-pagination-item-link) {
-   color: #B0C4DE !important; /* Disabled color */
+   color: #B0C4DE !important;
 }
 
-/* Ant Select Dropdown for light theme - relies heavily on a-config-provider */
+/* Ant Select Dropdown */
 :global(.ant-select-selector) {
-    background-color: #FFFFFF !important; /* Ensure select bg is white */
-    border-color: #D9E2EC !important; /* Default border from config */
+    background-color: #FFFFFF !important;
+    border-color: #D9E2EC !important;
 }
 :global(.ant-select-focused .ant-select-selector),
 :global(.ant-select-selector:focus),
 :global(.ant-select-selector:hover) {
-    border-color: #00AFFF !important; /* Accent color on hover/focus */
+    border-color: #00AFFF !important;
 }
 :global(.ant-select-arrow) {
-    color: #5A738E !important; /* Default arrow color */
+    color: #5A738E !important;
 }
 :global(.ant-select-focused .ant-select-arrow) {
     color: #00AFFF !important;
 }
 
-
-/* Ant Spin - colorPrimary from config provider should style this */
+/* Ant Spin */
 :global(.ant-spin-dot-item) {
-  background-color: #00AFFF; /* Explicitly set if needed */
+  background-color: #00AFFF;
 }
+
+
+/* === RESPONSIVE STYLES FOR MOBILE === */
+@media (max-width: 768px) {
+  /* Main layout adjustments */
+  .body-wrapper {
+    flex-direction: column; /* Stack columns vertically */
+    padding: 15px; /* Reduce padding for smaller screens */
+    gap: 15px;
+  }
+
+  /* Make columns full width */
+  .part-left,
+  .part-right {
+    width: 100%;
+  }
+
+  /* Adjust typography */
+  .body-header > h2 {
+    font-size: 1.5rem; /* Smaller title */
+  }
+  .course-title {
+    font-size: 1.2rem;
+  }
+
+  /* Adjust form elements */
+  .search-container {
+    width: 100%; /* Full width search bar */
+  }
+
+  .course-select-wrapper {
+    flex-direction: column; /* Stack label and select box */
+    align-items: flex-start; /* Align to the left */
+    gap: 8px;
+  }
+  
+  .course-select-wrapper .ant-select {
+    width: 100% !important; /* Ensure select box is full width */
+  }
+
+  /* Reduce padding on containers */
+  .problem-container,
+  .collapse-options,
+  .next-problems {
+    padding: 15px;
+  }
+}
+
 </style>
