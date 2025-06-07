@@ -214,386 +214,325 @@ const navigateToProblem = code => {
 </script>
 
 <template>
-  <Header v-if="currentUser && currentUser.member_group === 1"/>
-  <LecturerHeader v-else-if="currentUser && currentUser.member_group === 2"/>
-  <AdminHeader v-else/>
-  <a-spin :spinning="isLoading">
-    <div class="body">
-      <div class="part-left">
+    <Header v-if="currentUser && currentUser.member_group === 1"/>
+    <LecturerHeader v-else-if="currentUser && currentUser.member_group === 2"/>
+    <AdminHeader v-else/>
+  <div class="profile-page">
+    
+    <a-spin :spinning="isLoading">
+      <div class="page-wrapper">
         <div class="body-header">
           <h2>Hồ sơ người dùng</h2>
           <div class="underline"></div>
+        </div>
 
-          <div style="display: flex">
-            <div class="info-container" ref="infoContainerRef">
-              <div
-                  style="display: flex; justify-content: center; flex-direction: column; align-items: center">
+        <div class="profile-layout">
+          <!-- Cột thông tin bên trái -->
+          <aside class="profile-sidebar">
+            <div class="info-card">
+              <div class="avatar-section">
                 <a-avatar
-                    :size="avatarSize"
-                    style="border: 1px solid #A7453C; box-shadow: 0 2px 5px #A7453C"
-                    :src="currentUser.profile_picture ??
-                            `https://ui-avatars.com/api/?name=${getAvatarName(currentUser.last_name + ' ' + currentUser.first_name)}`"
+                    :size="120"
+                    class="profile-avatar"
+                    :src="currentUser.profile_picture ?? `https://ui-avatars.com/api/?name=${getAvatarName(currentUser.last_name + ' ' + currentUser.first_name)}&background=007ACC&color=FFFFFF`"
                     alt="Avatar"
                 />
-
-                <p style="margin-top: 10px; font-weight: bold; font-size: 130%">
-                  {{ currentUser.last_name + ' ' + currentUser.first_name }}</p>
+                <p class="user-name">{{ currentUser.last_name + ' ' + currentUser.first_name }}</p>
               </div>
 
-              <a-button type="primary" style="margin-top: 5px; margin-bottom: 5px"
-                        @click="router.push('profile/edit')">
+              <a-button type="primary" block @click="router.push('profile/edit')">
                 Chỉnh sửa hồ sơ
               </a-button>
 
-              <div class="detail-container">
-                <p>
-                                <span style="font-weight: bold">
-                                    <SolutionOutlined/>
-                                    Tài khoản:
-                                </span>
-                  {{ currentUser.username }}
+              <div class="detail-list">
+                <p class="detail-item"><SolutionOutlined/><span>Tài khoản:</span> {{ currentUser.username }}</p>
+                <p class="detail-item"><ReadOutlined/><span>Lớp:</span> {{ currentUser.class }}</p>
+                <p class="detail-item"><MailOutlined/><span>Email:</span> {{ currentUser.email }}</p>
+                <p class="detail-item"><CalendarOutlined/><span>Ngày sinh:</span> {{ currentUser.birthday }}</p>
+                <p class="detail-item">
+                  <WomanOutlined v-if="currentUser.gender === 1"/><ManOutlined v-else/>
+                  <span>Giới tính:</span> {{ currentUser.gender === 0 ? 'Nam' : currentUser.gender === 1 ? 'Nữ' : '' }}
                 </p>
-
-                <p>
-                                <span style="font-weight: bold">
-                                    <ReadOutlined/>
-                                    Lớp:
-                                </span>
-                  {{ currentUser.class }}
-                </p>
-
-                <p>
-                                <span style="font-weight: bold">
-                                    <MailOutlined/>
-                                    Email:
-                                </span>
-                  {{ currentUser.email }}
-                </p>
-
-                <p>
-                                <span style="font-weight: bold">
-                                    <CalendarOutlined/>
-                                    Ngày sinh:
-                                </span>
-                  {{ currentUser.birthday }}
-                </p>
-
-                <p>
-                                <span style="font-weight: bold">
-                                    <WomanOutlined v-if="currentUser.gender === 1"/>
-                                    <ManOutlined v-else/>
-                                    Giới tính:
-                                </span>
-                  {{ currentUser.gender === 0 ? 'Nam' : currentUser.gender === 0 ? 'Nữ' : '' }}
-                </p>
-
-                <p>
-                                <span style="font-weight: bold">
-                                    <HomeOutlined/>
-                                    Địa chỉ:
-                                </span>
-                  {{ currentUser.address }}
-                </p>
-
-                <p>
-                                <span style="font-weight: bold">
-                                    <MessageOutlined/>
-                                    Giới thiệu:
-                                </span>
-                  {{ currentUser.about }}
-                </p>
+                <p class="detail-item"><HomeOutlined/><span>Địa chỉ:</span> {{ currentUser.address }}</p>
+                <p class="detail-item"><MessageOutlined/><span>Giới thiệu:</span> {{ currentUser.about }}</p>
               </div>
             </div>
+          </aside>
 
-            <div class="part-right">
-              <div class="content-container">
-                <a-menu style="font-size: 110%" v-model:selectedKeys="currentTab" mode="horizontal"
-                        :items="items"/>
+          <!-- Cột nội dung bên phải -->
+          <main class="profile-main-content">
+            <div class="content-card">
+              <a-menu class="profile-tabs" v-model:selectedKeys="currentTab" mode="horizontal" :items="items"/>
 
-                <div class="general-container" v-if="currentTab[0] === 'general'">
-                  <p style="margin-top: 10px; font-size: 110%; font-weight: bold; margin-bottom: 10px">
-                    Danh sách lớp học đã tham gia:</p>
-                  <a-table
-                      :row-key="genUuid()"
-                      :data-source="dataSource"
-                      :pagination="pagination"
-                      :loading="loading"
-                      @change="handleTableChange"
-                  >
-                    <a-table-column data-index="stt" width="8%">
-                      <template #title>
-                        <span style="font-weight: bold;">STT</span>
-                      </template>
-                    </a-table-column>
+              <div class="tab-content general-container" v-if="currentTab[0] === 'general'">
+                <p class="tab-title">Danh sách lớp học đã tham gia:</p>
+                <a-table
+                    :row-key="genUuid"
+                    :data-source="dataSource"
+                    :pagination="pagination"
+                    :loading="loading"
+                    @change="handleTableChange"
+                    :scroll="{ x: 'max-content' }"
+                >
+                  <a-table-column title="STT" data-index="stt" width="8%" />
+                  <a-table-column title="Môn học" data-index="subject" />
+                  <a-table-column title="Nhóm" data-index="group" width="20%" />
+                  <a-table-column title="Học kỳ" data-index="semester" />
+                  <a-table-column title="Trạng thái" data-index="status" width="15%">
+                    <template #default="{ text }">
+                      <a-tag :color="text === 1 ? 'green' : 'red'">
+                        {{ text === 1 ? 'Hoạt động' : 'Không hoạt động' }}
+                      </a-tag>
+                    </template>
+                  </a-table-column>
+                </a-table>
+              </div>
 
-                    <a-table-column data-index="subject">
-                      <template #title>
-                        <span style="font-weight: bold">Môn học</span>
-                      </template>
-                    </a-table-column>
-
-                    <a-table-column width="20%" data-index="group">
-                      <template #title>
-                        <span style="font-weight: bold">Nhóm</span>
-                      </template>
-                    </a-table-column>
-
-                    <a-table-column data-index="semester">
-                      <template #title>
-                        <span style="font-weight: bold">Học kỳ</span>
-                      </template>
-                    </a-table-column>
-
-                    <a-table-column width="15%" data-index="status">
-                      <template #title>
-                        <span style="font-weight: bold">Trạng thái</span>
-                      </template>
-
-                      <template #default="{ text }">
-                        <a-tag color="green" v-if="text === 1">Hoạt động</a-tag>
-                        <a-tag color="red" v-else>Không hoạt động</a-tag>
-                      </template>
-                    </a-table-column>
-                  </a-table>
-                </div>
-
-                <div class="history-container" v-if="currentTab[0] === 'history'">
-                  <p style="font-size: 110%; font-weight: bold; margin-bottom: 10px">Danh sách bài
-                    nộp:</p>
-                  <a-table
-                      :row-key="genUuid()"
-                      :data-source="dataSourceHistory"
-                      :pagination="pagination"
-                      :loading="loading"
-                      @change="handleTableChange"
-                  >
-                    <a-table-column data-index="id" width="12%">
-                      <template #title>
-                        <span style="font-weight: bold;">ID</span>
-                      </template>
-
-                      <template #default="{ text }">
-                        <a style="color: #A7453C" @click="showEditor(text)">{{ text }}</a>
-                      </template>
-                    </a-table-column>
-
-                    <a-table-column data-index="date" width="12%">
-                      <template #title>
-                        <span style="font-weight: bold">Thời gian</span>
-                      </template>
-                    </a-table-column>
-
-                    <a-table-column width="8%" data-index="result">
-                      <template #title>
-                        <span style="font-weight: bold">Kết quả</span>
-                      </template>
-
-                      <template #default="{ record }">
-                        <a @click="showEditor(record.id)">
-                          <a-tag style="width: 70%; text-align: center" v-if="record.result === 'AC'"
-                                 color="green">AC
-                          </a-tag>
-                          <a-tag style="width: 70%; text-align: center"
-                                 v-else-if="record.result === 'WA'"
-                                 color="red">WA
-                          </a-tag>
-                          <a-tag style="width: 70%; text-align: center"
-                                 v-else-if="record.result === 'TLE'"
-                                 color="orange">TLE
-                          </a-tag>
-                          <a-tag style="width: 70%; text-align: center"
-                                 v-else-if="record.result === 'RTE'"
-                                 color="red">RTE
-                          </a-tag>
-                          <a-tag style="width: 70%; text-align: center"
-                                 v-else-if="record.result === 'CE'"
-                                 color="purple">CE
-                          </a-tag>
-                          <a-tag style="width: 70%; text-align: center"
-                                 v-else-if="record.result === 'MLE'"
-                                 color="red">MLE
-                          </a-tag>
-                          <a-tag style="width: 70%; text-align: center"
-                                 v-else-if="record.result === 'OLE'"
-                                 color="red">OLE
-                          </a-tag>
-                          <a-tag style="width: 70%; text-align: center"
-                                 v-else-if="record.result === 'IR'"
-                                 color="red">IR
-                          </a-tag>
-                          <p v-else-if="record.result === null">
-                            <LoadingOutlined/>
-                          </p>
-                        </a>
-                      </template>
-                    </a-table-column>
-
-                    <a-table-column width="20%" data-index="problem">
-                      <template #title>
-                        <span style="font-weight: bold">Bài tập</span>
-                      </template>
-
-                      <template #default="{ record }">
-                        <a style="color: #A7453C" @click="navigateToProblem(record.code)">
-                          {{ record.problem }}
-                        </a>
-                      </template>
-                    </a-table-column>
-
-                    <a-table-column width="10%" data-index="time">
-                      <template #title>
-                        <span style="font-weight: bold">Thời gian</span>
-                      </template>
-                    </a-table-column>
-
-                    <a-table-column width="10%" data-index="memory">
-                      <template #title>
-                        <span style="font-weight: bold">Bộ nhớ</span>
-                      </template>
-                    </a-table-column>
-
-                    <a-table-column width="10%" data-index="compiler">
-                      <template #title>
-                        <span style="font-weight: bold">Trình biên dịch</span>
-                      </template>
-                    </a-table-column>
-                  </a-table>
-                </div>
+              <div class="tab-content history-container" v-if="currentTab[0] === 'history'">
+                <p class="tab-title">Danh sách bài nộp:</p>
+                <a-table
+                    :row-key="genUuid"
+                    :data-source="dataSourceHistory"
+                    :pagination="pagination"
+                    :loading="loading"
+                    @change="handleTableChange"
+                    :scroll="{ x: 'max-content' }"
+                >
+                  <a-table-column title="ID" data-index="id" width="12%">
+                    <template #default="{ text }">
+                      <a class="table-link" @click="showEditor(text)">{{ text }}</a>
+                    </template>
+                  </a-table-column>
+                  <a-table-column title="Thời gian" data-index="date" width="12%" />
+                  <a-table-column title="Kết quả" data-index="result" width="8%">
+                     <template #default="{ record }">
+                       <a @click="showEditor(record.id)">
+                          <a-tag v-if="record.result === 'AC'" color="green">AC</a-tag>
+                          <a-tag v-else-if="record.result === 'WA'" color="red">WA</a-tag>
+                          <a-tag v-else-if="record.result === 'TLE'" color="orange">TLE</a-tag>
+                          <a-tag v-else-if="record.result === 'RTE'" color="red">RTE</a-tag>
+                          <a-tag v-else-if="record.result === 'CE'" color="purple">CE</a-tag>
+                          <a-tag v-else-if="record.result === 'MLE'" color="red">MLE</a-tag>
+                          <a-tag v-else-if="record.result === 'OLE'" color="red">OLE</a-tag>
+                          <a-tag v-else-if="record.result === 'IR'" color="red">IR</a-tag>
+                          <p v-else-if="record.result === null"><LoadingOutlined/></p>
+                       </a>
+                     </template>
+                  </a-table-column>
+                  <a-table-column title="Bài tập" data-index="problem" width="20%">
+                     <template #default="{ record }">
+                       <a class="table-link" @click="navigateToProblem(record.code)">{{ record.problem }}</a>
+                     </template>
+                  </a-table-column>
+                  <a-table-column title="Thời gian" data-index="time" width="10%" />
+                  <a-table-column title="Bộ nhớ" data-index="memory" width="10%" />
+                  <a-table-column title="Trình biên dịch" data-index="compiler" width="10%" />
+                </a-table>
               </div>
             </div>
-          </div>
+          </main>
         </div>
       </div>
-    </div>
+    </a-spin>
 
-    <a-modal style="top: 20px" v-model:open="isOpenCodeEditor" width="1000px"
-             :title="currentSubmission?.question?.code + ' - ' + currentSubmission?.question?.name.toUpperCase()">
-      <div v-if="currentSubmission">
-        <p style="margin-bottom: 5px; font-weight: bold">Thời gian nộp bài:
-          {{ currentSubmission?.created_at }}</p>
-        <p style="margin-bottom: 5px; font-weight: bold">Ngôn ngữ: {{ currentSubmission?.compiler.name }}</p>
-        <p style="margin-bottom: 5px; font-weight: bold">Kết quả:
-          <span v-if="currentSubmission?.result === 'AC'" style="color: #2AAA2F">AC</span>
-          <span v-else-if="currentSubmission?.result === 'WA'" style="color: #FF0000">WA</span>
-          <span v-else-if="currentSubmission?.result === 'TLE'" style="color: #FF0000">TLE</span>
-          <span v-else-if="currentSubmission?.result === 'MLE'" style="color: #FF0000">MLE</span>
-          <span v-else-if="currentSubmission?.result === 'OLE'" style="color: #FF0000">OLE</span>
-          <span v-else-if="currentSubmission?.result === 'RTE'" style="color: #FF0000">RTE</span>
-          <span v-else-if="currentSubmission?.result === 'IR'" style="color: #FF0000">IR</span>
-          <span v-else-if="currentSubmission?.result === 'CE'" style="color: #FF0000">CE</span>
+    <a-modal style="top: 20px" v-model:open="isOpenCodeEditor" width="1000px" :title="currentSubmission?.question?.code + ' - ' + currentSubmission?.question?.name.toUpperCase()">
+      <div v-if="currentSubmission" class="submission-details">
+        <p><b>Thời gian nộp bài:</b> {{ currentSubmission?.created_at }}</p>
+        <p><b>Ngôn ngữ:</b> {{ currentSubmission?.compiler.name }}</p>
+        <p><b>Kết quả:</b>
+          <span v-if="currentSubmission?.result === 'AC'" style="color: #52c41a">AC</span>
+          <span v-else-if="['WA', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'CE'].includes(currentSubmission?.result)" style="color: #d9363e">{{ currentSubmission?.result }}</span>
           <span v-else-if="currentSubmission?.result === null"><LoadingOutlined/></span>
         </p>
       </div>
-
       <div class="editor-container">
-        <MonacoEditor
-            theme="vs-light"
-            language="python"
-            :width="900"
-            :height="700"
-            :options="editorOptions"
-            v-model:value="submittedCode"
-        />
+        <MonacoEditor theme="vs-light" language="python" :width="900" :height="700" :options="editorOptions" v-model:value="submittedCode" />
       </div>
-
       <template #footer>
         <a-button type="primary" @click="isOpenCodeEditor = false">Đóng</a-button>
       </template>
     </a-modal>
-
-    <a-config-provider
-        :theme="{
-                token: {
-                    colorPrimary: '#A7453C',
-                    colorTextHeading: '#000000',
-                    colorText: '#A7453C',
-                    colorBorderSecondary: 'rgba(186,151,147,0.45)'
-                },
-            }"
-    />
-  </a-spin>
+  </div>
 </template>
 
 <style scoped>
-.body {
-  color: #A7453C;
-  display: flex;
+/*
+  CSS cho Trang Hồ sơ người dùng - Chủ đề Neo-Futuristic Sáng
+  Đã bao gồm các điều chỉnh để responsive trên di động.
+*/
+
+.profile-page {
+  background-color: #F5F7FA;
+  min-height: 100vh;
+}
+
+.page-wrapper {
   margin-top: 90px;
+  padding: 24px;
 }
 
-.part-left {
-  width: 96%;
-  margin-bottom: 5%;
-
-}
-
+/* === Phần Tiêu đề === */
 .body-header {
-  margin-left: 50px;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  max-width: 1400px; /* Giới hạn chiều rộng */
+  margin: 0 auto 24px auto; /* Căn giữa */
 }
 
-.body-header h2 {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: black;
-}
-
-.info-container {
-  display: flex;
-  flex-direction: column;
-  background-color: rgba(255, 255, 255, 0.35);
-  border-radius: 10px;
-  box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.2);
-  padding: 2%;
-  width: 25%;
-  margin-top: 20px;
-  min-height: 468px;
+h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #007ACC;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .underline {
   width: 100%;
-  height: 1px;
-  margin-top: 5px;
-  background-color: #cacaca;
+  height: 3px;
+  margin-top: 8px;
+  background: linear-gradient(90deg, #00AFFF, #B3E5FC);
+  border-radius: 2px;
 }
 
-.part-right {
-  width: 100%;
-  margin-left: 20px;
+/* === Bố cục chính === */
+.profile-layout {
+  display: flex;
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-.group-icon:hover img {
-  filter: invert(32%) sepia(64%) saturate(506%) hue-rotate(330deg) brightness(70%) contrast(95%);
+.profile-sidebar {
+  width: 25%;
+  min-width: 280px;
+  flex-shrink: 0; /* Không cho co lại */
 }
 
-.group-icon-container p {
-  margin-top: 12px;
+.profile-main-content {
+  flex-grow: 1; /* Chiếm hết không gian còn lại */
 }
 
-.detail-container {
-  margin-top: 20px;
-  font-size: 110%;
-}
-
-.detail-container p {
-  margin-bottom: 5px;
-}
-
-.content-container {
+/* === Thẻ thông tin bên trái === */
+.info-card {
   display: flex;
   flex-direction: column;
-  background-color: rgba(255, 255, 255, 0.35);
-  border-radius: 10px;
-  box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.2);
-  padding: 2%;
-  width: 100%;
-  margin-top: 20px;
-  min-height: 768px;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08);
+  border: 1px solid #D9E2EC;
+  padding: 24px;
+  height: 100%;
+}
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.profile-avatar {
+  border: 3px solid #00AFFF;
+  box-shadow: 0 4px 10px rgba(0, 175, 255, 0.3);
+  margin-bottom: 15px;
+}
+.user-name {
+  margin-top: 10px;
+  font-weight: bold;
+  font-size: 1.3rem;
+  color: #1A2B3C;
+}
+.info-card .ant-btn-primary {
+  background: linear-gradient(90deg, #007ACC, #00AFFF);
+  border: none;
+  font-weight: 600;
+  margin: 0 0 20px 0;
+}
+.detail-list {
+  font-size: 1em;
+  border-top: 1px solid #E8EFF5;
+  padding-top: 20px;
+}
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: #33475B;
+}
+.detail-item .anticon {
+  color: #00AFFF;
+  font-size: 1.2em;
+}
+.detail-item span {
+  font-weight: 600;
+  color: #1A2B3C;
 }
 
-.history-container {
+/* === Khung nội dung bên phải === */
+.content-card {
+  display: flex;
+  flex-direction: column;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08);
+  border: 1px solid #D9E2EC;
+  padding: 24px;
+  min-height: 768px; /* Giữ lại min-height */
+}
+
+.profile-tabs {
+  font-size: 1.1em;
+  border-bottom: 2px solid #E8EFF5;
+  margin-bottom: 20px;
+}
+.tab-content {
   margin-top: 10px;
+}
+.tab-title {
+  margin-top: 10px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #006BB3;
+}
+.table-link {
+  color: #007ACC;
+  font-weight: 500;
+}
+.table-link:hover {
+  color: #005C9E;
+}
+
+/* Modal and Editor */
+.submission-details p {
+  margin-bottom: 8px;
+}
+.editor-container {
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 992px) {
+  .profile-layout {
+    flex-direction: column; /* Xếp chồng các cột */
+  }
+  .profile-sidebar, .profile-main-content {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+@media (max-width: 576px) {
+  .page-wrapper {
+    padding: 15px;
+  }
+  h2 { font-size: 1.5rem; }
+  .info-card, .content-card {
+    padding: 15px;
+  }
+  .profile-tabs {
+    font-size: 1em;
+  }
 }
 </style>

@@ -165,278 +165,278 @@ const handleTableChange = (pag, filters, sorter) =>
 
 <template>
     <Header/>
-
+  <div class="ranking-page">
+    
     <a-spin :spinning="isLoading">
-        <div style="display: flex; justify-content: center; margin-top: 110px; flex-direction: column; align-items: center">
-            <div style="width: 93%; margin-bottom: 20px; color: black">
-                <h2>Bảng xếp hạng</h2>
-                <div class="underline"></div>
-            </div>
-            <div class="ranking">
-                <div style="display: flex; justify-content: space-between; align-items: center">
-                    <div v-if="currentCourse">
-                        <h2 style="color: #A7453C">{{currentCourse?.subject?.name}} - Nhóm {{currentCourse?.name}}</h2>
-                    </div>
+      <div class="page-wrapper">
 
-                    <div class="group-icon-container">
-                        <a-dropdown :arrow="{ pointAtCenter: true }" placement="bottom">
-                            <a class="ant-dropdown-link" @click.prevent>
-                                <div class="group-icon">
-                                    <img style="margin-right: 7%" src="../static/img/group_icon.svg">
-                                    <p style="margin-right: 7%; font-size: 100%; margin-bottom: 10px">Nhóm</p>
-                                    <img src="../static/img/dropdown_icon.svg">
-                                </div>
-                            </a>
-                            <template #overlay>
-                                <a-menu @click="onClick">
-                                    <a-menu-item v-for="group in groupList" :key="group.id">{{ group.name }}</a-menu-item>
-                                </a-menu>
-                            </template>
-                        </a-dropdown>
-                    </div>
-                </div>
-                <div class="top-3">
-                    <a-card class="card-top-3" hoverable style="margin-top: 30px; background-color: #ececec"
-                            :loading="isLoading">
-                        <div style="display: flex; align-items: center; justify-content: center">
-                            <img src="../static/img/top2.svg" alt=""/>
-                            <a-avatar :src="top3[1]?.avatar" style="position: absolute; vertical-align: middle"
-                                      :size="56">
-                                <UserOutlined/>
-                            </a-avatar>
-                        </div>
-                        <p style="font-size: 16px">{{ top3[1]?.name }}</p>
-                        <p style="font-size: 12px; color: #737374">{{ top3[1]?.username }}</p>
-                        <p style="font-size: 10px;">{{ top3[1]?.subjectClass }}</p>
-                        <div style="display: flex; justify-content: center; margin-top: 10px; align-items: center">
-                            <div style="text-align: center; margin-right: 16px">
-                                <p style="color: #159714; font-size: 20px; margin: 0">{{ top3[1]?.solved }}</p>
-                                <p style="margin: 0">Làm đúng</p>
-                            </div>
-                            <div class="divider"></div>
-                            <div style="text-align: center; margin-left: 16px">
-                                <p style="color: #164096; font-size: 20px; margin: 0">{{ top3[1]?.tried }}</p>
-                                <p style="margin: 0">Đã nộp</p>
-                            </div>
-                        </div>
-                    </a-card>
-
-                    <a-card class="card-top-3" hoverable style="margin-left: 50px; background-color: #fff471"
-                            :loading="isLoading">
-                        <div style="display: flex; align-items: center; justify-content: center">
-                            <img src="../static/img/top1.svg" alt=""/>
-                            <a-avatar :src="top3[0]?.avatar" style="position: absolute" :size="56">
-                                <UserOutlined/>
-                            </a-avatar>
-                        </div>
-                        <p style="font-size: 16px">{{ top3[0]?.name }}</p>
-                        <p style="font-size: 12px; color: #737374">{{ top3[0]?.username }}</p>
-                        <p style="font-size: 10px;">{{ top3[0]?.subjectClass }}</p>
-                        <div style="display: flex; justify-content: center; margin-top: 10px; align-items: center">
-                            <div style="text-align: center; margin-right: 16px">
-                                <p style="color: #159714; font-size: 20px; margin: 0">{{ top3[0]?.solved }}</p>
-                                <p style="margin: 0">Làm đúng</p>
-                            </div>
-                            <div class="divider"></div>
-                            <div style="text-align: center; margin-left: 16px">
-                                <p style="color: #164096; font-size: 20px; margin: 0">{{ top3[0]?.tried }}</p>
-                                <p style="margin: 0">Đã nộp</p>
-                            </div>
-                        </div>
-                    </a-card>
-
-                    <a-card class="card-top-3" hoverable
-                            style="margin-left: 50px; margin-top: 30px; background-color: #fbe0b5" :loading="isLoading">
-                        <div style="display: flex; align-items: center; justify-content: center">
-                            <img src="../static/img/top3.svg" alt=""/>
-                            <a-avatar :src="top3[2]?.avatar" style="position: absolute" :size="56">
-                                <UserOutlined/>
-                            </a-avatar>
-                        </div>
-                        <p style="font-size: 16px">{{ top3[2]?.name }}</p>
-                        <p style="font-size: 12px; color: #737374">{{ top3[2]?.username }}</p>
-                        <p style="font-size: 10px;">{{ top3[2]?.subjectClass }}</p>
-                        <div style="display: flex; justify-content: center; margin-top: 10px; align-items: center">
-                            <div style="text-align: center; margin-right: 16px">
-                                <p style="color: #159714; font-size: 20px; margin: 0">{{ top3[2]?.solved }}</p>
-                                <p style="margin: 0">Làm đúng</p>
-                            </div>
-                            <div class="divider"></div>
-                            <div style="text-align: center; margin-left: 16px">
-                                <p style="color: #164096; font-size: 20px; margin: 0">{{ top3[2]?.tried }}</p>
-                                <p style="margin: 0">Đã nộp</p>
-                            </div>
-                        </div>
-
-                    </a-card>
-                </div>
-
-                <div class="table-container">
-                    <a-table
-                        :row-key="genUuid()"
-                        :data-source="dataSource"
-                        :pagination="pagination"
-                        :loading="isLoading"
-                        @change="handleTableChange"
-                    >
-                        <a-table-column data-index="stt" width="8%">
-                            <template #title>
-                                <span style="font-weight: bold">STT</span>
-                            </template>
-                        </a-table-column>
-
-                        <a-table-column width="20%" data-index="username">
-                            <template #title>
-                                <span style="font-weight: bold">Tài khoản</span>
-                            </template>
-                        </a-table-column>
-
-                        <a-table-column width="20%" data-index="name">
-                            <template #title>
-                                <span style="font-weight: bold">Họ và tên</span>
-                            </template>
-                        </a-table-column>
-
-                        <a-table-column data-index="subjectClass">
-                            <template #title>
-                                <span style="font-weight: bold">Lớp học</span>
-                            </template>
-                        </a-table-column>
-
-                        <a-table-column width="15%" data-index="class">
-                            <template #title>
-                                <span style="font-weight: bold">Lớp</span>
-                            </template>
-                        </a-table-column>
-
-                        <a-table-column width="10%" data-index="solved">
-                            <template #title>
-                                <span style="font-weight: bold">Làm đúng</span>
-                            </template>
-                        </a-table-column>
-
-                        <a-table-column width="10%" data-index="tried">
-                            <template #title>
-                                <span style="font-weight: bold">Đã thử</span>
-                            </template>
-                        </a-table-column>
-                    </a-table>
-                    <a-config-provider
-                        :theme="{
-                          token: {
-                            colorPrimary: '#A7453C',
-                            colorTextHeading: '#000000',
-                            colorText: '#A7453C',
-                            colorBorderSecondary: 'rgba(186,151,147,0.45)'
-                          },
-                        }"
-                    />
-                </div>
-            </div>
+        <!-- Phần tiêu đề trang -->
+        <div class="title-container">
+          <h2>Bảng xếp hạng</h2>
+          <div class="underline"></div>
         </div>
+
+        <!-- Khung nội dung chính -->
+        <div class="ranking-content">
+
+          <!-- Phần bộ lọc -->
+          <div class="filter-container">
+            <div v-if="currentCourse" class="course-info">
+              <h3>{{currentCourse?.subject?.name}} - Nhóm {{currentCourse?.name}}</h3>
+            </div>
+            <div class="group-icon-container">
+              <a-dropdown :arrow="{ pointAtCenter: true }" placement="bottom">
+                <a class="ant-dropdown-link" @click.prevent>
+                  <div class="group-icon">
+                    <img src="../static/img/group_icon.svg" alt="Group Icon">
+                    <p>Nhóm</p>
+                    <img src="../static/img/dropdown_icon.svg" alt="Dropdown Icon">
+                  </div>
+                </a>
+                <template #overlay>
+                  <a-menu @click="onClick">
+                    <a-menu-item v-for="group in groupList" :key="group.id">{{ group.name }}</a-menu-item>
+                  </a-menu>
+                </template>
+              </a-dropdown>
+            </div>
+          </div>
+
+          <!-- Phần Top 3 -->
+          <div class="top-3">
+            <!-- Hạng 2 -->
+            <div class="card-top-3 rank-2" v-if="top3[1]">
+              <div class="rank-badge">#2</div>
+              <a-avatar :src="top3[1]?.avatar" :size="80">
+                <template #icon><UserOutlined/></template>
+              </a-avatar>
+              <p class="username">{{ top3[1]?.name }}</p>
+              <p class="user-id">{{ top3[1]?.username }}</p>
+              <div class="stats">
+                <div class="stat-item">
+                  <p class="stat-value solved">{{ top3[1]?.solved }}</p>
+                  <p class="stat-label">Làm đúng</p>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                  <p class="stat-value tried">{{ top3[1]?.tried }}</p>
+                  <p class="stat-label">Đã nộp</p>
+                </div>
+              </div>
+            </div>
+            <!-- Hạng 1 -->
+            <div class="card-top-3 rank-1" v-if="top3[0]">
+              <img class="crown-icon" src="../static/img/top1.svg" alt="Top 1 Crown"/>
+              <div class="rank-badge">#1</div>
+              <a-avatar :src="top3[0]?.avatar" :size="100">
+                 <template #icon><UserOutlined/></template>
+              </a-avatar>
+              <p class="username">{{ top3[0]?.name }}</p>
+              <p class="user-id">{{ top3[0]?.username }}</p>
+              <div class="stats">
+                <div class="stat-item">
+                  <p class="stat-value solved">{{ top3[0]?.solved }}</p>
+                  <p class="stat-label">Làm đúng</p>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                  <p class="stat-value tried">{{ top3[0]?.tried }}</p>
+                  <p class="stat-label">Đã nộp</p>
+                </div>
+              </div>
+            </div>
+            <!-- Hạng 3 -->
+            <div class="card-top-3 rank-3" v-if="top3[2]">
+              <div class="rank-badge">#3</div>
+              <a-avatar :src="top3[2]?.avatar" :size="80">
+                 <template #icon><UserOutlined/></template>
+              </a-avatar>
+              <p class="username">{{ top3[2]?.name }}</p>
+              <p class="user-id">{{ top3[2]?.username }}</p>
+              <div class="stats">
+                <div class="stat-item">
+                  <p class="stat-value solved">{{ top3[2]?.solved }}</p>
+                  <p class="stat-label">Làm đúng</p>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                  <p class="stat-value tried">{{ top3[2]?.tried }}</p>
+                  <p class="stat-label">Đã nộp</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bảng xếp hạng chi tiết -->
+          <div class="table-container">
+            <a-table
+                :row-key="genUuid()"
+                :data-source="dataSource"
+                :pagination="pagination"
+                :loading="isLoading"
+                @change="handleTableChange"
+                :scroll="{ x: 'max-content' }"
+            >
+              <a-table-column title="STT" data-index="stt" width="8%" />
+              <a-table-column title="Tài khoản" data-index="username" width="20%" />
+              <a-table-column title="Họ và tên" data-index="name" width="20%" />
+              <a-table-column title="Lớp học" data-index="subjectClass" />
+              <a-table-column title="Lớp" data-index="class" width="15%" />
+              <a-table-column title="Làm đúng" data-index="solved" width="10%" />
+              <a-table-column title="Đã thử" data-index="tried" width="10%" />
+            </a-table>
+          </div>
+        </div>
+      </div>
     </a-spin>
+  </div>
 </template>
 
 <style scoped>
-.template {
-  height: 100vh;
-  /* Applying page background here if it's the root */
+/*
+  CSS cho trang Xếp hạng - Chủ đề Neo-Futuristic Sáng
+  Đã bao gồm các điều chỉnh để responsive trên di động.
+*/
+.ranking-page {
   background-color: #F5F7FA;
-  padding-top: 24px; /* Space from the top */
+  min-height: 100vh;
 }
 
-/* Main ranking card container */
-.ranking {
+.page-wrapper {
   display: flex;
   flex-direction: column;
-  width: 95%; /* Using a more standard width */
-  max-width: 1200px; /* Capping width on large screens */
-  margin: 0 auto; /* Centering the container */
-  background-color: #FFFFFF; /* THEMED: Solid white */
-  border-radius: 16px; /* Slightly larger radius for a major container */
-  box-shadow: 0 8px 30px rgba(0, 90, 170, 0.1); /* THEMED: A bit more shadow for a primary container */
-  border: 1px solid #D9E2EC; /* THEMED: Light border */
-  padding: 30px 40px; /* Generous padding */
-  margin-bottom: 5%;
+  align-items: center;
+  margin-top: 90px;
+  padding: 24px;
 }
 
-/* === Title Section === */
+/* === Phần Tiêu đề === */
+.title-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 20px;
+}
+
 h2 {
-  font-size: 1.8rem; /* Larger title for the page */
+  font-size: 1.8rem;
   font-weight: 700;
-  color: #007ACC; /* THEMED: Darker accent blue */
-  text-align: center;
+  color: #007ACC;
+  text-align: left; /* Căn trái tiêu đề */
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .underline {
-  width: 150px; /* Shorter underline centered under the title */
+  width: 100%;
   height: 3px;
-  margin: 8px auto 30px auto; /* Centering the underline */
-  background: linear-gradient(90deg, #00AFFF, #B3E5FC); /* THEMED: Accent gradient */
+  margin-top: 8px;
+  background: linear-gradient(90deg, #00AFFF, #B3E5FC);
   border-radius: 2px;
 }
 
+/* === Khung nội dung chính === */
+.ranking-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  background-color: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 90, 170, 0.1);
+  border: 1px solid #D9E2EC;
+  padding: 30px 40px;
+}
 
-/* === Top 3 Ranking Cards (Highlight of the Page) === */
+/* === Phần bộ lọc === */
+.filter-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* Cho phép xuống dòng trên màn hình nhỏ */
+  gap: 16px;
+  margin-bottom: 30px;
+}
+.course-info h3 {
+  font-size: 1.2rem;
+  color: #006BB3;
+  margin: 0;
+}
+.group-icon-container {
+  display: flex;
+  align-items: center;
+}
+.group-icon {
+  color: #5A738E;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.group-icon:hover, .group-icon:hover p {
+  color: #00AFFF;
+}
+.group-icon img {
+  filter: opacity(0.7);
+}
+.group-icon:hover img {
+  filter: brightness(0) saturate(100%) invert(72%) sepia(99%) saturate(4463%) hue-rotate(165deg) brightness(102%) contrast(104%);
+}
+.group-icon p {
+  margin: 0;
+  font-weight: 600;
+}
 
+/* === Thẻ xếp hạng Top 3 === */
 .top-3 {
   display: flex;
   justify-content: center;
-  align-items: flex-end; /* Aligns cards at the bottom for the podium effect */
-  gap: 20px; /* Clean spacing between cards */
-  margin-bottom: 40px; /* Space between top 3 and the rest of the table */
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
 }
 
-/* Base style for all top 3 cards */
 .card-top-3 {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px; /* Spacing for content inside the card */
-  width: 280px; /* Slightly wider */
+  gap: 10px;
+  width: 280px;
   padding: 20px;
   border-radius: 12px;
-  background-color: #F8F9FB; /* Subtle background color */
-  border: 2px solid transparent; /* Placeholder for rank-colored border */
+  background-color: #F8F9FB;
+  border: 2px solid transparent;
   box-shadow: 0 4px 10px rgba(0, 90, 170, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   position: relative;
   text-align: center;
 }
-
 .card-top-3:hover {
   transform: translateY(-10px);
   box-shadow: 0 10px 25px rgba(0, 90, 170, 0.15);
 }
 
-/* Specific styles for each rank */
-/* Rank 1 - Gold */
 .card-top-3.rank-1 {
   width: 300px;
-  padding-top: 30px;
-  padding-bottom: 30px;
+  padding-top: 25px;
+  padding-bottom: 25px;
   border-color: #FFD700;
   box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
 }
+.card-top-3.rank-2 { border-color: #C0C0C0; }
+.card-top-3.rank-3 { border-color: #CD7F32; }
 
-/* Rank 2 - Silver */
-.card-top-3.rank-2 {
-  border-color: #C0C0C0;
+.crown-icon {
+    position: absolute;
+    top: -25px;
+    width: 50px;
+    height: 50px;
 }
-
-/* Rank 3 - Bronze */
-.card-top-3.rank-3 {
-  border-color: #CD7F32;
-}
-
-
 .card-top-3 .rank-badge {
   position: absolute;
   top: 10px;
-  right: 10px;
+  right: 15px;
   font-size: 24px;
   font-weight: bold;
   opacity: 0.2;
@@ -445,70 +445,72 @@ h2 {
 .card-top-3.rank-2 .rank-badge { color: #C0C0C0; }
 .card-top-3.rank-3 .rank-badge { color: #CD7F32; }
 
-
-/* Typography inside the top 3 cards */
-.card-top-3 p {
-  margin: 0;
-}
 .card-top-3 .username {
   font-size: 1.1rem;
   font-weight: 600;
   color: #2c3e50;
+  margin-top: 10px;
 }
-.card-top-3 .score {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #007ACC;
+.card-top-3 .user-id {
+  font-size: 0.9rem;
+  color: #5a738e;
+}
+.stats {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+  gap: 16px;
+}
+.stat-item { text-align: center; }
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+.stat-value.solved { color: #52c41a; }
+.stat-value.tried { color: #1677ff; }
+.stat-label {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #5a738e;
+}
+.stat-divider {
+    width: 1px;
+    height: 35px;
+    background-color: #d9e2ec;
 }
 
-
-/* THEMED: No longer needed, using 'gap' for spacing
-.divider {
-  width: 1px;
-  height: 35px;
-  background-color: #E8EFF5;
-  margin: 0 16px;
-}
-*/
-
-
-/* === Filters & Table Section === */
-
+/* === Bảng xếp hạng chi tiết === */
 .table-container {
   margin-top: 30px;
-  flex: 1; /* Retained from original */
 }
 
-.group-icon-container {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end; /* Align filters to the right */
-}
-
-.group-icon {
-  color: #5A738E; /* THEMED: Default text */
-  display: flex;
-  align-items: center;
-  gap: 8px; /* Space between icon and text */
-}
-
-.group-icon:hover, .group-icon:hover p {
-  cursor: pointer;
-  color: #00AFFF; /* THEMED: Vibrant accent blue */
-}
-
-.group-icon img {
-  filter: opacity(0.7);
-  transition: filter 0.3s ease;
-}
-
-.group-icon:hover img {
-  /* THEMED: Filter for #00AFFF */
-  filter: brightness(0) saturate(100%) invert(72%) sepia(99%) saturate(4463%) hue-rotate(165deg) brightness(102%) contrast(104%);
-}
-
-.group-icon-container p {
-  margin: 0; /* Removing top margin for better alignment */
-  font-weight: 600;
+/* === RESPONSIVE CHO THIẾT BỊ DI ĐỘNG === */
+@media (max-width: 768px) {
+  .page-wrapper {
+    padding: 15px;
+  }
+  .ranking-content {
+    padding: 20px 15px;
+  }
+  h2 { font-size: 1.5rem; }
+  .underline { margin-bottom: 20px; }
+  .top-3 {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+  .card-top-3.rank-1 { order: 1; }
+  .card-top-3.rank-2 { order: 2; }
+  .card-top-3.rank-3 { order: 3; }
+  .card-top-3, .card-top-3.rank-1 {
+    width: 100%;
+    max-width: 320px;
+    padding: 20px;
+  }
+  .card-top-3:hover { transform: translateY(-5px); }
+  .filter-container { justify-content: center; }
 }
 </style>
