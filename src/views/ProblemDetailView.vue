@@ -297,495 +297,324 @@ const showEditor = async (id) => {
 
 <template>
   <Header/>
-  <a-spin :spinning="isLoading">
-    <div class="body">
-      <div class="part-left">
-        <div class="body-header">
-          <h2>{{ questionDetail?.name.toUpperCase() }}</h2>
-          <div class="underline"></div>
-          <!--copy--> 
-          <div class="problem-container" v-if="questionDetail">
-            <div v-if="questionContent" v-html="questionContent"></div>
-            <br>
-            <p>Giới hạn thời gian: {{ questionDetail?.time_limit }}s</p>
-            <p>Giới hạn bộ nhớ: {{ questionDetail?.memory_limit }}Kb</p>
-          </div>
+  <div class="problem-page">
+       <a-spin :spinning="isLoading">
+        <div class="page-wrapper">
+          <div class="problem-layout">
 
-          <div class="tools-container">
-            <div class="compiler-container">
-              <h3 style="margin-right: 7px">Trình biên dịch:</h3>
-              <a-select
-                  ref="select"
-                  v-model:value="chosenCompiler"
-                  style="width: 120px; margin-bottom: 5px"
-                  :options="compilers"
-              ></a-select>
-            </div>
-
-            <div class="submit-container">
-              <a-upload :file-list="fileList" :before-upload="beforeUpload" @remove="handleRemove">
-                <a-button style="width: 100%" :disabled="fileList.length === 1">
-                  <UploadOutlined/>
-                  Tải file lên
-                </a-button>
-              </a-upload>
-
-              <div class="submit-status-container">
-                <p>Trạng thái:
-                  <span v-if="result === 'AC'" style="color: #2AAA2F">AC</span>
-                  <span v-else-if="result === 'WA'" style="color: #FF0000">WA</span>
-                  <span v-else-if="result === 'TLE'" style="color: #FF0000">TLE</span>
-                  <span v-else-if="result === 'MLE'" style="color: #FF0000">MLE</span>
-                  <span v-else-if="result === 'OLE'" style="color: #FF0000">OLE</span>
-                  <span v-else-if="result === 'RTE'" style="color: #FF0000">RTE</span>
-                  <span v-else-if="result === 'IR'" style="color: #FF0000">IR</span>
-                  <span v-else-if="result === 'CE'" style="color: #FF0000">CE</span>
-                  <span v-else-if="result === null"><LoadingOutlined/></span>
-                </p>
-
-                <a-button
-                    type="primary"
-                    style="width: 30%; margin-top: 10px"
-                    :loading="uploading"
-                    @click="handleUpload"
-                    :disabled="fileList.length === 0">Nộp bài
-                </a-button>
+            <!-- Cột nội dung chính -->
+            <main class="main-content">
+              <div class="header-container">
+                <h2>{{ questionDetail?.name.toUpperCase() }}</h2>
+                <div class="underline"></div>
               </div>
-            </div>
-          </div>
 
-          <h3 style="margin-top: 2%">Bình luận</h3>
-          <div class="comment-container">
-            <a-comment>
-              <template #avatar>
-                <a-avatar
-                    :src="currentUser.profile_picture ??
-                                    `https://ui-avatars.com/api/?name=${getAvatarName(currentUser.last_name + ' ' + currentUser.first_name)}`"
-                    alt="Avatar"
-                />
+              <!-- Thẻ nội dung bài tập -->
+              <div class="card-style problem-description">
+                <div v-if="questionContent" v-html="questionContent"></div>
+                <div class="problem-meta">
+                  <span>Giới hạn thời gian: <b>{{ questionDetail?.time_limit }}s</b></span>
+                  <span>Giới hạn bộ nhớ: <b>{{ questionDetail?.memory_limit }}Kb</b></span>
+                </div>
+              </div>
 
-              </template>
-              <template #content>
-                <a-form-item>
-                  <a-textarea
-                      placeholder="Sinh viên có thể đặt câu hỏi về bài tập, chia sẻ cách giải bài tập, nhưng không nên chia sẻ mã nguồn..."
-                      v-model:value="commentValue" :rows="4"/>
-                </a-form-item>
-                <a-form-item>
-                  <a-button html-type="submit" :loading="isSubmittingComment" type="primary"
-                            @click="handleComment">
-                    Thêm bình luận
+              <!-- Thẻ công cụ và nộp bài -->
+              <div class="card-style submission-tools">
+                <div class="tools-grid">
+                  <div class="compiler-container">
+                    <h3>Trình biên dịch:</h3>
+                    <a-select v-model:value="chosenCompiler" :options="compilers" style="width: 100%;" />
+                  </div>
+                  <div class="upload-container">
+                    <h3>Tải file lên:</h3>
+                    <a-upload :file-list="fileList" :before-upload="beforeUpload" @remove="handleRemove">
+                      <a-button block :disabled="fileList.length === 1">
+                        <UploadOutlined/> Chọn File
+                      </a-button>
+                    </a-upload>
+                  </div>
+                </div>
+                <div class="submit-action-bar">
+                  <div class="submit-status">
+                    Trạng thái:
+                    <span v-if="result === 'AC'" class="status-ac">AC</span>
+                    <span v-else-if="result" class="status-wa">{{ result }}</span>
+                    <LoadingOutlined v-else-if="uploading"/>
+                  </div>
+                  <a-button type="primary" :loading="uploading" @click="handleUpload" :disabled="fileList.length === 0">
+                    Nộp bài
                   </a-button>
-                </a-form-item>
-              </template>
-            </a-comment>
-
-            <a-list
-                v-if="comments.length"
-                :data-source="comments"
-                :header="`${comments.length} bình luận`"
-                item-layout="horizontal"
-            >
-              <template #renderItem="{ item }">
-                <a-list-item>
-                  <a-comment
-                      :author="item.name"
-                      :avatar="item.user.photo && item.user.photo?.length > 0 ? item.user.photo : `https://ui-avatars.com/api/?name=${getAvatarName(item.name)}`"
-                      :content="item.content"
-                      :datetime="item.created_at"
-                  />
-                </a-list-item>
-              </template>
-            </a-list>
-          </div>
-        </div>
-      </div>
-      <div class="part-right">
-        <a-config-provider
-            :theme="{
-                          token: {
-                            colorPrimary: '#A7453C',
-                            colorTextHeading: '#000000',
-                            colorText: '#A7453C',
-                            colorBorderSecondary: 'rgba(186,151,147,0.45)'
-                          }
-                        }"
-        />
-        <!-- <div class="group-icon-container">
-          <div class="group-icon">
-            <RiseOutlined style="margin-right: 2%;"/>
-            <p style="font-size: 100%;" @click="openTopSubmissions = true">Bài làm tốt nhất</p>
-          </div>
-        </div> -->
-
-        <div class="card-content">
-          <p style="font-weight: bold">Lịch sử nộp bài:</p>
-          <div v-for="submission in currentUserSubmissions">
-            <div style="display: flex; justify-content: space-between; align-items: center">
-              <div>
-                <p style="margin-bottom: 0">{{ submission?.question?.name }}</p>
-                <p style="font-size: 80%; color: #9e9e9e">{{ submission?.created_at }}</p>
+                </div>
               </div>
+              
+              <!-- Khu vực bình luận -->
+              <div class="card-style comment-section">
+                 <h3>Bình luận</h3>
+                 <a-comment>
+                   <template #avatar>
+                     <a-avatar :src="currentUser.profile_picture ?? `https://ui-avatars.com/api/?name=${getAvatarName(currentUser.last_name + ' ' + currentUser.first_name)}&background=007ACC&color=FFFFFF`" alt="Avatar"/>
+                   </template>
+                   <template #content>
+                     <a-textarea v-model:value="commentValue" placeholder="Đặt câu hỏi, chia sẻ cách giải, nhưng không chia sẻ mã nguồn..." :rows="4"/>
+                     <a-button html-type="submit" :loading="isSubmittingComment" type="primary" @click="handleComment" style="margin-top: 10px;">
+                       Thêm bình luận
+                     </a-button>
+                   </template>
+                 </a-comment>
+                 <a-list
+                     v-if="comments.length"
+                     :data-source="comments"
+                     :header="`${comments.length} bình luận`"
+                     item-layout="horizontal"
+                     class="comment-list"
+                 >
+                   <template #renderItem="{ item }">
+                     <a-list-item>
+                       <a-comment
+                           :author="item.name"
+                           :avatar="item.user.photo && item.user.photo?.length > 0 ? item.user.photo : `https://ui-avatars.com/api/?name=${getAvatarName(item.name)}`"
+                           :content="item.content"
+                           :datetime="item.created_at"
+                       />
+                     </a-list-item>
+                   </template>
+                 </a-list>
+              </div>
+            </main>
 
-              <a @click="showEditor(submission?.id)">
-                <span v-if="submission?.result === 'AC'" style="color: #2AAA2F">AC</span>
-                <span v-else-if="submission?.result === 'WA'" style="color: #FF0000">WA</span>
-                <span v-else-if="submission?.result === 'TLE'" style="color: #FF0000">TLE</span>
-                <span v-else-if="submission?.result === 'MLE'" style="color: #FF0000">MLE</span>
-                <span v-else-if="submission?.result === 'OLE'" style="color: #FF0000">OLE</span>
-                <span v-else-if="submission?.result === 'RTE'" style="color: #FF0000">RTE</span>
-                <span v-else-if="submission?.result === 'IR'" style="color: #FF0000">IR</span>
-                <span v-else-if="submission?.result === 'CE'" style="color: #FF0000">CE</span>
-                <span v-else-if="submission?.result === null"><LoadingOutlined/></span>
-              </a>
-            </div>
-            <div class="underline" style="opacity: 40%; margin-bottom: 3%"></div>
+            <!-- Cột bên phải -->
+            <aside class="sidebar">
+              <div class="card-style submission-history">
+                <h3>Lịch sử nộp bài</h3>
+                 <div v-if="currentUserSubmissions && currentUserSubmissions.length > 0">
+                    <div v-for="submission in currentUserSubmissions" :key="submission.id" class="history-item">
+                        <div class="history-info">
+                            <p class="problem-name">{{ submission?.question?.name }}</p>
+                            <p class="timestamp">{{ submission?.created_at }}</p>
+                        </div>
+                        <a @click="showEditor(submission?.id)" class="history-status" :class="submission?.result">
+                            <span v-if="submission?.result">{{ submission?.result }}</span>
+                            <LoadingOutlined v-else />
+                        </a>
+                    </div>
+                 </div>
+                 <a-empty v-else description="Chưa có lịch sử nộp bài." />
+              </div>
+            </aside>
+
           </div>
         </div>
-      </div>
-    </div>
-
-    <div>
-      <a-modal v-model:open="openTopSubmissions" width="100%" wrap-class-name="full-modal" style="top: 3%;"
-               :title="'Bài làm tốt nhất cho ' + questionDetail?.name.toUpperCase()">
-        <div class="table-container">
-          <a-table
-              :row-key="genUuid()"
-              :data-source="dataSource"
-              :pagination="pagination"
-              :loading="isLoadingTopSubmissions"
-              @change="handleTableChange"
-          >
-            <a-table-column data-index="id">
-              <template #title>
-                <span style="font-weight: bold;">ID</span>
-              </template>
-            </a-table-column>
-
-            <a-table-column data-index="date" width="12%">
-              <template #title>
-                <span style="font-weight: bold">Thời gian</span>
-              </template>
-            </a-table-column>
-
-            <a-table-column width="15%" data-index="account">
-              <template #title>
-                <span style="font-weight: bold">Tài khoản</span>
-              </template>
-            </a-table-column>
-
-            <a-table-column width="10%" data-index="result">
-              <template #title>
-                <span style="font-weight: bold">Kết quả</span>
-              </template>
-
-              <template #default="{ text }">
-                <a-tag style="width: 70%; text-align: center" v-if="text === 'AC'"
-                       color="green">AC
-                </a-tag>
-                <a-tag style="width: 70%; text-align: center" v-else-if="text === 'WA'"
-                       color="red">WA
-                </a-tag>
-                <a-tag style="width: 70%; text-align: center" v-else-if="text === 'TLE'"
-                       color="orange">TLE
-                </a-tag>
-                <a-tag style="width: 70%; text-align: center" v-else-if="text === 'RTE'"
-                       color="red">RTE
-                </a-tag>
-                <a-tag style="width: 70%; text-align: center" v-else-if="text === 'CE'"
-                       color="purple">CE
-                </a-tag>
-                <a-tag style="width: 70%; text-align: center" v-else-if="text === 'MLE'"
-                       color="red">MLE
-                </a-tag>
-                <a-tag style="width: 70%; text-align: center" v-else-if="text === 'OLE'"
-                       color="red">OLE
-                </a-tag>
-                <a-tag style="width: 70%; text-align: center" v-else-if="text === 'OLE'"
-                       color="red">IR
-                </a-tag>
-              </template>
-            </a-table-column>
-
-            <a-table-column width="20%" data-index="problem">
-              <template #title>
-                <span style="font-weight: bold">Bài tập</span>
-              </template>
-            </a-table-column>
-
-            <a-table-column width="10%" data-index="time">
-              <template #title>
-                <span style="font-weight: bold">Thời gian</span>
-              </template>
-            </a-table-column>
-
-            <a-table-column width="10%" data-index="memory">
-              <template #title>
-                <span style="font-weight: bold">Bộ nhớ</span>
-              </template>
-            </a-table-column>
-
-            <a-table-column width="10%" data-index="compiler">
-              <template #title>
-                <span style="font-weight: bold">Trình biên dịch</span>
-              </template>
-            </a-table-column>
-          </a-table>
-        </div>
-        <a-config-provider
-            :theme="{
-                          token: {
-                            colorPrimary: '#A7453C',
-                            colorTextHeading: '#000000',
-                            colorText: '#A7453C',
-                            colorBorderSecondary: 'rgba(186,151,147,0.45)'
-                          },
-                        }"
-        />
-
-        <template #footer>
-        </template>
-      </a-modal>
-    </div>
-
-    <div>
-      <a-modal style="top: 20px" v-model:open="isOpenCodeEditor" width="1000px"
-               :title="questionDetail?.code + ' - ' + questionDetail?.name.toUpperCase()">
-        <div v-if="selectedSubmission">
-          <p style="margin-bottom: 5px; font-weight: bold">Thời gian nộp bài: {{ selectedSubmission?.created_at }}</p>
-          <p style="margin-bottom: 5px; font-weight: bold">Ngôn ngữ: {{ selectedSubmission?.compiler.name }}</p>
-          <p style="margin-bottom: 5px; font-weight: bold">Kết quả:
-            <span v-if="selectedSubmission?.result === 'AC'" style="color: #2AAA2F">AC</span>
-            <span v-else-if="selectedSubmission?.result === 'WA'" style="color: #FF0000">WA</span>
-            <span v-else-if="selectedSubmission?.result === 'TLE'" style="color: #FF0000">TLE</span>
-            <span v-else-if="selectedSubmission?.result === 'MLE'" style="color: #FF0000">MLE</span>
-            <span v-else-if="selectedSubmission?.result === 'OLE'" style="color: #FF0000">OLE</span>
-            <span v-else-if="selectedSubmission?.result === 'RTE'" style="color: #FF0000">RTE</span>
-            <span v-else-if="selectedSubmission?.result === 'IR'" style="color: #FF0000">IR</span>
-            <span v-else-if="selectedSubmission?.result === 'CE'" style="color: #FF0000">CE</span>
-            <span v-else-if="selectedSubmission?.result === null"><LoadingOutlined/></span>
-          </p>
-        </div>
-
-        <div class="editor-container">
-          <MonacoEditor
-              theme="vs-light"
-              language="python"
-              :width="900"
-              :height="700"
-              :options="editorOptions"
-              v-model:value="submittedCode"
-          />
-        </div>
-
-        <template #footer>
-          <a-button type="primary" @click="isOpenCodeEditor = false">Đóng</a-button>
-        </template>
-      </a-modal>
-    </div>
-  </a-spin>
+      </a-spin>
+  </div>
 </template>
-
-
 <style scoped>
-/* Assuming 'template' is a class name for a general wrapper */
-.template {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
 
-.body {
-  display: flex;
-  margin-top: 90px;
-  color: #2c3e50;          /* THEMED: Default text color */
-}
+  .problem-page {
+    background-color: #F5F7FA;
+    min-height: 100vh;
+  }
 
-.part-left {
-  width: 80%;
-  height: 100%;
-}
+  .page-wrapper {
+    margin-top: 90px;
+    padding: 24px;
+  }
 
-.body-header {
-  margin-left: 50px;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
+  /* === Bố cục chính === */
+  .problem-layout {
+    display: flex;
+    gap: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
 
-.body-header h2 {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #007ACC; /* THEMED: Darker accent blue for section titles */
-}
+  .main-content {
+    width: 75%;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
 
-.problem-container,
-.card-content, /* Grouping similar card-like elements */
-.comment-container,
-.editor-container {
-  margin-top: 20px; /* Retained from problem-container */
-  background-color: #FFFFFF; /* THEMED: Solid white background */
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 90, 170, 0.08); /* THEMED: Subtle, cool shadow */
-  border: 1px solid #D9E2EC; /* THEMED: Light grey border for definition */
-  padding: 2%; /* Retained from problem-container, card-content had 10px, editor 10px */
-  display: flex;
-  flex-direction: column;
-  height: 100%; /* May need adjustment based on content if not truly 100% */
-  margin-bottom: 3%; /* Retained from problem-container & comment-container */
-}
-.search-container input {
-  margin-left: 3px;
-  border: none;
-  width: 100%;
-  height: 100%;
-  color: #2c3e50; /* THEMED: Dark text for input */
-  background-color: transparent; /* Assuming container provides background */
-}
-/* THEMED: Added placeholder color for consistency */
-.search-container input::placeholder {
-  color: #90A4AE;
-}
+  .sidebar {
+    width: 25%;
+    min-width: 300px;
+    flex-shrink: 0;
+  }
 
+  /* === Tiêu đề & Thẻ chung === */
+  .header-container {
+    margin-bottom: 0;
+  }
 
-.underline {
-  width: 100%;
-  height: 1px;
-  margin-top: 5px;
-  background-color: #D9E2EC; /* THEMED: Light grey, matching themed borders (was #cacaca) */
-}
+  h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #007ACC;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
 
-.part-right {
-  width: 20%;
-  height: 100%;
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-}
+  .underline {
+    width: 100%;
+    height: 3px;
+    margin-top: 8px;
+    background: linear-gradient(90deg, #00AFFF, #B3E5FC);
+    border-radius: 2px;
+  }
 
-.group-icon:hover img {
-  /* THEMED: Filter for #00AFFF (Vibrant Accent Blue) - assuming original icon is black */
-  filter: brightness(0) saturate(100%) invert(72%) sepia(99%) saturate(4463%) hue-rotate(165deg) brightness(102%) contrast(104%);
-}
+  .card-style {
+    background-color: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08);
+    border: 1px solid #D9E2EC;
+    padding: 24px;
+  }
+  .card-style h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #007ACC;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #E8EFF5;
+  }
 
-.group-icon-container {
-  display: flex;
-  align-items: center;
-  margin-left: 20px;
-  width: 100%;
-}
+  /* === Nội dung bài tập === */
+  .problem-description {
+    line-height: 1.7;
+  }
+  .problem-description :deep(p) { margin-bottom: 1em; }
+  .problem-description :deep(pre) {
+      background-color: #f8f9fc;
+      padding: 16px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-break: break-all;
+  }
+  .problem-meta {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #E8EFF5;
+    display: flex;
+    gap: 24px;
+    font-size: 0.9rem;
+    color: #5a738e;
+  }
 
-.group-icon {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  margin-top: 5px;
-  margin-bottom: 13px;
-  color: #5A738E; /* THEMED: Default icon text color (was not specified, adding for theme) */
-  transition: color 0.3s ease; /* THEMED: Added transition for text color */
-}
-.group-icon img {
-  filter: opacity(0.7); /* THEMED: Default subdued icon appearance (was not specified, adding for theme) */
-  transition: filter 0.3s ease; /* THEMED: Added transition for filter */
-}
+  /* === Công cụ và Nộp bài === */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .compiler-container span, .upload-container span {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #33475B;
+  }
+  .submit-action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #E8EFF5;
+  }
+  .submit-status {
+    font-weight: 600;
+    color: #5a738e;
+  }
+  .submit-status .status-ac { color: #52c41a; }
+  .submit-status .status-wa { color: #d9363e; }
+  .submit-action-bar .ant-btn-primary {
+    background: linear-gradient(90deg, #007ACC, #00AFFF);
+    border: none;
+    font-weight: 600;
+  }
 
-.group-icon:hover {
-  cursor: pointer;
-  color: #00AFFF; /* THEMED: Vibrant Accent Blue for text on hover (was #A7453C) */
-}
+  /* === Khu vực bình luận === */
+  .comment-section .ant-form-item {
+    margin-bottom: 10px;
+  }
+  .comment-list {
+    margin-top: 24px;
+  }
+  .comment-list .ant-list-header {
+      font-weight: 600;
+      color: #33475B;
+      border-bottom: 1px solid #E8EFF5;
+      padding-bottom: 10px;
+  }
 
-.card-content {
-  margin-left: 20px;
-  margin-right: 20px;
-  background-color: #FFFFFF; /* THEMED: Solid white background (was rgba(255, 255, 255, 0.35)) */
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 90, 170, 0.08); /* THEMED: Subtle, cool shadow (was 2px 10px 20px rgba(0, 0, 0, 0.2)) */
-  padding: 10px; /* Original padding: 10px */
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10%;
-}
+  /* === Sidebar - Lịch sử nộp bài === */
+  .submission-history {
+    position: sticky;
+    top: 90px; /* Vị trí dính sau header */
+  }
+  .history-list {
+      max-height: 60vh; /* Giới hạn chiều cao và cho phép cuộn */
+      overflow-y: auto;
+      padding-right: 5px; /* for scrollbar */
+  }
+  .history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #E8EFF5;
+  }
+  .history-item:last-child {
+    border-bottom: none;
+  }
+  .history-info .problem-name {
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+  }
+  .history-info .timestamp {
+    font-size: 0.85rem;
+    color: #5a738e;
+    margin: 0;
+  }
+  .history-status {
+    font-weight: bold;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .history-status.AC { color: #52c41a; background-color: #f6ffed; border: 1px solid #b7eb8f;}
+  .history-status.WA, .history-status.TLE, .history-status.MLE { color: #d9363e; background-color: #fff1f0; border: 1px solid #ffccc7;}
+  .history-status.CE { color: #722ed1; background-color: #f9f0ff; border: 1px solid #d3adf7;}
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 20px 0;
-  font-size: 16px;
-  text-align: left;
-}
+  /* === RESPONSIVE === */
+  @media (max-width: 992px) {
+    .problem-layout {
+      flex-direction: column; /* Xếp chồng các cột */
+    }
+    .main-content, .sidebar {
+      width: 100%;
+      min-width: unset;
+    }
+    .sidebar {
+        order: 1; /* Đảm bảo sidebar (chứa lịch sử) luôn ở dưới */
+    }
+    .submission-history {
+        position: static; /* Gỡ bỏ sticky trên mobile */
+    }
+  }
 
-th, td {
-  border: 1px solid #E8EFF5; /* THEMED: Very light grey cell borders (was #ddd) */
-  padding: 8px; /* Original padding: 8px */
-}
-/* THEMED: Added default text color for table data cells */
-td {
-  color: #33475B;
-}
-
-th {
-  background-color: #F0F5FA; /* THEMED: Very light blue/grey background (was #f4f4f4) */
-  font-weight: bold; /* Original font-weight: bold */
-  color: #007ACC; /* THEMED: Darker accent blue for header text (was not specified) */
-}
-
-tr:nth-child(even) {
-  background-color: #F8F9FB; /* THEMED: Themed subtle striping (was #f9f9f9) */
-}
-
-tr:hover {
-  background-color: rgba(0, 175, 255, 0.05); /* THEMED: Light accent blue hover (was #f1f1f1) */
-}
-
-.compiler-container {
-  display: flex;
-  align-items: center;
-}
-
-.tools-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.submit-container {
-  width: 50%;
-  display: flex;
-  align-items: flex-end;
-  flex-direction: column;
-}
-
-.submit-status-container {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.submit-status-container p {
-  margin: 0;
-  color: #5A738E; /* THEMED: Secondary text color (was not specified) */
-}
-
-.comment-container {
-  background-color: #FFFFFF; /* THEMED: Solid white background (was rgba(255, 255, 255, 0.35)) */
-  border-radius: 10px;
-  box-shadow: 0 3px 10px rgba(0, 90, 170, 0.07); /* THEMED: Slightly lighter cool shadow (was 2px 10px 20px rgba(0, 0, 0, 0.1)) */
-  padding: 2%; /* Original padding: 2% */
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  margin-bottom: 3%;
-}
-
-.editor-container {
-  width: 100%;
-  background-color: #FFFFFF; /* THEMED: Solid white background (was rgba(255, 255, 255, 0.35)) */
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 90, 170, 0.08); /* THEMED: Subtle, cool shadow (was 2px 10px 20px rgba(0, 0, 0, 0.2)) */
-  padding: 10px; /* Original padding: 10px */
-  margin-bottom: 40px;
-  margin-top: 20px;
-}
+  @media (max-width: 576px) {
+    .page-wrapper { padding: 15px; }
+    h2 { font-size: 1.5rem; }
+    .card-style { padding: 15px; }
+    .tools-grid {
+        grid-template-columns: 1fr; /* Xếp chồng các công cụ */
+        gap: 16px;
+    }
+    .submit-action-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+  }
 </style>
