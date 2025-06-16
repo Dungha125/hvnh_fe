@@ -1,7 +1,7 @@
 <script setup>
 import Header from '@/components/LecturerHeader.vue';
 
-import {computed, onBeforeMount, reactive, ref} from 'vue';
+import {computed, onBeforeMount, reactive, ref, h} from 'vue';
 import {usePagination} from 'vue-request';
 import axios from "@/configs/axios.js";
 import {LoadingOutlined} from "@ant-design/icons-vue";
@@ -158,287 +158,317 @@ const showEditor = async (id) =>
     }
     isLoading.value = false;
 }
+
+const antDesignTheme = {
+  token: {
+    colorPrimary: '#00AFFF',
+    colorLink: '#007ACC',
+    colorText: '#2c3e50',
+    colorTextHeading: '#007ACC',
+    colorBorder: '#D9E2EC',
+  }
+};
 </script>
 
 
 <template>
-    <Header/>
-    <a-spin :spinning="isLoading">
-        <div class="body">
-            <div class="part-left">
-                <div class="body-header">
-                    <h2>Lịch sử</h2>
-                    <div class="underline"></div>
-                    <div class="problem-container">
-                        <div class="table-container">
-                            <a-table
-                                :row-key="genUuid()"
-                                :data-source="dataSource"
-                                :pagination="pagination"
-                                :loading="loading"
-                                @change="handleTableChange"
-                            >
-                                <a-table-column data-index="id" width="12%">
-                                    <template #title>
-                                        <span style="font-weight: bold;">ID</span>
-                                    </template>
-
-                                    <template #default="{ text }">
-                                        <a style="color: #A7453C" @click="showEditor(text)">{{ text }}</a>
-                                    </template>
-                                </a-table-column>
-
-                                <a-table-column data-index="date" width="12%">
-                                    <template #title>
-                                        <span style="font-weight: bold">Thời gian</span>
-                                    </template>
-                                </a-table-column>
-
-                                <a-table-column width="8%" data-index="result">
-                                    <template #title>
-                                        <span style="font-weight: bold">Kết quả</span>
-                                    </template>
-
-                                    <template #default="{ record }">
-                                        <a @click="showEditor(record.id)">
-                                            <a-tag style="width: 70%; text-align: center" v-if="record.result === 'AC'"
-                                                   color="green">AC
-                                            </a-tag>
-                                            <a-tag style="width: 70%; text-align: center"
-                                                   v-else-if="record.result === 'WA'"
-                                                   color="red">WA
-                                            </a-tag>
-                                            <a-tag style="width: 70%; text-align: center"
-                                                   v-else-if="record.result === 'TLE'"
-                                                   color="orange">TLE
-                                            </a-tag>
-                                            <a-tag style="width: 70%; text-align: center"
-                                                   v-else-if="record.result === 'RTE'"
-                                                   color="red">RTE
-                                            </a-tag>
-                                            <a-tag style="width: 70%; text-align: center"
-                                                   v-else-if="record.result === 'CE'"
-                                                   color="purple">CE
-                                            </a-tag>
-                                            <a-tag style="width: 70%; text-align: center"
-                                                   v-else-if="record.result === 'MLE'"
-                                                   color="red">MLE
-                                            </a-tag>
-                                            <a-tag style="width: 70%; text-align: center"
-                                                   v-else-if="record.result === 'OLE'"
-                                                   color="red">OLE
-                                            </a-tag>
-                                            <a-tag style="width: 70%; text-align: center"
-                                                   v-else-if="record.result === 'IR'"
-                                                   color="red">IR
-                                            </a-tag>
-                                            <p v-else-if="record.result === null">
-                                                <LoadingOutlined/>
-                                            </p>
-                                        </a>
-                                    </template>
-                                </a-table-column>
-
-                                <a-table-column width="20%" data-index="problem">
-                                    <template #title>
-                                        <span style="font-weight: bold">Bài tập</span>
-                                    </template>
-
-                                    <template #default="{ record }">
-                                        <a @click="navigateToProblem(record.code)"
-                                           style="cursor: pointer; color: #A7453C;">
-                                            {{ record.problem.toUpperCase() }}
-                                        </a>
-                                    </template>
-                                </a-table-column>
-
-                                <a-table-column width="10%" data-index="time">
-                                    <template #title>
-                                        <span style="font-weight: bold">Thời gian</span>
-                                    </template>
-                                </a-table-column>
-
-                                <a-table-column width="10%" data-index="memory">
-                                    <template #title>
-                                        <span style="font-weight: bold">Bộ nhớ</span>
-                                    </template>
-                                </a-table-column>
-
-                                <a-table-column width="10%" data-index="compiler">
-                                    <template #title>
-                                        <span style="font-weight: bold">Trình biên dịch</span>
-                                    </template>
-                                </a-table-column>
-                            </a-table>
-                        </div>
-                        <a-config-provider
-                            :theme="{
-                          token: {
-                            colorPrimary: '#A7453C',
-                            colorTextHeading: '#000000',
-                            colorText: '#A7453C',
-                            colorBorderSecondary: 'rgba(186,151,147,0.45)'
-                          },
-                        }"
-                        />
-                    </div>
+  <div class="history-page">
+    <Header />
+    <a-config-provider :theme="antDesignTheme">
+      <a-spin :spinning="isLoading">
+        <div class="page-wrapper">
+          <!-- Layout chính của trang -->
+          <div class="history-layout">
+            
+            <!-- Cột nội dung chính (bảng lịch sử) -->
+            <main class="main-content">
+              <div class="header-container">
+                <h2>Lịch sử nộp bài</h2>
+                <div class="underline"></div>
+              </div>
+              <div class="card-style history-container">
+                <div class="table-container">
+                  <a-table
+                      :row-key="genUuid"
+                      :data-source="dataSource"
+                      :pagination="pagination"
+                      :loading="loading"
+                      @change="handleTableChange"
+                      :scroll="{ x: 'max-content' }"
+                  >
+                    <a-table-column title="ID" data-index="id" width="10%">
+                      <template #default="{ text }">
+                        <a class="table-link" @click="showEditor(text)">{{ text }}</a>
+                      </template>
+                    </a-table-column>
+                    <a-table-column title="Thời gian" data-index="date" width="15%" />
+                    <a-table-column title="Kết quả" data-index="result" width="10%">
+                      <template #default="{ record }">
+                        <a @click="showEditor(record.id)" style="cursor: pointer;">
+                          <a-tag v-if="record.result === 'AC'" color="green">AC</a-tag>
+                          <a-tag v-else-if="record.result === 'WA'" color="red">WA</a-tag>
+                          <a-tag v-else-if="record.result === 'TLE'" color="orange">TLE</a-tag>
+                          <a-tag v-else-if="record.result === 'RTE'" color="red">RTE</a-tag>
+                          <a-tag v-else-if="record.result === 'CE'" color="purple">CE</a-tag>
+                          <a-tag v-else-if="record.result === 'MLE'" color="red">MLE</a-tag>
+                          <a-tag v-else-if="record.result === 'OLE'" color="red">OLE</a-tag>
+                          <a-tag v-else-if="record.result === 'IR'" color="red">IR</a-tag>
+                          <LoadingOutlined v-else-if="record.result === null"/>
+                        </a>
+                      </template>
+                    </a-table-column>
+                    <a-table-column title="Bài tập" data-index="problem" width="25%">
+                       <template #default="{ record }">
+                         <a class="table-link" @click="navigateToProblem(record.code)">
+                           {{ record.problem.toUpperCase() }}
+                         </a>
+                       </template>
+                    </a-table-column>
+                    <a-table-column title="Thời gian chạy" data-index="time" width="10%" />
+                    <a-table-column title="Bộ nhớ" data-index="memory" width="10%" />
+                    <a-table-column title="Ngôn ngữ" data-index="compiler" />
+                  </a-table>
                 </div>
-            </div>
-            <div class="part-right">
-                <div class="card-content">
-                    <a-card style="width: 100%; background-color: #ffe9e8">
-                        <p style="color: #2AAA2F">AC: Accepted (Kết quả đúng)</p>
-                        <p>WA: Wrong Answer (Kết quả sai)</p>
-                        <p>TLE: Time Limit Exceeded (Quá giới hạn thời gian)</p>
-                        <p>MLE: Memory Limit Exceeded (Quá giới hạn bộ nhớ)</p>
-                        <p>OLE: Output Limit Exceeded (Quá giới hạn đầu ra)</p>
-                        <p>RTE: Runtime Error (Lỗi thực thi)</p>
-                        <p>IR: Invalid Return (Trả về không hợp lệ)</p>
-                        <p style="color: black">CE: Compile Error (Lỗi biên dịch)</p>
-                    </a-card>
-                </div>
-            </div>
+              </div>
+            </main>
+
+            <!-- Cột bên phải (chú giải) -->
+            <aside class="sidebar">
+              <div class="card-style legend-card">
+                <h4>Chú giải kết quả</h4>
+                <ul>
+                  <li><a-tag color="green">AC</a-tag> Accepted (Kết quả đúng)</li>
+                  <li><a-tag color="red">WA</a-tag> Wrong Answer (Kết quả sai)</li>
+                  <li><a-tag color="orange">TLE</a-tag> Time Limit Exceeded</li>
+                  <li><a-tag color="red">MLE</a-tag> Memory Limit Exceeded</li>
+                  <li><a-tag color="red">OLE</a-tag> Output Limit Exceeded</li>
+                  <li><a-tag color="red">RTE</a-tag> Runtime Error</li>
+                  <li><a-tag color="red">IR</a-tag> Invalid Return</li>
+                  <li><a-tag color="purple">CE</a-tag> Compile Error</li>
+                </ul>
+              </div>
+            </aside>
+          </div>
         </div>
 
-        <a-modal style="top: 20px" v-model:open="isOpenCodeEditor" width="1000px"
-                 :title="currentSubmission?.question?.code + ' - ' + currentSubmission?.question?.name.toUpperCase()">
-            <div v-if="currentSubmission">
-                <p style="margin-bottom: 5px; font-weight: bold">Thời gian nộp bài:
-                    {{ currentSubmission?.created_at }}</p>
-                <p style="margin-bottom: 5px; font-weight: bold">Ngôn ngữ: {{ currentSubmission?.compiler.name }}</p>
-                <p style="margin-bottom: 5px; font-weight: bold">Kết quả:
-                    <span v-if="currentSubmission?.result === 'AC'" style="color: #2AAA2F">AC</span>
-                    <span v-else-if="currentSubmission?.result === 'WA'" style="color: #FF0000">WA</span>
-                    <span v-else-if="currentSubmission?.result === 'TLE'" style="color: #FF0000">TLE</span>
-                    <span v-else-if="currentSubmission?.result === 'MLE'" style="color: #FF0000">MLE</span>
-                    <span v-else-if="currentSubmission?.result === 'OLE'" style="color: #FF0000">OLE</span>
-                    <span v-else-if="currentSubmission?.result === 'RTE'" style="color: #FF0000">RTE</span>
-                    <span v-else-if="currentSubmission?.result === 'IR'" style="color: #FF0000">IR</span>
-                    <span v-else-if="currentSubmission?.result === 'CE'" style="color: #FF0000">CE</span>
+        <a-modal class="code-modal" :open="isOpenCodeEditor" @update:open="isOpenCodeEditor = $event" width="80vw" :footer="null" centered>
+            <template #title>
+                <div class="modal-title">
+                    <CodeOutlined />
+                    <span>{{ currentSubmission?.question?.code }} - {{ currentSubmission?.question?.name.toUpperCase() }}</span>
+                </div>
+            </template>
+            <div v-if="currentSubmission" class="submission-details">
+                <p><b>Thời gian nộp bài:</b> {{ currentSubmission?.created_at }}</p>
+                <p><b>Ngôn ngữ:</b> {{ currentSubmission?.compiler.name }}</p>
+                <p><b>Kết quả:</b>
+                    <span v-if="currentSubmission?.result === 'AC'" style="color: #52c41a; font-weight: bold;">{{ currentSubmission?.result }}</span>
+                    <span v-else-if="['WA', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'CE'].includes(currentSubmission?.result)" style="color: #d9363e; font-weight: bold;">{{ currentSubmission?.result }}</span>
                     <span v-else-if="currentSubmission?.result === null"><LoadingOutlined/></span>
                 </p>
             </div>
-
             <div class="editor-container">
-                <MonacoEditor
-                    theme="vs-light"
-                    language="python"
-                    :width="900"
-                    :height="700"
-                    :options="editorOptions"
-                    v-model:value="submittedCode"
-                />
+                <MonacoEditor theme="vs-light" language="python" width="100%" height="60vh" :options="editorOptions" v-model:value="submittedCode" />
             </div>
-
-            <template #footer>
+            <div class="modal-footer">
                 <a-button type="primary" @click="isOpenCodeEditor = false">Đóng</a-button>
-            </template>
+            </div>
         </a-modal>
-    </a-spin>
+      </a-spin>
+    </a-config-provider>
+  </div>
 </template>
 
+
 <style scoped>
-template
-{
-    height: 100vh;
+/*
+  CSS cho trang Lịch sử - Chủ đề Neo-Futuristic Sáng
+  Đã được thiết kế lại và responsive.
+*/
+
+.history-page {
+  background-color: #F5F7FA;
+  min-height: 100vh;
+}
+
+.page-wrapper {
+  margin-top: 90px;
+  padding: 24px;
+}
+
+/* === Bố cục chính === */
+.history-layout {
+  display: flex;
+  gap: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.main-content {
+  width: 78%;
+  flex-grow: 1;
+}
+
+.sidebar {
+  width: 22%;
+  min-width: 280px;
+  flex-shrink: 0;
+}
+
+/* === Tiêu đề & Thẻ chung === */
+.header-container {
+  margin-bottom: 24px;
+}
+
+h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #007ACC;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.underline {
+  width: 100%;
+  height: 3px;
+  margin-top: 8px;
+  background: linear-gradient(90deg, #00AFFF, #B3E5FC);
+  border-radius: 2px;
+}
+
+.card-style {
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08);
+  border: 1px solid #D9E2EC;
+  padding: 24px;
+}
+
+.history-container {
+  padding: 24px;
+}
+
+.table-container {
+  flex: 1;
+}
+.table-link {
+    color: #007ACC;
+    font-weight: 500;
+}
+.table-link:hover {
+    color: #005C9E;
+    text-decoration: underline;
+}
+
+/* === Filter Bar === */
+.filter-container {
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.filter-input, .filter-select {
+    flex-grow: 1;
+    min-width: 150px;
+}
+.filter-container .ant-btn-primary {
+  background: linear-gradient(90deg, #007ACC, #00AFFF);
+  border: none;
 }
 
-.body
-{
+/* === Sidebar Card === */
+.legend-card {
+    position: sticky; /* Dính lại khi cuộn */
+    top: 90px;
+}
+.legend-card h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #007ACC;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #E8EFF5;
+  padding-bottom: 8px;
+}
+.legend-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.legend-card li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+}
+.legend-card .ant-tag {
+    min-width: 40px;
+    text-align: center;
+}
+
+/* === Modal xem Code === */
+.modal-title {
     display: flex;
-    margin-top: 90px;
-}
-
-.part-left
-{
-    width: 80%;
-    height: 100%;
-}
-
-.body-header
-{
-    margin-left: 50px;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.body-header h2
-{
-    font-size: 1.3rem;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.2rem;
+    color: #007ACC;
     font-weight: 600;
-    color: black;
 }
-
-.problem-container
-{
-    margin-top: 20px;
-    background-color: rgba(255, 255, 255, 0.35);
-    border-radius: 10px;
-    box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.2);
-    padding: 2%;
+.submission-details {
     display: flex;
-    flex-direction: column;
-    height: 100%;
-    margin-bottom: 5%;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding: 12px;
+    background-color: #f8f9fc;
+    border-radius: 8px;
 }
-
-.search-container input
-{
-    margin-left: 3px;
-    border: none;
-    width: 100%;
-    height: 100%;
+.submission-details p { margin: 0; }
+.editor-container {
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  overflow: hidden;
 }
-
-.table-container
-{
-    margin-top: 20px;
-    flex: 1;
-}
-
-.search-container input:focus
-{
-    outline: none;
-}
-
-.underline
-{
-    width: 100%;
-    height: 1px;
-    margin-top: 5px;
-    background-color: #cacaca;
-}
-
-.part-right
-{
-    width: 20%;
-    height: 100%;
-    margin-top: 60px;
+.modal-footer {
     display: flex;
-    flex-direction: column;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+.modal-footer .ant-btn-primary {
+    background: #007ACC;
+}
+.code-modal :deep(.ant-modal-body) {
+    padding-top: 16px;
 }
 
-.group-icon:hover img
-{
-    filter: invert(32%) sepia(64%) saturate(506%) hue-rotate(330deg) brightness(70%) contrast(95%);
+/* === RESPONSIVE === */
+@media (max-width: 1200px) {
+  .history-layout {
+    flex-direction: column; /* Xếp chồng các cột */
+  }
+  .main-content, .sidebar {
+    width: 100%;
+    min-width: unset;
+  }
+  .legend-card {
+    position: static; /* Gỡ bỏ sticky trên mobile */
+  }
 }
 
-.group-icon-container p
-{
-    margin-top: 12px;
+@media (max-width: 768px) {
+    .filter-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
 }
 
-.card-content
-{
-    margin-left: 20px;
-    margin-right: 20px;
-    border-radius: 10px;
-    box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.2);
+@media (max-width: 576px) {
+  .page-wrapper { padding: 15px; }
+  h2 { font-size: 1.5rem; }
+  .card-style, .history-container { padding: 15px; }
 }
-
-
 </style>

@@ -843,7 +843,6 @@ watch(pageSize, (newSize) =>
   background-color: #00AFFF;
 }
 
-
 /* === RESPONSIVE STYLES FOR MOBILE === */
 @media (max-width: 768px) {
   /* Main layout adjustments */
@@ -887,6 +886,83 @@ watch(pageSize, (newSize) =>
   .collapse-options,
   .next-problems {
     padding: 15px;
+  }
+
+  /* Table responsive styles */
+  :global(.ant-table) {
+    font-size: 14px;
+  }
+
+  :global(.ant-table-thead > tr > th) {
+    padding: 8px !important;
+    white-space: nowrap;
+  }
+
+  :global(.ant-table-tbody > tr > td) {
+    padding: 8px !important;
+  }
+
+  /* Hide less important columns on mobile */
+  :global(.ant-table-thead > tr > th:nth-child(3)),
+  :global(.ant-table-tbody > tr > td:nth-child(3)) {
+    display: none;
+  }
+
+  /* Adjust column widths for mobile */
+  :global(.ant-table-thead > tr > th:first-child),
+  :global(.ant-table-tbody > tr > td:first-child) {
+    width: 15%;
+  }
+
+  :global(.ant-table-thead > tr > th:nth-child(2)),
+  :global(.ant-table-tbody > tr > td:nth-child(2)) {
+    width: 45%;
+  }
+
+  :global(.ant-table-thead > tr > th:nth-child(4)),
+  :global(.ant-table-tbody > tr > td:nth-child(4)) {
+    width: 20%;
+  }
+
+  :global(.ant-table-thead > tr > th:nth-child(5)),
+  :global(.ant-table-tbody > tr > td:nth-child(5)) {
+    width: 20%;
+  }
+
+  /* Make table horizontally scrollable */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Adjust pagination for mobile */
+  :global(.ant-pagination) {
+    margin: 16px 0 !important;
+    text-align: center;
+  }
+
+  :global(.ant-pagination-item) {
+    min-width: 32px;
+    height: 32px;
+    line-height: 32px;
+  }
+}
+
+/* Additional breakpoint for very small screens */
+@media (max-width: 480px) {
+  :global(.ant-table-thead > tr > th:nth-child(4)),
+  :global(.ant-table-tbody > tr > td:nth-child(4)) {
+    display: none;
+  }
+
+  :global(.ant-table-thead > tr > th:nth-child(2)),
+  :global(.ant-table-tbody > tr > td:nth-child(2)) {
+    width: 65%;
+  }
+
+  :global(.ant-table-thead > tr > th:nth-child(5)),
+  :global(.ant-table-tbody > tr > td:nth-child(5)) {
+    width: 20%;
   }
 }
 

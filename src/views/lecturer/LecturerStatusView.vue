@@ -121,234 +121,183 @@ const activeKey = ref([1]);
 
 
 <template>
-    <Header/>
+  <div class="status-page">
+    <Header />
     <a-spin :spinning="isLoading">
-        <div class="body">
-            <div class="part-left">
-                <div class="body-header">
-                    <h2>Trạng thái giải bài</h2>
-                    <div class="underline"></div>
-                    <div class="problem-container">
-                        <div class="table-container">
-                            <a-table
-                                :row-key="genUuid()"
-                                :data-source="dataSource"
-                                :pagination="pagination"
-                                :loading="loading"
-                                @change="handleTableChange"
-                            >
-                                <a-table-column data-index="id">
-                                    <template #title>
-                                        <span style="font-weight: bold;">ID</span>
-                                    </template>
-                                </a-table-column>
-
-                                <a-table-column data-index="date" width="12%">
-                                    <template #title>
-                                        <span style="font-weight: bold">Thời gian</span>
-                                    </template>
-                                </a-table-column>
-
-                                <a-table-column width="15%" data-index="account">
-                                    <template #title>
-                                        <span style="font-weight: bold">Tài khoản</span>
-                                    </template>
-                                </a-table-column>
-
-                                <a-table-column width="10%" data-index="result">
-                                    <template #title>
-                                        <span style="font-weight: bold">Kết quả</span>
-                                    </template>
-
-                                    <template #default="{ text }">
-                                        <a-tag style="width: 70%; text-align: center" v-if="text === 'AC'"
-                                               color="green">AC
-                                        </a-tag>
-                                        <a-tag style="width: 70%; text-align: center" v-else-if="text === 'WA'"
-                                               color="red">WA
-                                        </a-tag>
-                                        <a-tag style="width: 70%; text-align: center" v-else-if="text === 'TLE'"
-                                               color="orange">TLE
-                                        </a-tag>
-                                        <a-tag style="width: 70%; text-align: center" v-else-if="text === 'RTE'"
-                                               color="red">RTE
-                                        </a-tag>
-                                        <a-tag style="width: 70%; text-align: center" v-else-if="text === 'CE'"
-                                               color="purple">CE
-                                        </a-tag>
-                                        <a-tag style="width: 70%; text-align: center" v-else-if="text === 'MLE'"
-                                               color="red">MLE
-                                        </a-tag>
-                                        <a-tag style="width: 70%; text-align: center" v-else-if="text === 'OLE'"
-                                               color="red">OLE
-                                        </a-tag>
-                                        <a-tag style="width: 70%; text-align: center" v-else-if="text === 'IR'"
-                                               color="red">IR
-                                        </a-tag>
-                                        <p v-else-if="text === null">
-                                            <LoadingOutlined/>
-                                        </p>
-                                    </template>
-                                </a-table-column>
-
-                                <a-table-column width="20%" data-index="problem">
-                                    <template #title>
-                                        <span style="font-weight: bold">Bài tập</span>
-                                    </template>
-                                </a-table-column>
-
-                                <a-table-column width="10%" data-index="time">
-                                    <template #title>
-                                        <span style="font-weight: bold">Thời gian</span>
-                                    </template>
-                                </a-table-column>
-
-                                <a-table-column width="10%" data-index="memory">
-                                    <template #title>
-                                        <span style="font-weight: bold">Bộ nhớ</span>
-                                    </template>
-                                </a-table-column>
-
-                                <a-table-column width="10%" data-index="compiler">
-                                    <template #title>
-                                        <span style="font-weight: bold">Trình biên dịch</span>
-                                    </template>
-                                </a-table-column>
-                            </a-table>
-                        </div>
-                        <a-config-provider
-                            :theme="{
-                          token: {
-                            colorPrimary: '#A7453C',
-                            colorTextHeading: '#000000',
-                            colorText: '#A7453C',
-                            colorBorderSecondary: 'rgba(186,151,147,0.45)'
-                          },
-                        }"
-                        />
-                    </div>
-                </div>
+      <div class="page-wrapper">
+        <div class="status-layout">
+          <main class="main-content">
+            <div class="header-container">
+              <h2>Trạng thái giải bài</h2>
+              <div class="underline"></div>
             </div>
-            <div class="part-right">
-                <div class="card-content">
-                    <a-card style="width: 100%; background-color: #ffe9e8">
-                        <p style="color: #2AAA2F">AC: Accepted (Kết quả đúng)</p>
-                        <p>WA: Wrong Answer (Kết quả sai)</p>
-                        <p>TLE: Time Limit Exceeded (Quá giới hạn thời gian)</p>
-                        <p>MLE: Memory Limit Exceeded (Quá giới hạn bộ nhớ)</p>
-                        <p>OLE: Output Limit Exceeded (Quá giới hạn đầu ra)</p>
-                        <p>RTE: Runtime Error (Lỗi thực thi)</p>
-                        <p>IR: Invalid Return (Trả về không hợp lệ)</p>
-                        <p style="color: black">CE: Compile Error (Lỗi biên dịch)</p>
-                    </a-card>
-                </div>
+            <div class="card-style problem-container">
+              <div class="table-container">
+                <a-table
+                    :row-key="genUuid"
+                    :data-source="dataSource"
+                    :pagination="pagination"
+                    :loading="loading"
+                    @change="handleTableChange"
+                    :scroll="{ x: 'max-content' }"
+                >
+                  <a-table-column title="ID" data-index="id" />
+                  <a-table-column title="Thời gian" data-index="date" width="12%" />
+                  <a-table-column title="Tài khoản" data-index="account" width="15%" />
+                  <a-table-column title="Kết quả" data-index="result" width="10%">
+                    <template #default="{ text }">
+                      <a-tag v-if="text === 'AC'" color="green">AC</a-tag>
+                      <a-tag v-else-if="text === 'WA'" color="red">WA</a-tag>
+                      <a-tag v-else-if="text === 'TLE'" color="orange">TLE</a-tag>
+                      <a-tag v-else-if="text === 'RTE'" color="red">RTE</a-tag>
+                      <a-tag v-else-if="text === 'CE'" color="purple">CE</a-tag>
+                      <a-tag v-else-if="text === 'MLE'" color="red">MLE</a-tag>
+                      <a-tag v-else-if="text === 'OLE'" color="red">OLE</a-tag>
+                      <a-tag v-else-if="text === 'IR'" color="red">IR</a-tag>
+                      <p v-else-if="text === null"><LoadingOutlined/></p>
+                    </template>
+                  </a-table-column>
+                  <a-table-column title="Bài tập" data-index="problem" width="20%" />
+                  <a-table-column title="Thời gian" data-index="time" width="10%" />
+                  <a-table-column title="Bộ nhớ" data-index="memory" width="10%" />
+                  <a-table-column title="Trình biên dịch" data-index="compiler" />
+                </a-table>
+              </div>
             </div>
+          </main>
+
+          <aside class="sidebar">
+            <div class="card-style legend-card">
+              <h4>Chú giải kết quả</h4>
+              <ul>
+                <li><a-tag color="green">AC</a-tag> Accepted (Kết quả đúng)</li>
+                <li><a-tag color="red">WA</a-tag> Wrong Answer (Kết quả sai)</li>
+                <li><a-tag color="orange">TLE</a-tag> Time Limit Exceeded</li>
+                <li><a-tag color="red">MLE</a-tag> Memory Limit Exceeded</li>
+                <li><a-tag color="red">OLE</a-tag> Output Limit Exceeded</li>
+                <li><a-tag color="red">RTE</a-tag> Runtime Error</li>
+                <li><a-tag color="red">IR</a-tag> Invalid Return</li>
+                <li><a-tag color="purple">CE</a-tag> Compile Error</li>
+              </ul>
+            </div>
+          </aside>
         </div>
+      </div>
     </a-spin>
+  </div>
 </template>
 
 <style scoped>
-template
-{
-    height: 100vh;
-    display: flex;
+.status-page {
+  background-color: #F5F7FA;
+  min-height: 100vh;
+}
+
+.page-wrapper {
+  margin-top: 90px;
+  padding: 24px;
+}
+
+.status-layout {
+  display: flex;
+  gap: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.main-content {
+  width: 75%;
+  flex-grow: 1;
+}
+
+.sidebar {
+  width: 25%;
+  min-width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header-container {
+  margin-bottom: 24px;
+}
+
+h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #007ACC;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.underline {
+  width: 100%;
+  height: 3px;
+  margin-top: 8px;
+  background: linear-gradient(90deg, #00AFFF, #B3E5FC);
+  border-radius: 2px;
+}
+
+.card-style {
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08);
+  border: 1px solid #D9E2EC;
+  padding: 24px;
+}
+
+.problem-container {
+  padding: 24px;
+}
+
+.table-container {
+  flex: 1;
+}
+
+.legend-card h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #007ACC;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #E8EFF5;
+  padding-bottom: 8px;
+}
+
+.legend-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.legend-card li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+}
+
+.legend-card .ant-tag {
+  min-width: 40px;
+  text-align: center;
+}
+
+@media (max-width: 1200px) {
+  .status-layout {
     flex-direction: column;
-    justify-content: space-between;
-}
-
-.body
-{
-    display: flex;
-    margin-top: 90px;
-}
-
-.part-left
-{
-    width: 80%;
-    height: 100%;
-}
-
-.body-header
-{
-    margin-left: 50px;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.body-header h2
-{
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: black;
-}
-
-.problem-container
-{
-    margin-top: 20px;
-    background-color: rgba(255, 255, 255, 0.35);
-    border-radius: 10px;
-    box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.2);
-    padding: 2%;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    margin-bottom: 5%;
-}
-
-.search-container input
-{
-    margin-left: 3px;
-    border: none;
+  }
+  .main-content, .sidebar {
     width: 100%;
-    height: 100%;
+    min-width: unset;
+  }
 }
 
-.table-container
-{
-    margin-top: 20px;
-    flex: 1;
+@media (max-width: 576px) {
+  .page-wrapper { padding: 15px; }
+  h2 { font-size: 1.5rem; }
+  .card-style, .problem-container { padding: 15px; }
 }
-
-.search-container input:focus
-{
-    outline: none;
-}
-
-.underline
-{
-    width: 100%;
-    height: 1px;
-    margin-top: 5px;
-    background-color: #cacaca;
-}
-
-.part-right
-{
-    width: 20%;
-    height: 100%;
-    margin-top: 60px;
-    display: flex;
-    flex-direction: column;
-}
-
-.group-icon:hover img
-{
-    filter: invert(32%) sepia(64%) saturate(506%) hue-rotate(330deg) brightness(70%) contrast(95%);
-}
-
-.group-icon-container p
-{
-    margin-top: 12px;
-}
-
-.card-content
-{
-    margin-left: 20px;
-    margin-right: 20px;
-    border-radius: 10px;
-    box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.2);
-}
-
-
 </style>

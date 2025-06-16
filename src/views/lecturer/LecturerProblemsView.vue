@@ -1015,12 +1015,13 @@ const handleCourseChange = (value) => {
           <div class="underline"></div>
           <div class="part-right">
             <div class="content-container">
-              <a-menu
-                v-model:selectedKeys="currentTab"
-                mode="horizontal"
-                :items="tabs"
-                style="margin-bottom: 10px; font-size: 110%"
-              />
+              <div class="menu-container">
+                <a-menu
+                  v-model:selectedKeys="currentTab"
+                  mode="horizontal"
+                  :items="tabs"
+                />
+              </div>
 
               <div
                 v-if="currentTab[0] === 'managementProblem'"
@@ -1650,31 +1651,29 @@ const handleCourseChange = (value) => {
 
 <style scoped>
 .body {
-  /* THEMED: Màu chữ mặc định cho phần body này, có thể được ghi đè bởi các quy tắc cụ thể hơn */
   color: #2c3e50;
   display: flex;
   margin-top: 90px;
-  background-color: #f5f7fa; /* Thêm màu nền cho trang */
-  padding: 24px 40px; /* Thêm padding để nội dung không bị dính vào cạnh */
+  background-color: #f5f7fa;
+  padding: 24px 40px;
 }
 
 .part-left {
-  width: 100%; /* Đổi thành 100% để tận dụng padding của .body */
+  width: 100%;
   margin-bottom: 5%;
 }
 
-/* === Tiêu đề & Phân cách === */
 .body-header {
-  margin-left: 0; /* Bỏ margin để căn chỉnh theo padding của .body */
+  margin-left: 0;
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
 .body-header h2 {
-  font-size: 1.6rem; /* Tăng kích thước cho tiêu đề chính */
+  font-size: 1.6rem;
   font-weight: 700;
-  color: #007acc; /* THEMED: Màu xanh nhấn đậm */
+  color: #007acc;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -1683,65 +1682,89 @@ const handleCourseChange = (value) => {
   width: 100%;
   height: 2px;
   margin-top: 8px;
-  background: linear-gradient(90deg, #00afff, #b3e5fc); /* THEMED: Gradient màu nhấn */
+  background: linear-gradient(90deg, #00afff, #b3e5fc);
 }
 
-/* === Khung nội dung chính === */
 .content-container {
   display: flex;
   flex-direction: column;
-  background-color: #ffffff; /* THEMED: Nền trắng */
-  border-radius: 12px; /* Tăng độ bo tròn */
-  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08); /* THEMED: Đổ bóng nhẹ, hiện đại */
-  border: 1px solid #d9e2ec; /* THEMED: Viền xám nhạt */
-  padding: 24px; /* Tăng padding */
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08);
+  border: 1px solid #d9e2ec;
+  padding: 24px;
   width: 100%;
   margin-top: 20px;
   min-height: 768px;
 }
 
-/* === Thanh tìm kiếm === */
 .search-container {
   display: flex;
   align-items: center;
-  border: 1px solid #d9e2ec; /* THEMED: Viền xám nhạt */
-  width: 35%; /* Tăng chiều rộng */
-  height: 40px;
+  border: 1px solid #d9e2ec;
+  width: 35%;
+  height: 48px;
   padding: 10px;
   background-color: #fff;
   border-radius: 8px;
-  margin-bottom: 20px; /* Tăng khoảng cách dưới */
+  margin-bottom: 20px;
   transition: border-color 0.3s, box-shadow 0.3s;
 }
-.search-container:focus-within {
-  border-color: #00afff;
-  box-shadow: 0 0 0 3px rgba(0, 175, 255, 0.15); /* Hiệu ứng tỏa sáng khi focus */
+
+.search-container img {
+  margin-right: 8px;
+  flex-shrink: 0;
+  height: 24px;
+  width: 24px;
 }
 
-/* === Trình soạn thảo văn bản (CKEditor) === */
+.search-container :deep(.ant-input) {
+  border: none;
+  height: 100%;
+  width: 100%;
+  padding: 0 8px;
+  font-size: 15px;
+  background: transparent;
+  line-height: 48px;
+}
+
+.search-container :deep(.ant-input:focus) {
+  box-shadow: none;
+}
+
+.search-container :deep(.ant-input::placeholder) {
+  color: #a0aec0;
+}
+
+.search-container:focus-within {
+  border-color: #00afff;
+  box-shadow: 0 0 0 3px rgba(0, 175, 255, 0.15);
+}
+
 ::v-deep(.ck.ck-editor) {
   width: 100%;
   max-width: 1200px;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #d9e2ec; /* THEMED: Viền xám nhạt */
+  border: 1px solid #d9e2ec;
 }
+
 ::v-deep(.ck-editor__editable) {
   min-height: 200px;
   max-height: 500px;
-  font-size: 16px; /* Giảm kích thước font cho dễ đọc */
+  font-size: 16px;
   background-color: #ffffff;
   color: #2c3e50;
 }
+
 ::v-deep(.ck.ck-toolbar) {
   background-color: #f8f9fc;
   border-bottom: 1px solid #d9e2ec;
 }
 
-/* === Bố cục Form === */
 .form-container {
   display: flex;
-  gap: 24px; /* Tăng khoảng cách */
+  gap: 24px;
 }
 
 .form-group {
@@ -1750,41 +1773,383 @@ const handleCourseChange = (value) => {
 }
 
 .subject-dropdowns {
-  border: 1px solid #d9e2ec; /* THEMED: Viền xám nhạt */
+  border: 1px solid #d9e2ec;
   padding: 15px;
   margin-bottom: 10px;
-  border-radius: 8px; /* Tăng độ bo tròn */
-  background-color: #fafcfe; /* Nền nhẹ nhàng */
+  border-radius: 8px;
+  background-color: #fafcfe;
 }
 
-/* === Bảng tùy chỉnh (.table-bordered) === */
 .table-bordered {
   width: 100%;
-  border-collapse: collapse; /* Gộp đường viền */
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .table-bordered th {
   font-weight: 600;
-  background-color: #f0f5fa; /* THEMED: Nền tiêu đề bảng */
-  color: #007acc; /* THEMED: Màu chữ tiêu đề */
-  padding: 10px; /* Tăng padding */
-  border: 1px solid #e8eff5; /* Viền trong bảng */
+  background-color: #f0f5fa;
+  color: #007acc;
+  padding: 12px 16px;
+  border: 1px solid #e8eff5;
   text-align: center;
+  font-size: 14px;
 }
 
 .table-bordered td {
   text-align: center;
-  padding: 10px; /* Tăng padding */
-  border: 1px solid #e8eff5; /* Viền trong bảng */
+  padding: 12px 16px;
+  border: 1px solid #e8eff5;
+  font-size: 14px;
+  color: #2c3e50;
 }
 
-/* Bỏ đường viền dưới mặc định và sử dụng viền của ô */
 .table-bordered tbody tr {
   border-bottom: none;
+  transition: background-color 0.2s ease;
 }
 
-/* Hiệu ứng di chuột cho hàng */
 .table-bordered tbody tr:hover td {
   background-color: rgba(0, 175, 255, 0.05);
+}
+
+.red-text {
+  color: #ff4d4f;
+  font-weight: 500;
+}
+
+/* Ant Design Components Customization */
+:deep(.ant-btn-primary) {
+  background-color: #00afff;
+  border-color: #00afff;
+  box-shadow: 0 2px 0 rgba(0, 175, 255, 0.1);
+}
+
+:deep(.ant-btn-primary:hover) {
+  background-color: #0099e6;
+  border-color: #0099e6;
+}
+
+:deep(.ant-input) {
+  border-color: #d9e2ec;
+  border-radius: 8px;
+}
+
+:deep(.ant-input:hover),
+:deep(.ant-input:focus) {
+  border-color: #00afff;
+  box-shadow: 0 0 0 2px rgba(0, 175, 255, 0.1);
+}
+
+:deep(.ant-select-selector) {
+  border-color: #d9e2ec !important;
+  border-radius: 8px !important;
+}
+
+:deep(.ant-select-focused .ant-select-selector) {
+  border-color: #00afff !important;
+  box-shadow: 0 0 0 2px rgba(0, 175, 255, 0.1) !important;
+}
+
+:deep(.ant-radio-wrapper) {
+  color: #2c3e50;
+}
+
+:deep(.ant-checkbox-wrapper) {
+  color: #2c3e50;
+}
+
+:deep(.ant-form-item-label > label) {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+:deep(.ant-modal-content) {
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08);
+}
+
+:deep(.ant-modal-header) {
+  border-radius: 12px 12px 0 0;
+  background-color: #f8f9fc;
+  border-bottom: 1px solid #d9e2ec;
+}
+
+:deep(.ant-modal-title) {
+  color: #007acc;
+  font-weight: 600;
+}
+
+:deep(.ant-menu) {
+  background: transparent;
+  border-bottom: 1px solid #e8eff5;
+  padding: 0 16px;
+}
+
+:deep(.ant-menu-item) {
+  color: #2c3e50;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 0 20px;
+  margin: 0 4px;
+  height: 48px;
+  line-height: 48px;
+  transition: all 0.3s ease;
+}
+
+:deep(.ant-menu-item:hover) {
+  color: #00afff !important;
+  background-color: rgba(0, 175, 255, 0.05);
+}
+
+:deep(.ant-menu-item-selected) {
+  color: #00afff !important;
+  font-weight: 600;
+  background-color: rgba(0, 175, 255, 0.08);
+  border-bottom: 2px solid #00afff;
+}
+
+:deep(.ant-menu-item::after) {
+  display: none;
+}
+
+/* Menu Container */
+.menu-container {
+  margin-bottom: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive Menu */
+@media screen and (max-width: 768px) {
+  .body {
+    padding: 16px;
+    margin-top: 70px;
+  }
+
+  .content-container {
+    padding: 16px;
+    min-height: auto;
+  }
+
+  .search-container {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .form-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-group {
+    min-width: 100%;
+  }
+
+  .table-bordered {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-bordered th,
+  .table-bordered td {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  /* Adjust modal for mobile */
+  :deep(.ant-modal) {
+    width: 95% !important;
+    max-width: none;
+    margin: 10px auto;
+  }
+
+  :deep(.ant-modal-content) {
+    padding: 16px;
+  }
+
+  /* Adjust form items for mobile */
+  :deep(.ant-form-item) {
+    margin-bottom: 16px;
+  }
+
+  :deep(.ant-form-item-label) {
+    padding-bottom: 4px;
+  }
+
+  /* Adjust select dropdowns for mobile */
+  :deep(.ant-select) {
+    width: 100% !important;
+  }
+
+  /* Adjust buttons for mobile */
+  :deep(.ant-btn) {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  /* Adjust menu items for mobile */
+  :deep(.ant-menu) {
+    padding: 0 8px;
+  }
+
+  /* Adjust CKEditor for mobile */
+  ::v-deep(.ck.ck-editor) {
+    max-width: 100%;
+  }
+
+  ::v-deep(.ck-editor__editable) {
+    min-height: 150px;
+    max-height: 300px;
+  }
+
+  /* Adjust subject dropdowns for mobile */
+  .subject-dropdowns {
+    padding: 12px;
+  }
+
+  .subject-dropdowns h3 {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  /* Adjust header for mobile */
+  .body-header h2 {
+    font-size: 1.4rem;
+  }
+
+  /* Adjust search icon for mobile */
+  .search-container img {
+    height: 20px;
+    width: 20px;
+  }
+
+  /* Adjust input text for mobile */
+  .search-container :deep(.ant-input) {
+    font-size: 14px;
+  }
+
+  .menu-container {
+    margin-bottom: 16px;
+  }
+}
+
+/* Additional breakpoint for very small devices */
+@media screen and (max-width: 480px) {
+  .body {
+    padding: 12px;
+  }
+
+  .content-container {
+    padding: 12px;
+  }
+
+  .table-bordered th,
+  .table-bordered td {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  .body-header h2 {
+    font-size: 1.2rem;
+  }
+
+  :deep(.ant-modal-content) {
+    padding: 12px;
+  }
+
+  .menu-container {
+    padding: 0 4px;
+  }
+
+  :deep(.ant-menu-item) {
+    font-size: 13px;
+    padding: 0 8px;
+    margin: 0 1px;
+  }
+}
+
+/* Active Tab Indicator */
+:deep(.ant-menu-item-selected::before) {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #00afff;
+  border-radius: 2px 2px 0 0;
+}
+
+/* Menu Item Icons */
+:deep(.ant-menu-item .anticon) {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+/* Menu Item Badge */
+:deep(.ant-menu-item .ant-badge) {
+  margin-left: 8px;
+}
+
+/* Menu Item Count */
+:deep(.ant-menu-item .count) {
+  background: #f0f5fa;
+  color: #2c3e50;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+/* Menu Item Hover Effect */
+:deep(.ant-menu-item:hover) {
+  transform: translateY(-1px);
+}
+
+/* Menu Item Active State */
+:deep(.ant-menu-item-selected) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 175, 255, 0.15);
+}
+
+/* Menu Item Disabled State */
+:deep(.ant-menu-item-disabled) {
+  color: #a0aec0 !important;
+  cursor: not-allowed;
+  background: #f8f9fc;
+}
+
+/* Menu Item Loading State */
+:deep(.ant-menu-item-loading) {
+  position: relative;
+  overflow: hidden;
+}
+
+:deep(.ant-menu-item-loading::after) {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 </style>
