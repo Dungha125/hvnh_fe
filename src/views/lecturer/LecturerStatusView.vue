@@ -5,6 +5,7 @@ import {computed, onBeforeMount, onBeforeUnmount, reactive, ref} from 'vue';
 import {usePagination} from 'vue-request';
 import axios from "@/configs/axios.js";
 import {LoadingOutlined} from "@ant-design/icons-vue";
+import LecturerHeader from '@/components/LecturerHeader.vue';
 
 const isLoading = ref(true);
 
@@ -122,72 +123,84 @@ const activeKey = ref([1]);
 
 <template>
   <div class="status-page">
-    <Header />
-    <a-spin :spinning="isLoading">
-      <div class="page-wrapper">
-        <div class="status-layout">
-          <main class="main-content">
-            <div class="header-container">
-              <h2>Trạng thái giải bài</h2>
-              <div class="underline"></div>
-            </div>
-            <div class="card-style problem-container">
-              <div class="table-container">
-                <a-table
-                    :row-key="genUuid"
-                    :data-source="dataSource"
-                    :pagination="pagination"
-                    :loading="loading"
-                    @change="handleTableChange"
-                    :scroll="{ x: 'max-content' }"
-                >
-                  <a-table-column title="ID" data-index="id" />
-                  <a-table-column title="Thời gian" data-index="date" width="12%" />
-                  <a-table-column title="Tài khoản" data-index="account" width="15%" />
-                  <a-table-column title="Kết quả" data-index="result" width="10%">
-                    <template #default="{ text }">
-                      <a-tag v-if="text === 'AC'" color="green">AC</a-tag>
-                      <a-tag v-else-if="text === 'WA'" color="red">WA</a-tag>
-                      <a-tag v-else-if="text === 'TLE'" color="orange">TLE</a-tag>
-                      <a-tag v-else-if="text === 'RTE'" color="red">RTE</a-tag>
-                      <a-tag v-else-if="text === 'CE'" color="purple">CE</a-tag>
-                      <a-tag v-else-if="text === 'MLE'" color="red">MLE</a-tag>
-                      <a-tag v-else-if="text === 'OLE'" color="red">OLE</a-tag>
-                      <a-tag v-else-if="text === 'IR'" color="red">IR</a-tag>
-                      <p v-else-if="text === null"><LoadingOutlined/></p>
-                    </template>
-                  </a-table-column>
-                  <a-table-column title="Bài tập" data-index="problem" width="20%" />
-                  <a-table-column title="Thời gian" data-index="time" width="10%" />
-                  <a-table-column title="Bộ nhớ" data-index="memory" width="10%" />
-                  <a-table-column title="Trình biên dịch" data-index="compiler" />
-                </a-table>
+    <LecturerHeader />
+    <a-config-provider>
+      <a-spin :spinning="isLoading">
+        <div class="page-wrapper">
+          <div class="status-layout">
+            
+            <!-- Cột nội dung chính (bảng trạng thái) -->
+            <main class="main-content">
+              <div class="header-container">
+                <h2>Trạng thái giải bài</h2>
+                <div class="underline"></div>
               </div>
-            </div>
-          </main>
+              <div class="card-style problem-container">
 
-          <aside class="sidebar">
-            <div class="card-style legend-card">
-              <h4>Chú giải kết quả</h4>
-              <ul>
-                <li><a-tag color="green">AC</a-tag> Accepted (Kết quả đúng)</li>
-                <li><a-tag color="red">WA</a-tag> Wrong Answer (Kết quả sai)</li>
-                <li><a-tag color="orange">TLE</a-tag> Time Limit Exceeded</li>
-                <li><a-tag color="red">MLE</a-tag> Memory Limit Exceeded</li>
-                <li><a-tag color="red">OLE</a-tag> Output Limit Exceeded</li>
-                <li><a-tag color="red">RTE</a-tag> Runtime Error</li>
-                <li><a-tag color="red">IR</a-tag> Invalid Return</li>
-                <li><a-tag color="purple">CE</a-tag> Compile Error</li>
-              </ul>
-            </div>
-          </aside>
+                <!-- Table Section -->
+                <div class="table-container">
+                  <a-table
+                      :row-key="genUuid"
+                      :data-source="dataSource"
+                      :pagination="pagination"
+                      :loading="loading"
+                      @change="handleTableChange"
+                      :scroll="{ x: 'max-content' }"
+                  >
+                    <a-table-column title="ID" data-index="id" :width="80" />
+                    <a-table-column title="Thời gian" data-index="date" :width="60" />
+                    <a-table-column title="Tài khoản" data-index="account" :width="100" />
+                    <a-table-column title="Kết quả" data-index="result" :width="100">
+                      <template #default="{ text }">
+                        <a-tag v-if="text === 'AC'" color="green">AC</a-tag>
+                        <a-tag v-else-if="text === 'WA'" color="red">WA</a-tag>
+                        <a-tag v-else-if="text === 'TLE'" color="orange">TLE</a-tag>
+                        <a-tag v-else-if="text === 'RTE'" color="red">RTE</a-tag>
+                        <a-tag v-else-if="text === 'CE'" color="purple">CE</a-tag>
+                        <a-tag v-else-if="text === 'MLE'" color="red">MLE</a-tag>
+                        <a-tag v-else-if="text === 'OLE'" color="red">OLE</a-tag>
+                        <a-tag v-else-if="text === 'IR'" color="red">IR</a-tag>
+                        <LoadingOutlined v-else-if="text === null" />
+                      </template>
+                    </a-table-column>
+                    <a-table-column title="Bài tập" data-index="problem" :min-width="200" />
+                    <a-table-column title="Thời gian chạy" data-index="time" :width="120" />
+                    <a-table-column title="Bộ nhớ" data-index="memory" :width="100" />
+                    <a-table-column title="Trình biên dịch" data-index="compiler" :width="150" />
+                  </a-table>
+                </div>
+              </div>
+            </main>
+
+            <!-- Cột bên phải (chú giải) -->
+            <aside class="sidebar">
+              <div class="card-style legend-card">
+                <h4>Chú giải kết quả</h4>
+                <ul>
+                  <li><a-tag color="green">AC</a-tag> Accepted (Kết quả đúng)</li>
+                  <li><a-tag color="red">WA</a-tag> Wrong Answer (Kết quả sai)</li>
+                  <li><a-tag color="orange">TLE</a-tag> Time Limit Exceeded</li>
+                  <li><a-tag color="red">MLE</a-tag> Memory Limit Exceeded</li>
+                  <li><a-tag color="red">OLE</a-tag> Output Limit Exceeded</li>
+                  <li><a-tag color="red">RTE</a-tag> Runtime Error</li>
+                  <li><a-tag color="red">IR</a-tag> Invalid Return</li>
+                  <li><a-tag color="purple">CE</a-tag> Compile Error</li>
+                </ul>
+              </div>
+            </aside>
+          </div>
         </div>
-      </div>
-    </a-spin>
+      </a-spin>
+    </a-config-provider>
   </div>
 </template>
 
 <style scoped>
+/*
+  CSS cho trang Trạng thái - Chủ đề Neo-Futuristic Sáng
+  Đã được thiết kế lại và responsive.
+*/
+
 .status-page {
   background-color: #F5F7FA;
   min-height: 100vh;
@@ -198,11 +211,13 @@ const activeKey = ref([1]);
   padding: 24px;
 }
 
+/* === Bố cục chính === */
 .status-layout {
   display: flex;
   gap: 24px;
   max-width: 1600px;
   margin: 0 auto;
+  align-items: flex-start;
 }
 
 .main-content {
@@ -214,11 +229,11 @@ const activeKey = ref([1]);
   width: 25%;
   min-width: 300px;
   flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+  position: sticky; /* Dính lại khi cuộn */
+  top: 90px;
 }
 
+/* === Tiêu đề & Thẻ chung === */
 .header-container {
   margin-bottom: 24px;
 }
@@ -253,8 +268,27 @@ h2 {
 
 .table-container {
   flex: 1;
+  overflow-x: auto; /* Luôn cho phép cuộn ngang khi cần */
 }
 
+/* === Filter Bar === */
+.filter-container {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.filter-input, .filter-select {
+    flex-grow: 1;
+}
+.filter-container .ant-btn-primary {
+  background: linear-gradient(90deg, #007ACC, #00AFFF);
+  border: none;
+  color: white;
+}
+
+/* === Sidebar Card === */
 .legend-card h4 {
   font-size: 1.2rem;
   font-weight: 600;
@@ -285,6 +319,7 @@ h2 {
   text-align: center;
 }
 
+/* === RESPONSIVE === */
 @media (max-width: 1200px) {
   .status-layout {
     flex-direction: column;
@@ -293,7 +328,15 @@ h2 {
     width: 100%;
     min-width: unset;
   }
+  .sidebar {
+    position: static; /* Gỡ bỏ sticky trên mobile */
+  }
+  .ant-table-thead > tr > th
+  {
+    display: block;
+  }
 }
+
 
 @media (max-width: 576px) {
   .page-wrapper { padding: 15px; }

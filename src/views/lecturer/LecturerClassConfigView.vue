@@ -1,97 +1,108 @@
 <template>
-  <a-table
-      :dataSource="classList"
-      :pagination="pagination"
-      :columns="columns"
-      :rowKey="(record) => record.id"
-      @change="handleTableChange"
-  >
-    <template #bodyCell="{ column, record }">
-      <template v-if="column.dataIndex === 'name'">
-        <span style="font-weight: bold; color: red">{{
-            record.name
-          }}</span>
-      </template>
-
-      <!-- Cột thao tác -->
-      <template v-if="column.dataIndex === 'actions'">
-        <a-dropdown>
-          <a-button> ⋮</a-button>
-          <template #overlay>
-            <a-menu @click="({ key }) => handleAction(key, record)">
-              <a-menu-item key="contest">Thực Hành</a-menu-item>
-              <a-menu-item key="student">Sinh Viên</a-menu-item>
-              <a-menu-item key="lecturer">Giảng viên</a-menu-item>
-              <a-menu-divider/>
-              <a-menu-item key="edit" danger>Sửa</a-menu-item>
-            </a-menu>
+  <div class="class-config-container">
+    <a-config-provider :theme="antDesignTheme">
+      <a-table
+        :dataSource="classList"
+        :pagination="pagination"
+        :columns="columns"
+        :rowKey="(record) => record.id"
+        @change="handleTableChange"
+        class="class-table"
+        :scroll="{ x: 'max-content' }"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.dataIndex === 'name'">
+            <span class="class-name-link">{{ record.name }}</span>
           </template>
-        </a-dropdown>
-      </template>
-    </template>
-  </a-table>
-  <a-modal
-      v-model:open="isModalVisible"
-      :title="`Chỉnh sửa lớp học ${selectedRecord.name || ''}`"
-      style="min-width: 600px"
-      @ok="handleUpdate"
-  >
-    <a-form :model="editForm" layout="vertical">
-      <a-form-item label="Tên *">
-        <a-input v-model:value="editForm.name" placeholder="Nhập tên lớp"/>
-      </a-form-item>
 
-      <a-form-item label="Môn học">
-        <a-select v-model:value="editForm.subject">
-          <a-select-option
-              v-for="subject in subjects"
-              :key="subject.course_id"
-              :value="subject.subject_id"
-          >
-            {{ subject.label }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
+          <!-- Cột thao tác -->
+          <template v-if="column.dataIndex === 'actions'">
+            <a-dropdown :trigger="['click']">
+              <a-button type="text" shape="circle" class="action-button">
+                <EllipsisOutlined />
+              </a-button>
+              <template #overlay>
+                <a-menu @click="({ key }) => handleAction(key, record)">
+                  <a-menu-item key="contest">Thực Hành</a-menu-item>
+                  <a-menu-item key="student">Sinh Viên</a-menu-item>
+                  <a-menu-item key="lecturer">Giảng viên</a-menu-item>
+                  <a-menu-divider/>
+                  <a-menu-item key="edit" @click="showEditModal(record)">Sửa</a-menu-item>
+                </a-menu>
+              </template>
+            </a-dropdown>
+          </template>
+        </template>
+      </a-table>
 
-      <a-form-item label="Học kỳ">
-        <a-select v-model:value="editForm.semester">
-          <a-select-option
-              v-for="semester in semesters"
-              :key="semester.value"
-              :value="semester.value"
-          >
-            {{ semester.label }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
+      <a-modal
+          v-model:open="isModalVisible"
+          :title="`Chỉnh sửa lớp học ${selectedRecord.name || ''}`"
+          wrap-class-name="edit-modal"
+          @ok="handleUpdate"
+          :footer="null"
+          centered
+      >
+        <a-form :model="editForm" layout="vertical" class="edit-form">
+          <a-form-item label="Tên lớp học" name="name" :rules="[{ required: true, message: 'Vui lòng nhập tên lớp!' }]">
+            <a-input v-model:value="editForm.name" placeholder="Nhập tên lớp"/>
+          </a-form-item>
 
+          <a-form-item label="Môn học" name="subject" :rules="[{ required: true, message: 'Vui lòng chọn môn học!' }]">
+            <a-select v-model:value="editForm.subject" placeholder="Chọn môn học">
+              <a-select-option
+                  v-for="subject in subjects"
+                  :key="subject.course_id"
+                  :value="subject.subject_id"
+              >
+                {{ subject.label }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
 
-      <a-form-item label="Trạng thái">
-        <a-select v-model:value="editForm.status">
-          <a-select-option value=1>Hoạt động</a-select-option>
-          <a-select-option value=0>Không hoạt động</a-select-option>
-        </a-select>
-      </a-form-item>
+          <a-form-item label="Học kỳ" name="semester" :rules="[{ required: true, message: 'Vui lòng chọn học kỳ!' }]">
+            <a-select v-model:value="editForm.semester" placeholder="Chọn học kỳ">
+              <a-select-option
+                  v-for="semester in semesters"
+                  :key="semester.value"
+                  :value="semester.value"
+              >
+                {{ semester.label }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
 
-      <a-form-item label="Thông báo (Hiển thị tới sinh viên - Hỗ trợ HTML)">
-        <a-textarea v-model:value="editForm.about" rows="4"/>
-      </a-form-item>
+          <a-form-item label="Trạng thái" name="status" :rules="[{ required: true, message: 'Vui lòng chọn trạng thái!' }]">
+            <a-select v-model:value="editForm.status" placeholder="Chọn trạng thái">
+              <a-select-option :value="1">Hoạt động</a-select-option>
+              <a-select-option :value="0">Không hoạt động</a-select-option>
+            </a-select>
+          </a-form-item>
 
-      <div style="color: red">(*) Bắt buộc</div>
-    </a-form>
+          <a-form-item label="Thông báo (Hiển thị tới sinh viên - Hỗ trợ HTML)">
+            <a-textarea v-model:value="editForm.about" :rows="4" placeholder="Nhập thông báo..."/>
+          </a-form-item>
 
-    <template #footer>
-      <a-button @click="handleReset">Khôi phục</a-button>
-      <a-button type="primary" @click="handleUpdate(selectedRecord.courseID)">Cập nhật</a-button>
-    </template>
-  </a-modal>
-
+          <div class="required-notice">(*) Bắt buộc</div>
+        </a-form>
+        
+        <template #footer>
+          <div class="modal-footer">
+              <a-button @click="handleReset">Khôi phục</a-button>
+              <a-button type="primary" @click="handleUpdate(selectedRecord.courseID)">Cập nhật</a-button>
+          </div>
+        </template>
+      </a-modal>
+    </a-config-provider>
+  </div>
 </template>
+
 
 <script setup>
 import axiosInstance from "@/configs/axios";
 import {onBeforeMount, ref} from "vue";
 import {useRoute, useRouter} from "vue-router";
+import { EllipsisOutlined } from '@ant-design/icons-vue';
 
 const classList = ref([]);
 const pagination = ref({
@@ -125,7 +136,7 @@ const showEditModal = async (record) => {
 
   editForm.value = {
     name: classDataDetail.value.name || record.group,
-    subject: subjectLabel,   // ✅ Đổ luôn label (tên môn học) vào
+    subject: subjectLabel,   
     semester: record.semester_id,
     status: classDataDetail.value.status || '0',
     about: classDataDetail.value.about || ''
@@ -279,5 +290,58 @@ const handleAction = (key, record) => {
 </script>
 
 <style scoped>
+/*
+  CSS cho Component Cấu hình Lớp học - Chủ đề Neo-Futuristic Sáng
+*/
 
+.class-config-container {
+  /* Component này được thiết kế để nằm trong một card khác, nên không cần padding/margin ở đây */
+}
+
+/* === Bảng dữ liệu === */
+.class-table :deep(.ant-table) {
+  text-align: center;
+}
+.class-name-link {
+  font-weight: 600;
+  color: #007ACC; /* THEMED: Màu xanh nhấn đậm */
+}
+.class-table :deep(.ant-table-cell) {
+  text-align: center !important;
+}
+.action-button {
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: none;
+}
+.action-button:hover {
+  background-color: rgba(0, 175, 255, 0.1);
+}
+
+/* === Modal và Form === */
+.edit-form {
+  padding-top: 12px;
+}
+:deep(.ant-form-item-label > label) {
+    font-weight: 500;
+    color: #33475B;
+}
+
+.required-notice {
+    color: #d9363e;
+    font-size: 0.9rem;
+    margin-top: -10px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 24px;
+}
+.modal-footer .ant-btn-primary {
+    background: linear-gradient(90deg, #007ACC, #00AFFF);
+    border: none;
+    color: white;
+}
 </style>

@@ -902,32 +902,6 @@ watch(pageSize, (newSize) =>
     padding: 8px !important;
   }
 
-  /* Hide less important columns on mobile */
-  :global(.ant-table-thead > tr > th:nth-child(3)),
-  :global(.ant-table-tbody > tr > td:nth-child(3)) {
-    display: none;
-  }
-
-  /* Adjust column widths for mobile */
-  :global(.ant-table-thead > tr > th:first-child),
-  :global(.ant-table-tbody > tr > td:first-child) {
-    width: 15%;
-  }
-
-  :global(.ant-table-thead > tr > th:nth-child(2)),
-  :global(.ant-table-tbody > tr > td:nth-child(2)) {
-    width: 45%;
-  }
-
-  :global(.ant-table-thead > tr > th:nth-child(4)),
-  :global(.ant-table-tbody > tr > td:nth-child(4)) {
-    width: 20%;
-  }
-
-  :global(.ant-table-thead > tr > th:nth-child(5)),
-  :global(.ant-table-tbody > tr > td:nth-child(5)) {
-    width: 20%;
-  }
 
   /* Make table horizontally scrollable */
   .table-container {
@@ -949,21 +923,6 @@ watch(pageSize, (newSize) =>
 }
 
 /* Additional breakpoint for very small screens */
-@media (max-width: 480px) {
-  :global(.ant-table-thead > tr > th:nth-child(4)),
-  :global(.ant-table-tbody > tr > td:nth-child(4)) {
-    display: none;
-  }
 
-  :global(.ant-table-thead > tr > th:nth-child(2)),
-  :global(.ant-table-tbody > tr > td:nth-child(2)) {
-    width: 65%;
-  }
-
-  :global(.ant-table-thead > tr > th:nth-child(5)),
-  :global(.ant-table-tbody > tr > td:nth-child(5)) {
-    width: 20%;
-  }
-}
 
 </style>

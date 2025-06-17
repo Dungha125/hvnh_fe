@@ -43,11 +43,14 @@ if (icpc === "1" || icpc === "true") {
 
 const styleNavItem = (path) => {
   return {
-    color: currentPath.includes(path) && !isHover.value ? '#A7453C' : '#737374',
-    filter: currentPath.includes(path) && !isHover.value ? 'invert(32%) sepia(64%) saturate(506%) hue-rotate(330deg) brightness(70%) contrast(95%)' : '',
-    transition: 'color 0.3s ease, filter 0.3s ease'
-  }
-}
+    color: currentPath.includes(path) && !isHover.value ? "#0055A5" : "#737374",
+    filter:
+      currentPath.includes(path) && !isHover.value
+        ? "invert(33%) sepia(83%) saturate(612%) hue-rotate(190deg) brightness(60%) contrast(95%)"
+        : "",
+    transition: "color 0.3s ease, filter 0.3s ease",
+  };
+};
 
 const goTo = (path) => {
   router.push(path);

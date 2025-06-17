@@ -1414,7 +1414,7 @@ watch(
 
 <style scoped>
 .body {
-  color: #a7453c;
+  color: #5A738E;
   display: flex;
   margin-top: 90px;
 }

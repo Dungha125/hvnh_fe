@@ -501,7 +501,7 @@ const antDesignTheme = {
           bordered
           :scroll="{ x: 'max-content' }"
         >
-          <a-table-column key="checkbox" width="50px">
+          <a-table-column key="checkbox" >
             <template #title>
               <a-checkbox
                   :checked="contestIDs.length === listContests.length && listContests.length > 0"
@@ -516,7 +516,7 @@ const antDesignTheme = {
               />
             </template>
           </a-table-column>
-          <a-table-column title="STT" dataIndex="index" key="index" width="60px" />
+          <a-table-column title="STT" dataIndex="index" key="index"  />
           <a-table-column title="Tên" dataIndex="name" key="name">
             <template #default="{ text, record }">
               <a class="contest-name-link" @click="goToContestRanking(record)">{{ text }}</a>
@@ -645,7 +645,7 @@ const antDesignTheme = {
           </a-tabs>
            <a-form-item class="modal-footer">
               <a-button key="back" @click="handleEditCancel">Hủy</a-button>
-              <a-button key="submit" type="primary" html-type="submit">Lưu thay đổi</a-button>
+              <a-button key="submit" type="primary">Lưu thay đổi</a-button>
            </a-form-item>
         </a-form>
       </a-modal>
@@ -659,10 +659,6 @@ const antDesignTheme = {
   CSS cho trang Cấu hình Thực hành - Chủ đề Neo-Futuristic Sáng
   Đã được thiết kế lại và responsive.
 */
-
-.contest-config-container {
-  /* Loại bỏ padding, vì component cha sẽ cung cấp */
-}
 
 /* === Thanh hành động và bộ lọc === */
 .action-bar {
@@ -779,9 +775,4 @@ const antDesignTheme = {
   }
 }
 
-@media (max-width: 576px) {
-    .contest-config-container {
-        padding: 15px;
-    }
-}
 </style>
