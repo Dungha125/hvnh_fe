@@ -146,203 +146,308 @@ const showConfirm = () => {
 </script>
 
 <template>
-  <div class="form-container">
-    <!-- Cột 1 -->
-    <div class="form-column">
-      <a-form-item label="Tên">
-        <a-input v-model:value="createContestDTO.name"/>
-      </a-form-item>
-      <a-form-item label="Địa điểm">
-        <a-input v-model:value="createContestDTO.address"/>
-      </a-form-item>
-      <a-form-item label="Môn Học">
-        <a-select v-model:value="selectedCourse">
-          <a-select-option v-for="subject in subjects" :key="subject.value" :value="subject.value">
-            {{ subject.label }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
-      <a-form-item label="Học kỳ">
-        <a-select v-model:value="createContestDTO.semester">
-          <a-select-option v-for="semester in semesters" :key="semester.value" :value="semester.value">
-            {{ semester.label }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
-      <a-form-item label="Nhóm">
-        <a-select v-model:value="createContestDTO.course" :disabled="filteredGroups.length === 0">
-          <a-select-option v-for="group in filteredGroups" :key="group.value" :value="group.value">
-            {{ group.label }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
-      <a-form-item label="Thời gian bắt đầu">
-        <a-date-picker v-model:value="createContestDTO.start_time" show-time format="YYYY-MM-DD HH:mm:ss"
-                       placeholder="Chọn thời gian bắt đầu"/>
-      </a-form-item>
-      <a-form-item label="Thời gian kết thúc">
-        <a-date-picker v-model:value="createContestDTO.end_time" show-time format="YYYY-MM-DD HH:mm:ss"
-                       placeholder="Chọn thời gian kết thúc"/>
-      </a-form-item>
-      <a-form-item label="Thời gian dừng xếp hạng">
-        <a-date-picker v-model:value="createContestDTO.ranking_stop_time" show-time format="YYYY-MM-DD HH:mm:ss"
-                       placeholder="Chọn thời gian dừng xếp hạng"/>
-      </a-form-item>
+  <div class="contest-config-container">
+    <div class="header-section">
+      <h2 class="section-title">Thêm bài thực hành mới</h2>
+      <p class="section-description">Điền đầy đủ thông tin để tạo bài thực hành mới</p>
     </div>
 
-    <!-- Cột 2 -->
-    <div class="form-column">
-      <a-form-item label="Bài thực hành số">
-        <a-input-number v-model:value="createContestDTO.ordinal" :min="1"/>
-      </a-form-item>
-      <a-form-item label="Trạng thái">
-        <a-radio-group v-model:value="createContestDTO.status">
-          <a-radio value="1">Hoạt động</a-radio>
-          <a-radio value="0">Không hoạt động</a-radio>
-        </a-radio-group>
-      </a-form-item>
-      <!-- CHECKBOXES -->
-      <a-form-item label="Tùy chọn">
-        <div class="checkbox-group">
-          <a-checkbox
-              :checked="createContestDTO.frozen_time === 1"
-              @change="createContestDTO.frozen_time = $event.target.checked ? 1 : 0"
-          >
-            Đóng băng bài thi
-          </a-checkbox>
-          <a-checkbox
-              :checked="createContestDTO.allow_browser === 1"
-              @change="createContestDTO.allow_browser = $event.target.checked ? 1 : 0"
-          >
-            Cho phép trình duyệt
-          </a-checkbox>
-          <a-checkbox
-              :checked="createContestDTO.ioi === 1"
-              @change="createContestDTO.ioi = $event.target.checked ? 1 : 0"
-          >
-            Chế độ IOI
-          </a-checkbox>
-          <a-checkbox
-              :checked="createContestDTO.icpc === 1"
-              @change="createContestDTO.icpc = $event.target.checked ? 1 : 0"
-          >
-            Chế độ ICPC
-          </a-checkbox>
-          <a-checkbox
-              :checked="createContestDTO.display_detail === 1"
-              @change="createContestDTO.display_detail = $event.target.checked ? 1 : 0"
-          >
-            Ẩn câu hỏi
-          </a-checkbox>
-          <a-checkbox
-              :checked="createContestDTO.public_ranking === 1"
-              @change="createContestDTO.public_ranking = $event.target.checked ? 1 : 0"
-          >
-            Công khai bảng xếp hạng
-          </a-checkbox>
+    <div class="form-container">
+      <!-- Cột 1: Thông tin cơ bản -->
+      <div class="form-column">
+        <div class="form-section">
+          <h3 class="form-section-title">Thông tin cơ bản</h3>
+          
+          <a-form-item label="Tên bài thực hành">
+            <a-input v-model:value="createContestDTO.name" placeholder="Nhập tên bài thực hành"/>
+          </a-form-item>
+
+          <a-form-item label="Địa điểm">
+            <a-input v-model:value="createContestDTO.address" placeholder="Nhập địa điểm"/>
+          </a-form-item>
+
+          <a-form-item label="Môn Học">
+            <a-select v-model:value="selectedCourse" placeholder="Chọn môn học">
+              <a-select-option v-for="subject in subjects" :key="subject.value" :value="subject.value">
+                {{ subject.label }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+
+          <a-form-item label="Học kỳ">
+            <a-select v-model:value="createContestDTO.semester" placeholder="Chọn học kỳ">
+              <a-select-option v-for="semester in semesters" :key="semester.value" :value="semester.value">
+                {{ semester.label }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+
+          <a-form-item label="Nhóm">
+            <a-select v-model:value="createContestDTO.course" :disabled="filteredGroups.length === 0" placeholder="Chọn nhóm">
+              <a-select-option v-for="group in filteredGroups" :key="group.value" :value="group.value">
+                {{ group.label }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
         </div>
-      </a-form-item>
 
-      <a-form-item label="Thời gian phạt">
-        <a-input-number v-model:value="createContestDTO.penalty_time" :min="20"/>
-      </a-form-item>
-      <a-form-item label="Thời gian đóng băng">
-        <a-input-number v-model:value="createContestDTO.frozen_time" :min="30"/>
-      </a-form-item>
-      <a-form-item label="Loại nộp bài">
-        <a-radio-group v-model:value="createContestDTO.submit_type">
-          <a-radio value="1">Tải lên</a-radio>
-          <a-radio value="2">Chấm thủ công</a-radio>
-        </a-radio-group>
-      </a-form-item>
+        <div class="form-section">
+          <h3 class="form-section-title">Thời gian</h3>
+          
+          <a-form-item label="Thời gian bắt đầu">
+            <a-date-picker v-model:value="createContestDTO.start_time" show-time format="YYYY-MM-DD HH:mm:ss"
+                         placeholder="Chọn thời gian bắt đầu"/>
+          </a-form-item>
 
+          <a-form-item label="Thời gian kết thúc">
+            <a-date-picker v-model:value="createContestDTO.end_time" show-time format="YYYY-MM-DD HH:mm:ss"
+                         placeholder="Chọn thời gian kết thúc"/>
+          </a-form-item>
+
+          <a-form-item label="Thời gian dừng xếp hạng">
+            <a-date-picker v-model:value="createContestDTO.ranking_stop_time" show-time format="YYYY-MM-DD HH:mm:ss"
+                         placeholder="Chọn thời gian dừng xếp hạng"/>
+          </a-form-item>
+        </div>
+      </div>
+
+      <!-- Cột 2: Cấu hình -->
+      <div class="form-column">
+        <div class="form-section">
+          <h3 class="form-section-title">Cấu hình chung</h3>
+
+          <a-form-item label="Bài thực hành số">
+            <a-input-number v-model:value="createContestDTO.ordinal" :min="1" class="full-width"/>
+          </a-form-item>
+
+          <a-form-item label="Trạng thái">
+            <a-radio-group v-model:value="createContestDTO.status" class="status-group">
+              <a-radio value="1">Hoạt động</a-radio>
+              <a-radio value="0">Không hoạt động</a-radio>
+            </a-radio-group>
+          </a-form-item>
+
+          <a-form-item label="Loại nộp bài">
+            <a-radio-group v-model:value="createContestDTO.submit_type" class="submit-type-group">
+              <a-radio value="1">Tải lên</a-radio>
+              <a-radio value="2">Chấm thủ công</a-radio>
+            </a-radio-group>
+          </a-form-item>
+
+          <a-form-item label="Thời gian phạt (phút)">
+            <a-input-number v-model:value="createContestDTO.penalty_time" :min="20" class="full-width"/>
+          </a-form-item>
+
+          <a-form-item label="Thời gian đóng băng (phút)">
+            <a-input-number v-model:value="createContestDTO.frozen_time" :min="30" class="full-width"/>
+          </a-form-item>
+        </div>
+
+        <div class="form-section">
+          <h3 class="form-section-title">Tùy chọn nâng cao</h3>
+          
+          <div class="checkbox-group">
+            <a-checkbox
+                :checked="createContestDTO.frozen_time === 1"
+                @change="createContestDTO.frozen_time = $event.target.checked ? 1 : 0"
+            >
+              Đóng băng bài thi
+            </a-checkbox>
+
+            <a-checkbox
+                :checked="createContestDTO.allow_browser === 1"
+                @change="createContestDTO.allow_browser = $event.target.checked ? 1 : 0"
+            >
+              Cho phép trình duyệt
+            </a-checkbox>
+
+            <a-checkbox
+                :checked="createContestDTO.ioi === 1"
+                @change="createContestDTO.ioi = $event.target.checked ? 1 : 0"
+            >
+              Chế độ IOI
+            </a-checkbox>
+
+            <a-checkbox
+                :checked="createContestDTO.icpc === 1"
+                @change="createContestDTO.icpc = $event.target.checked ? 1 : 0"
+            >
+              Chế độ ICPC
+            </a-checkbox>
+
+            <a-checkbox
+                :checked="createContestDTO.display_detail === 1"
+                @change="createContestDTO.display_detail = $event.target.checked ? 1 : 0"
+            >
+              Ẩn câu hỏi
+            </a-checkbox>
+
+            <a-checkbox
+                :checked="createContestDTO.public_ranking === 1"
+                @change="createContestDTO.public_ranking = $event.target.checked ? 1 : 0"
+            >
+              Công khai bảng xếp hạng
+            </a-checkbox>
+          </div>
+        </div>
+      </div>
     </div>
-    <a-button @click="showConfirm">Thêm</a-button>
+
+    <div class="form-actions">
+      <a-button type="primary" size="large" @click="showConfirm">
+        <template #icon><PlusOutlined /></template>
+        Thêm bài thực hành
+      </a-button>
+    </div>
   </div>
 </template>
 
-
 <style scoped>
-/* Container tổng thể của form */
+.contest-config-container {
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+}
+
+.header-section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.section-description {
+  color: #6b7280;
+  font-size: 16px;
+}
+
 .form-container {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  max-width: 900px;
-  overflow-y: auto; /* Bật thanh cuộn */
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  border: 1px solid #ddd;
-  background: #ffffff;
+  gap: 32px;
+  margin-bottom: 24px;
 }
 
-/* Mỗi cột chiếm 48% để tạo khoảng cách */
 .form-column {
-  width: 48%;
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 24px;
 }
 
-/* Label */
-a-form-item label {
+.form-section {
+  background: #f9fafb;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.form-section-title {
+  font-size: 18px;
   font-weight: 600;
-  color: #444;
-  display: block;
-  margin-bottom: 5px;
+  color: #374151;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
 }
 
-/* Input và select */
-a-input,
-a-input-number,
-a-select,
-a-date-picker {
+:deep(.ant-form-item) {
+  margin-bottom: 20px;
+}
+
+:deep(.ant-form-item-label) {
+  padding-bottom: 8px;
+}
+
+:deep(.ant-form-item-label > label) {
+  font-weight: 500;
+  color: #374151;
+}
+
+:deep(.ant-input),
+:deep(.ant-select-selector),
+:deep(.ant-picker),
+:deep(.ant-input-number) {
+  border-radius: 8px;
+  border-color: #d1d5db;
+}
+
+:deep(.ant-input:hover),
+:deep(.ant-select-selector:hover),
+:deep(.ant-picker:hover),
+:deep(.ant-input-number:hover) {
+  border-color: #60a5fa;
+}
+
+:deep(.ant-input:focus),
+:deep(.ant-select-selector:focus),
+:deep(.ant-picker:focus),
+:deep(.ant-input-number:focus) {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.full-width {
   width: 100% !important;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  padding: 8px;
-  font-size: 14px;
 }
 
-/* Checkbox group */
 .checkbox-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
 }
 
-/* Căn chỉnh checkbox */
-a-checkbox {
+:deep(.ant-checkbox-wrapper) {
+  margin-left: 0;
+}
+
+:deep(.ant-radio-group) {
+  display: flex;
+  gap: 16px;
+}
+
+.status-group,
+.submit-type-group {
+  display: flex;
+  gap: 24px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+:deep(.ant-btn-primary) {
+  height: 44px;
+  padding: 0 24px;
+  font-size: 16px;
+  border-radius: 8px;
+  background: #2563eb;
+  border-color: #2563eb;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Căn chỉnh radio group */
-a-radio-group {
-  display: flex;
-  gap: 20px;
+:deep(.ant-btn-primary:hover) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
 }
 
-/* Button */
-a-button {
-  background-color: #1890ff;
-  color: white;
-  font-weight: bold;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 6px;
+@media (max-width: 1024px) {
+  .form-container {
+    flex-direction: column;
+  }
+  
+  .form-column {
+    width: 100%;
+  }
 }
-
-a-button:hover {
-  background-color: #40a9ff;
-  transform: scale(1.02);
-}
-
-/* Khoảng cách giữa các mục */
-a-form-item {
-  margin-bottom: 15px !important;
-}
-
 </style>

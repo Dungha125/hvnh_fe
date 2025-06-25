@@ -40,7 +40,7 @@ onMounted(async () => {
           router.push('/contest');
         } 
         else {
-          router.push('/problems');
+          router.push('/home');
         }
       }
         else if (response.data.user.role === 'admin')

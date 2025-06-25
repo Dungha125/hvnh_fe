@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, h } from 'vue';
+import { ref, onMounted, onUnmounted, h, computed } from 'vue';
 import axios from '@/configs/axios.js';
 import { useRouter } from 'vue-router';
 import { message, Button } from 'ant-design-vue';
@@ -8,7 +8,10 @@ import HeaderContest from '../components/HeaderContest.vue';
 const isLoading = ref(true);
 const router = useRouter();
 const contestList = ref([]);
+const currentTime = ref(new Date());
+let countdownTimer = null;
 
+// --- API & DATA FETCHING ---
 const fetchContests = async () => {
   try {
     const response = await axios.get('contests/available');
@@ -22,51 +25,78 @@ const fetchContests = async () => {
   }
 };
 
-const goToContest = (contestId, startTime,endTime, publicRanking, icpc, ioi) => {
+// --- REAL-TIME COUNTDOWN LOGIC ---
+onMounted(() => {
+  fetchContests();
+  // Cập nhật thời gian mỗi giây
+  countdownTimer = setInterval(() => {
+    currentTime.value = new Date();
+  }, 1000);
+});
+
+onUnmounted(() => {
+  // Hủy bộ đếm khi component bị hủy để tránh memory leak
+  if (countdownTimer) {
+    clearInterval(countdownTimer);
+  }
+});
+
+// --- HELPER FUNCTIONS ---
+const getCountdown = (startTime) => {
+  const now = currentTime.value;
+  const start = new Date(startTime);
+
+  if (now >= start) {
+    return { text: 'Vào', isCounting: false };
+  }
+
+  const diff = Math.floor((start - now) / 1000);
+  if (diff < 0) return { text: 'Vào', isCounting: false };
+
+  const hours = Math.floor(diff / 3600);
+  const minutes = Math.floor((diff % 3600) / 60);
+  const seconds = diff % 60;
+
+  return {
+    text: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`,
+    isCounting: true,
+  };
+};
+
+const goToContest = (contestId, startTime, endTime, publicRanking, icpc, ioi) => {
   sessionStorage.setItem('contest_id', contestId);
   sessionStorage.setItem('start_time', startTime);
   sessionStorage.setItem('finish_time', endTime);
   sessionStorage.setItem('public_ranking', publicRanking);
   sessionStorage.setItem('contest_icpc', icpc);
   sessionStorage.setItem('contest_ioi', ioi);
-
   router.push('/contest/problems');
 };
 
-const getCountdown = (startTime) => {
-  const now = new Date();
-  const start = new Date(startTime);
-  if (now >= start) return 'Vào';
-
-  const diff = Math.floor((start - now) / 1000);
-  const hours = Math.floor(diff / 3600);
-  const minutes = Math.floor((diff % 3600) / 60);
-  const seconds = diff % 60;
-
-  return `Xin chờ: ${hours.toString().padStart(2, '0')}:${minutes
-    .toString()
-    .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-};
-
-const columns = [
-  { title: 'STT', dataIndex: 'index', key: 'index' },
+// --- TABLE COLUMNS ---
+const columns = computed(() => [
+  { title: 'STT', dataIndex: 'index', key: 'index', width: '80px', align: 'center' },
   { title: 'Thực hành', dataIndex: 'name', key: 'name' },
-  { title: 'Bắt đầu', dataIndex: 'start_time', key: 'start_time' },
-  { title: 'Kết thúc', dataIndex: 'end_time', key: 'end_time' },
+  { title: 'Bắt đầu', dataIndex: 'start_time', key: 'start_time', width: '200px', align: 'center' },
+  { title: 'Kết thúc', dataIndex: 'end_time', key: 'end_time', width: '200px', align: 'center' },
   {
     title: 'Thao tác',
     key: 'action',
+    width: '180px',
+    align: 'center',
     customRender: ({ record }) => {
-      return getCountdown(record.start_time) === 'Vào'
-        ? h(Button, { type: 'primary', onClick: () => goToContest(record.id, record.start_time, record.end_time, record.public_ranking, record.icpc, record.ioi) }, () => 'Tiếp tục')
-        : getCountdown(record.start_time);
+      const countdown = getCountdown(record.start_time);
+      if (countdown.isCounting) {
+        return h('span', { class: 'countdown-timer' }, `Xin chờ: ${countdown.text}`);
+      } else {
+        return h(Button, {
+          type: 'primary',
+          onClick: () => goToContest(record.id, record.start_time, record.end_time, record.public_ranking, record.icpc, record.ioi)
+        }, () => 'Tiếp tục');
+      }
     },
   },
-];
-
-
-
-onMounted(fetchContests);
+]);
 </script>
 
 

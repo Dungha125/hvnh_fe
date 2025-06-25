@@ -1,616 +1,332 @@
 <script setup>
-import {computed, reactive, ref, watch, watchEffect} from 'vue';
-import {usePagination} from 'vue-request';
-import {onBeforeMount} from "vue";
-import {useRouter} from 'vue-router';
+import { ref, onMounted, onUnmounted, computed, h } from 'vue';
+import { usePagination } from 'vue-request';
+import { useRouter } from 'vue-router';
 import axios from "@/configs/axios.js";
-import {CheckCircleTwoTone, CloseCircleTwoTone} from '@ant-design/icons-vue';
-import {message} from "ant-design-vue";
+import { message } from "ant-design-vue";
+import { CheckCircleTwoTone, CloseCircleTwoTone, FieldTimeOutlined, UserOutlined, WarningOutlined } from "@ant-design/icons-vue";
 import HeaderContest from '@/components/HeaderContest.vue';
+import dayjs from "dayjs";
 
+// --- STATE MANAGEMENT ---
 const isLoading = ref(true);
-const filterData = ref([]);
-const activeKey = ref([1]);
-const groupList = reactive([]);
-const problems = reactive([]);
-const difficulties = ref([]);
-const subTopics = ref([]);
 const router = useRouter();
-const currentCourse = ref(null);
-const listStudyingCourses = ref([]);
-const searchText = ref('')
-const countdown = ref('')
+const problems = ref([]);
+const countdown = ref('');
+const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+let countdownInterval = null;
 
-const initialPage = parseInt(localStorage.getItem('currentPage')) || 1;
-const initialPageSize = parseInt(localStorage.getItem('pageSize')) || 50;
-
-onBeforeMount(async () =>
-{
-	const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-
-	if (currentUser && currentUser.member_group != 1)
-	{
-		router.push('/not-found');
-	}
-
-	try
-	{
-		const response = await axios.get('courses/studying');
-		listStudyingCourses.value = response.data.data;
-
-		if (listStudyingCourses.value.length > 0)
-		{
-			if (localStorage.getItem('currentCourse'))
-			{
-				currentCourse.value = JSON.parse(localStorage.getItem('currentCourse'));
-			}
-			else
-			{
-				currentCourse.value = listStudyingCourses.value[0];
-				localStorage.setItem('currentCourse', JSON.stringify(currentCourse.value));
-			}
-
-			listStudyingCourses.value.forEach(course =>
-			{
-				groupList.push({
-					id: course.id,
-					name: course?.subject.name + '- Nhóm ' + course.name
-				});
-			});
-		}
-		else
-		{
-			message.error('Bạn chưa tham gia vào nhóm học nào!');
-			isLoading.value = false;
-		}
-	}
-	catch (error)
-	{
-		console.log(error);
-	}
-});
-
-const fetchProblems = async () =>
-{
-	if (listStudyingCourses.value.length === 0)
-		return;
-
-	isLoading.value = true;
-	problems.splice(0, problems.length);
-	filterData.value.splice(0, filterData.value.length);
-	difficulties.value.splice(0, difficulties.value.length);
-	subTopics.value.splice(0, subTopics.value.length);
-
-	try
-	{
-		const response = await axios.get(`contests/${contestId}/question`);
-		const listProblems = response.data.data.questions;
-		let subGroup = new Set();
-
-		listProblems.forEach((problem, index) =>
-		{
-			problems.push({
-				index: index + 1,
-				code: problem.code,
-				id: problem.id,
-				title: problem.name,
-				group: problem.group?.name,
-				subTopic: problem.sub_group?.name,
-				difficulty: problem.question_level?.name,
-				correct: problem.ac_user_count,
-				is_solved: problem.is_ac,
-				is_tried: problem.is_tried
-			});
-
-			if (problem.sub_group?.name)
-			{
-				subGroup.add(problem.sub_group?.name);
-			}
-		});
-
-		subGroup.forEach(subTopic =>
-		{
-			filterData.value.push({
-				text: subTopic,
-				value: subTopic
-			});
-		});
-
-		difficulties.value = Array.from(new Set(problems
-			.map(problem => problem?.difficulty)
-			.filter(difficulty => difficulty != null)));
-		difficulties.value.sort((a, b) => a.localeCompare(b));
-
-		subTopics.value = Array.from(new Set(problems
-			.map(problem => problem?.subTopic)
-			.filter(subTopic => subTopic != null)));
-		subTopics.value.sort((a, b) => a.localeCompare(b));
-
-		checkboxListState1.checkedList = [...difficulties.value];
-		checkboxListState1.indeterminate = false;
-		checkboxListState1.checkAll = true;
-
-		checkboxListState2.checkedList = [...subTopics.value];
-		checkboxListState2.indeterminate = false;
-		checkboxListState2.checkAll = true;
-
-		problems.sort((a, b) =>
-		{
-			return a.index.localeCompare(b.index);
-		});
-	}
-	catch (error)
-	{
-		console.log(error);
-	}
-
-	isLoading.value = false;
+// --- PAGINATION LOGIC ---
+const queryData = async () => {
+  // Trả về danh sách bài tập đã được lọc hoặc toàn bộ
+  return problems.value;
 };
 
-const checkboxListState1 = reactive({
-	indeterminate: true,
-	checkAll: false,
-	checkedList: [],
-});
-
-const checkboxListState2 = reactive({
-	indeterminate: true,
-	checkAll: false,
-	checkedList: [],
-});
-
-const toggleChecked1 = () =>
-{
-	if (checkboxListState1.checkedList.length === difficulties.value.length)
-	{
-		checkboxListState1.checkedList = [];
-		checkboxListState1.indeterminate = false;
-		checkboxListState1.checkAll = false;
-	}
-	else
-	{
-		checkboxListState1.checkedList = [...difficulties.value];
-		checkboxListState1.indeterminate = false;
-		checkboxListState1.checkAll = true;
-	}
-};
-
-const toggleChecked2 = () =>
-{
-	if (checkboxListState2.checkedList.length === subTopics.value.length)
-	{
-		checkboxListState2.checkedList = [];
-		checkboxListState2.indeterminate = false;
-		checkboxListState2.checkAll = false;
-	}
-	else
-	{
-		checkboxListState2.checkedList = [...subTopics.value];
-		checkboxListState2.indeterminate = false;
-		checkboxListState2.checkAll = true;
-	}
-};
-
-const queryData = async (params) =>
-{
-	const selectedDifficulties = checkboxListState1.checkedList;
-	const selectedSubTopics = checkboxListState2.checkedList;
-
-	let filteredProblems = problems;
-
-	if (selectedDifficulties.length > 0)
-	{
-		filteredProblems = filteredProblems.filter(problem => selectedDifficulties.includes(problem.difficulty));
-	}
-
-	if (selectedSubTopics.length > 0)
-	{
-		filteredProblems = filteredProblems.filter(problem => selectedSubTopics.includes(problem.subTopic));
-	}
-
-	if (searchText.value.trim())
-	{
-		const searchLower = searchText.value.toLowerCase();
-		filteredProblems = filteredProblems.filter(problem =>
-			problem.code.toLowerCase().includes(searchLower) ||
-			problem.title.toLowerCase().includes(searchLower)
-		);
-	}
-
-	return filteredProblems;
-};
-
-const {data: dataSource, run, loading, current, pageSize} = usePagination(queryData, {
-	defaultParams: [{
-		page: initialPage,
-		results: initialPageSize,
-	}],
-	formatResult: res => Array.isArray(res) ? res : [],
-	pagination: {
-		currentKey: 'page',
-		pageSizeKey: 'results',
-	},
+const { data: dataSource, run, loading, current, pageSize } = usePagination(queryData, {
+  pagination: {
+    currentKey: 'page',
+    pageSizeKey: 'results',
+    defaultPageSize: 50,
+  },
 });
 
 const pagination = computed(() => ({
-	total: queryData().length,
-	current: current.value,
-	pageSize: pageSize.value,
+  total: problems.value.length,
+  current: current.value,
+  pageSize: pageSize.value,
 }));
 
-const genUuid = () =>
-{
-	return Math.random().toString(36).substring(7);
+// --- API & DATA FETCHING ---
+const fetchProblems = async () => {
+  const contestId = sessionStorage.getItem('contest_id');
+  if (!contestId) {
+    message.error('Không tìm thấy kỳ thi. Vui lòng thử lại.');
+    router.push('/');
+    return;
+  }
+
+  isLoading.value = true;
+  try {
+    const response = await axios.get(`contests/${contestId}/question`);
+    if (response.data.code === 200) {
+      const listProblems = response.data.data.questions;
+      
+      problems.value = listProblems.map((problem, index) => ({
+        index: index + 1,
+        code: problem.code,
+        id: problem.id,
+        title: problem.name,
+        is_solved: problem.is_ac,
+        is_tried: problem.is_tried,
+      }));
+
+      // FIX: Chạy lại usePagination để cập nhật dataSource sau khi có dữ liệu
+      run(); 
+
+    }
+  } catch (error) {
+    message.error('Lỗi khi tải danh sách bài tập!');
+  } finally {
+    isLoading.value = false;
+  }
 };
 
-const handleTableChange = (pag, filters, sorter) =>
-{
-	run({
-		results: pag.pageSize,
-		page: pag?.current,
-		sortField: sorter.field,
-		sortOrder: sorter.order,
-		...filters,
-	});
+onMounted(() => {
+  fetchProblems();
+  updateCountdown();
+  countdownInterval = setInterval(updateCountdown, 1000);
+});
+
+onUnmounted(() => {
+  if (countdownInterval) clearInterval(countdownInterval);
+});
+
+const handleTableChange = (pag) => {
+  run({
+    results: pag.pageSize,
+    page: pag?.current,
+  });
 };
 
-const onClick = ({key}) =>
-{
-	currentCourse.value = listStudyingCourses.value.find(course => course.id === key);
-	localStorage.setItem('currentCourse', JSON.stringify(currentCourse.value));
-	run();
-};
-const User = JSON.parse(localStorage.getItem('user'));
-const contestId = sessionStorage.getItem('contest_id');
-if (!contestId) {
-  message.error('Vui lòng bấm nút tiếp tục');
-  router.push('/');
-}
-
-const navigateToProblem = code =>
-{
-	router.push(`/contest/problems/${code}`);
-};
-
-watch(currentCourse, async () =>
-{
-	await fetchProblems();
-	run();
-});
-
-watch([() => checkboxListState1.checkedList, () => checkboxListState2.checkedList], () =>
-{
-	run();
-});
-
-watch(() => checkboxListState1.checkedList, (newVal) =>
-{
-	const allChecked = newVal.length === difficulties.value.length;
-	const noneChecked = newVal.length === 0;
-	checkboxListState1.indeterminate = !allChecked && !noneChecked;
-	checkboxListState1.checkAll = allChecked;
-});
-
-watch(() => checkboxListState2.checkedList, (newVal) =>
-{
-	const allChecked = newVal.length === subTopics.value.length;
-	const noneChecked = newVal.length === 0;
-	checkboxListState2.indeterminate = !allChecked && !noneChecked;
-	checkboxListState2.checkAll = allChecked;
-});
-
-watch(searchText, () =>
-{
-	run();
-});
-
-watch(current, (newPage) =>
-{
-	localStorage.setItem('currentPage', newPage);
-});
-
-watch(pageSize, (newSize) =>
-{
-	current.value = 1;
-	localStorage.setItem('pageSize', newSize);
-});
-
-
-
+// --- HELPER & NAVIGATION ---
 const getCountdown = () => {
-  const now = new Date();
-  const start = new Date(sessionStorage.getItem('start_time'));
-  const end = new Date(sessionStorage.getItem('finish_time'))
-  if (now >= end) return 'End Contest';
-
-  const diff = Math.floor((end - now) / 1000);
-  const days = Math.floor(diff / 86400);
+  const now = dayjs();
+  const end = dayjs(sessionStorage.getItem('finish_time'));
+  if (now.isAfter(end)) {
+    clearInterval(countdownInterval);
+    return 'Hết giờ';
+  }
+  const diff = end.diff(now, 'second');
+  const days = Math.floor(diff / (3600*24))
   const hours = Math.floor(diff / 3600);
   const minutes = Math.floor((diff % 3600) / 60);
   const seconds = diff % 60;
 
-  return `${days.toString().padStart(2,'0')}:${hours.toString().padStart(2, '0')}:${minutes.toString()
-    .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  return `${days.toString().padStart(2, '0')}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
 
-watchEffect(() => {
-	setInterval(() => {
+const updateCountdown = () => {
   countdown.value = getCountdown();
-	}, 1000);
-});
+};
 
-
-
+const navigateToProblem = (problemId) => {
+  router.push(`/contest/problems/${problemId}`);
+};
 </script>
 
 <template>
-	<HeaderContest/>
-	
-	<a-spin :spinning="isLoading">
-		<div class="body">
-				
-				<div class="body-header">
-				<div class="countdown-time-test">
-					<h2 style="color: #a71d1d; font-size:36px">{{User.last_name}} {{ User.first_name }} ({{ User.username }}) {{countdown}}</h2>
-				</div>
-				<div class="underline"></div>
-					<h2>Thực hành</h2>
-					<div class="underline"></div>
-					<div class="problem-container">
-						<div class="table-container">
-							<a-table
-								:row-key="genUuid()"
-								:data-source="dataSource"
-								:pagination="pagination"
-								:loading="loading"
-							
-								@change="handleTableChange"
-							>
-								<a-table-column data-index="code" width="10%">
-									<template #title>
-										<span style="font-weight: bold">STT</span>
-									</template>
-
-									<template #default="{ record }">
-										<a @click="navigateToProblem(record.id)"
-										   style="cursor: pointer; color: #909090;">
-											<CheckCircleTwoTone v-if="record.is_solved" two-tone-color="#52c41a"/>
-											<CloseCircleTwoTone v-else-if="!record.is_solved && record.is_tried"
-											                    two-tone-color="#fc031c"
-											/>
-											{{ record.index }}
-										</a>
-									</template>
-								</a-table-column>
-
-								<a-table-column width="auto" data-index="title" align="left">
-									<template #title>
-										<span style="font-weight: bold;">Tiêu đề</span>
-									</template>
-
-									<template #default="{ record }" >
-										<a @click="navigateToProblem(record.id)"
-										   style="cursor: pointer; color: #A7453C; font-weight: medium; "
-										   onmouseover="this.style.textDecoration='underline'" 
-      										onmouseout="this.style.textDecoration='none'">
-											{{ record.title.toUpperCase() }}
-										</a>
-									</template>
-								</a-table-column>
-
-							
-
-<!--								<a-table-column width="10%" data-index="correct">-->
-<!--									<template #title>-->
-<!--										<span style="font-weight: bold">Làm đúng</span>-->
-<!--									</template>-->
-<!--								</a-table-column>-->
-							</a-table>
-						</div>
-					</div>
-				</div>
-		</div>
-		<a-config-provider
-			:theme="{
-              token: {
-                colorPrimary: '#A7453C',
-                colorTextHeading: '#000000',
-                colorText: '#A7453C',
-                colorBorderSecondary: 'rgba(186,151,147,0.45)'
-              }
-            }"
-		/>
-	</a-spin>
+  <div class="page-container">
+    <HeaderContest/>
+    <div class="page-wrapper">
+      <a-spin :spinning="isLoading">
+        <div class="countdown-bar">
+          <div class="user-info">
+            <UserOutlined />
+            <span>{{ currentUser.last_name }} {{ currentUser.first_name }} ({{ currentUser.username }})</span>
+          </div>
+          <div class="timer">
+            <FieldTimeOutlined />
+            <span>{{ countdown }}</span>
+          </div>
+        </div>
+        
+        <div class="contest-layout">
+            <main class="main-content">
+                <div class="content-card">
+                  <div class="header-container">
+                    <h2>Danh sách bài tập</h2>
+                    <div class="underline"></div>
+                  </div>
+                  <a-table
+                    :columns="[
+                      { title: 'STT', dataIndex: 'index', key: 'index', width: 80, align: 'center' },
+                      { title: 'Tiêu đề', dataIndex: 'title', key: 'name', customRender: ({ record }) => h('a', { class: 'problem-title-link', onClick: () => navigateToProblem(record.id) }, record.title.toUpperCase()) },
+                      { title: 'Trạng thái', key: 'status', width: 120, align: 'center', customRender: ({ record }) => { if (record.is_solved) { return h(CheckCircleTwoTone, { twoToneColor: '#52c41a' }); } else if (record.is_tried) { return h(CloseCircleTwoTone, { twoToneColor: '#eb2f96' }); } return null; } }
+                    ]"
+                    :dataSource="dataSource"
+                    :row-key="record => record.id"
+                    :pagination="pagination"
+                    @change="handleTableChange"
+                    :scroll="{ x: 'max-content' }"
+                    bordered
+                  />
+                </div>
+            </main>
+            <aside class="sidebar">
+                <div class="card-style rules-card">
+                    <h3><WarningOutlined /> LƯU Ý & QUY CHẾ</h3>
+                    <div class="rules">
+                        <h4>Lưu ý chung:</h4>
+                        <ul>
+                            <li>Trên Desktop có folder Mã SV_XXXX. Sinh viên lưu mã nguồn tại thư mục này.</li>
+                            <li>Thoát tất cả các phần mềm không hợp lệ.</li>
+                            <li>Quá trình thi sẽ được ghi hình toàn bộ.</li>
+                        </ul>
+                        <h4>Các trường hợp vi phạm quy chế:</h4>
+                        <ul>
+                            <li>Đóng phần mềm thi không rõ lý do.</li>
+                            <li>Đăng nhập một tài khoản trên nhiều thiết bị.</li>
+                            <li>Cài đặt thêm phần mềm không được phép.</li>
+                            <li>Sử dụng code có sẵn hoặc tài liệu.</li>
+                            <li>Trao đổi với người khác.</li>
+                        </ul>
+                    </div>
+                </div>
+            </aside>
+        </div>
+      </a-spin>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.template {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+/*
+  CSS cho trang Danh sách bài tập trong kỳ thi - Chủ đề Neo-Futuristic Sáng
+*/
+.page-container {
+  background-color: #F5F7FA;
+  min-height: 100vh;
 }
-
-.body {
-  display: flex;
-  /* Using gap for clean spacing between left and right parts */
-  gap: 24px;
-  /* Using padding on the body for overall spacing is more flexible than margin on children */
-  padding: 24px 40px;
-  margin-top: 70px; /* Assuming a fixed header of ~70px */
-  width: 100%;
-  background-color: #F5F7FA; /* THEMED: Base page background */
-  color: #2c3e50;          /* THEMED: Default text color */
-}
-
-.part-left {
-  width: 78%; /* Adjusted width to account for gap */
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 24px; /* Space between header/content blocks inside */
-}
-
-.part-right {
-  width: 22%; /* Adjusted width to account for gap */
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 20px; /* Consistent spacing for items in the right column */
-}
-
-/* === Urgent Countdown Timer === */
-.countdown-time-test {
-  position: sticky;
-  top: 70px; /* Sticks below the main header */
-  z-index: 900;
-  width: 100%;
-  background-color: #FFF1F0; /* THEMED: Ant Design error background */
-  color: #cf1322; /* THEMED: Strong red for urgency */
-  font-weight: 700; /* Bolder for emphasis */
-  text-align: center;
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid #ffccc7;
-  letter-spacing: 0.05em;
-  /* Subtle pulse animation to draw attention */
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(207, 19, 34, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(207, 19, 34, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(207, 19, 34, 0); }
-}
-
-/* === Page Header & Titles === */
-
-.body-header {
-  /* Removed fixed margins, handled by parent padding now */
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  height: auto; /* Let it size to content */
-}
-
-.body-header h2 {
-  font-size: 1.6rem; /* Slightly larger for more impact */
-  font-weight: 700;
-  color: #007ACC; /* THEMED: Darker accent blue */
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.underline {
-  width: 100%;
-  height: 2px;
-  margin-top: 8px;
-  /* THEMED: Accent gradient for a more futuristic feel */
-  background: linear-gradient(90deg, #00AFFF, #B3E5FC);
-}
-
-/* === Reusable Card Style === */
-/* Applied to .problem-container and any other similar panels */
-.problem-container {
-  margin-top: 0; /* Handled by parent gap */
-  background-color: #FFFFFF;
-  border-radius: 12px; /* Slightly more rounded */
-  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08); /* THEMED: Subtle, cool shadow */
-  border: 1px solid #D9E2EC; /* THEMED: Light grey border */
+.page-wrapper {
+  margin-top: 70px;
   padding: 24px;
+}
+.contest-layout {
+    display: flex;
+    gap: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+    align-items: flex-start;
+}
+.main-content {
+    width: 75%;
+    flex-grow: 1;
+}
+.sidebar {
+    width: 25%;
+    min-width: 300px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 140px; /* Dính sau header và countdown bar */
+}
+.countdown-bar {
+  position: sticky;
+  top: 70px;
+  z-index: 999;
   display: flex;
-  flex-direction: column;
-  height: 100%;
-  margin-bottom: 0; /* Handled by parent gap */
+  justify-content: space-between;
+  align-items: center;
+  background: #007acc;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
 }
-
-.table-container {
-  margin-top: 20px;
-  flex: 1;
-}
-
-/* === Modern Search Input === */
-
-.search-container {
+.user-info, .timer {
   display: flex;
   align-items: center;
-  border: 1px solid #D9E2EC; /* THEMED: Standard border */
-  width: 35%; /* Adjusted for better proportion */
-  height: 40px;
-  padding: 0 12px;
-  background-color: #fff;
-  border-radius: 8px;
-  transition: border-color 0.3s, box-shadow 0.3s;
-}
-.search-container:focus-within {
-  border-color: #00AFFF;
-  box-shadow: 0 0 0 3px rgba(0, 175, 255, 0.15); /* Glowing effect */
-}
-
-.search-container input {
-  margin-left: 3px;
-  border: none;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  color: #2c3e50;
-}
-
-.search-container input:focus {
-  outline: none;
-}
-.search-container input::placeholder {
-  color: #90A4AE;
-}
-
-/* === Custom Icon Buttons === */
-
-.group-icon-container {
-  display: flex;
-  align-items: center;
-  margin-top: 0; /* Handled by parent gap */
-  margin-left: 0; /* Handled by parent gap/padding */
-}
-
-.group-icon {
-  display: flex;
-  align-items: center;
-  gap: 8px; /* Use gap for spacing icon and text */
-  color: #5A738E; /* THEMED: Default text color */
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.group-icon p {
-  margin: 0 !important; /* Override other margin rules */
+  gap: 10px;
+  font-size: 1.1rem;
   font-weight: 600;
 }
-
-.group-icon img {
-  filter: opacity(0.7);
-  transition: filter 0.3s ease;
+.timer {
+  font-family: 'monospace';
+  font-size: 1.3rem;
+  letter-spacing: 1.5px;
 }
 
-.group-icon:hover, .group-icon:hover p {
-  color: #00AFFF; /* THEMED: Vibrant accent blue on hover */
+.card-style {
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08);
+  border: 1px solid #D9E2EC;
+  padding: 24px;
 }
-
-.group-icon:hover img {
-  /* THEMED: Filter for #00AFFF (Vibrant Accent Blue) */
-  filter: brightness(0) saturate(100%) invert(72%) sepia(99%) saturate(4463%) hue-rotate(165deg) brightness(102%) contrast(104%);
+.header-container { margin-bottom: 24px; }
+h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #007ACC;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
-
-/* === Right Column Wrappers === */
-
-.collapse-options {
-  /* Removed specific margins, assuming parent .part-right has a 'gap' */
-  margin: 0;
+.underline {
   width: 100%;
+  height: 3px;
+  margin-top: 8px;
+  background: linear-gradient(90deg, #00AFFF, #B3E5FC);
+  border-radius: 2px;
 }
 
-.button-group {
-  margin-top: 15px;
-  /* Removed margin-left, prefer text-align or flexbox for alignment */
-  text-align: right;
+.problem-title-link {
+    font-weight: 600;
+    color: #007ACC;
+    cursor: pointer;
+}
+.problem-title-link:hover {
+    color: #00AFFF;
+    text-decoration: underline;
+}
+
+:deep(.ant-table) { border: 1px solid #E8EFF5; }
+:deep(.ant-table-thead > tr > th) {
+  background-color: #F0F5FA !important;
+  color: #007ACC !important;
+  font-weight: 600;
+  text-align: center;
+}
+:deep(.ant-table-tbody > tr > td) {
+  padding: 16px 10px;
+  color: #33475B;
+  border-bottom: 1px solid #E8EFF5;
+}
+:deep(.ant-table-tbody > tr:first-child > td) {
+    border-top: 1px solid #E8EFF5;
+}
+:deep(.ant-table-tbody > tr.ant-table-row:hover > td) {
+  background: rgba(0, 175, 255, 0.05) !important;
+}
+
+.rules-card h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #d9363e;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #E8EFF5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rules h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #007ACC;
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+.rules ul {
+  padding-left: 20px;
+  list-style-type: '✓';
+  color: #5A738E;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rules ul li { padding-left: 10px; }
+
+@media (max-width: 992px) {
+  .contest-layout { flex-direction: column; }
+  .main-content, .sidebar { width: 100%; min-width: unset; }
+  .sidebar { position: static; margin-top: 24px; }
+}
+
+@media (max-width: 576px) {
+  .page-wrapper { padding: 15px; }
+  h2 { font-size: 1.5rem; }
+  .card-style { padding: 15px; }
+  .countdown-bar { flex-direction: column; gap: 8px; font-size: 0.9rem; }
+  .timer { font-size: 1.1rem; }
 }
 </style>

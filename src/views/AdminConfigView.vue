@@ -1,53 +1,62 @@
 <template>
-  <AdminHeader/>
-  <div class="container">
-    <div class="sidebar" style="margin-top: 70px">
-      <h2 class="title">Cấu hình</h2>
-      <div class="side-bar">
-        <!-- Cấu hình chung -->
-        <div class="menu">
-          <button class="menu-button" @click="toggleSection('general')">
-            Cấu hình chung
-            <RightOutlined :class="{ 'rotate': openSection === 'general' }"/>
-          </button>
-          <ul v-show="openSection === 'general'" class="submenu">
-            <li v-for="item in generalConfig" :key="item.label">
-              <button
-                  class="submenu-item"
-                  :class="{ 'active': activeItem === item.slug }"
-                  @click="goto(item.slug)"
-              >
-                <img :src="item.icon" alt="icon" class="menu-icon"/>
-                {{ item.label }}
-              </button>
-            </li>
-          </ul>
-        </div>
+  <div class="settings-page">
+    <AdminHeader/>
+    <div class="page-wrapper">
+      <div class="settings-layout">
+        <!-- Sidebar điều hướng -->
+        <aside class="sidebar">
+          <h2 class="sidebar-title">Cấu hình</h2>
+          <!-- Cấu hình chung -->
+          <div class="menu">
+            <button class="menu-button" @click="toggleSection('general')">
+              <span>Cấu hình chung</span>
+              <RightOutlined class="menu-arrow" :class="{ 'rotate': openSection === 'general' }"/>
+            </button>
+            <ul v-show="openSection === 'general'" class="submenu">
+              <li v-for="item in generalConfig" :key="item.label">
+                <button
+                    class="submenu-item"
+                    :class="{ 'active': activeItem === item.slug }"
+                    @click="goto(item.slug)"
+                >
+                  <img :src="item.icon" alt="icon" class="menu-icon"/>
+                  {{ item.label }}
+                </button>
+              </li>
+            </ul>
+          </div>
 
-        <!-- Cấu hình học tập -->
-        <div class="menu">
-          <button class="menu-button" @click="toggleSection('learning')">
-            Cấu hình học tập
-            <RightOutlined :class="{ 'rotate': openSection === 'learning' }"/>
-          </button>
-          <ul v-show="openSection === 'learning'" class="submenu">
-            <li v-for="item in learningConfig" :key="item.label">
-              <button
-                  class="submenu-item"
-                  :class="{ 'active': activeItem === item.slug }"
-                  @click="goto(item.slug)"
-              >
-                <img :src="item.icon" alt="icon" class="menu-icon"/>
-                {{ item.label }}
-              </button>
-            </li>
-          </ul>
-        </div>
+          <!-- Cấu hình học tập -->
+          <div class="menu">
+            <button class="menu-button" @click="toggleSection('learning')">
+              <span>Cấu hình học tập</span>
+              <RightOutlined class="menu-arrow" :class="{ 'rotate': openSection === 'learning' }"/>
+            </button>
+            <ul v-show="openSection === 'learning'" class="submenu">
+              <li v-for="item in learningConfig" :key="item.label">
+                <button
+                    class="submenu-item"
+                    :class="{ 'active': activeItem === item.slug }"
+                    @click="goto(item.slug)"
+                >
+                  <img :src="item.icon" alt="icon" class="menu-icon"/>
+                  {{ item.label }}
+                </button>
+              </li>
+            </ul>
+          </div>
+        </aside>
+
+        <!-- Khu vực nội dung chính -->
+        <main class="content-area">
+          <div class="content-card">
+            <component v-if="currentComponent" :is="currentComponent"/>
+            <div v-else class="placeholder">
+              <p>Chọn một mục từ menu bên cạnh để bắt đầu cấu hình.</p>
+            </div>
+          </div>
+        </main>
       </div>
-    </div>
-    <!-- Nội dung hiển thị -->
-    <div class="content">
-      <component v-if="currentComponent" :is="currentComponent"/>
     </div>
   </div>
 </template>
@@ -151,12 +160,50 @@ watchEffect(() => {
 </script>
 
 <style scoped>
+/*
+  CSS cho trang Cấu hình - Chủ đề Neo-Futuristic Sáng
+  Đã được thiết kế lại và responsive.
+*/
 
-.title {
-  font-size: 20px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 15px;
+.settings-page {
+  background-color: #F5F7FA;
+  min-height: 100vh;
+}
+
+.page-wrapper {
+  margin-top: 70px; /* Chiều cao của Header */
+  padding: 24px;
+}
+
+/* === Bố cục chính === */
+.settings-layout {
+  display: flex;
+  gap: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+/* === Sidebar === */
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #D9E2EC;
+  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08);
+  position: sticky;
+  top: 94px; /* 70px header + 24px padding */
+}
+
+.sidebar-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #007ACC;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #E8EFF5;
 }
 
 .menu {
@@ -170,25 +217,34 @@ watchEffect(() => {
   width: 100%;
   background: none;
   border: none;
-  padding: 10px;
-  font-size: 16px;
+  padding: 12px 10px;
+  font-size: 1rem;
   cursor: pointer;
   text-align: left;
-  font-weight: 500;
+  font-weight: 600;
+  color: #33475B;
   border-radius: 8px;
-  transition: background 0.3s, color 0.3s;
+  transition: background 0.2s, color 0.2s;
 }
 
 .menu-button:hover {
   background: #f0f4ff;
-  color: #0056b3;
+  color: #007ACC;
+}
+
+.menu-arrow {
+  transition: transform 0.3s ease-in-out;
+}
+.menu-arrow.rotate {
+  transform: rotate(90deg);
 }
 
 .submenu {
   list-style: none;
-  padding-left: 20px;
-  border-left: 3px solid #007bff;
-  margin-top: 5px;
+  padding-left: 15px;
+  margin-top: 8px;
+  margin-left: 5px;
+  border-left: 2px solid #00AFFF;
 }
 
 .submenu-item {
@@ -199,49 +255,49 @@ watchEffect(() => {
   background: none;
   border: none;
   padding: 10px;
-  font-size: 14px;
+  font-size: 0.95rem;
   cursor: pointer;
   text-align: left;
   border-radius: 6px;
-  transition: background 0.3s, color 0.3s;
+  color: #5A738E;
+  transition: background 0.2s, color 0.2s, font-weight 0.2s;
+  font-weight: 500;
 }
 
 .submenu-item:hover {
-  background: #e3f2fd;
-  color: #007bff;
+  background: #e6f7ff;
+  color: #007ACC;
 }
 
-.active {
-  color: #007bff;
-  font-weight: bold;
-  background: #e3f2fd;
+.submenu-item.active {
+  color: #007ACC;
+  font-weight: 600;
+  background: #e6f7ff;
 }
 
 .menu-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
-.rotate {
-  transform: rotate(90deg);
-  transition: transform 0.3s ease-in-out;
-}
-.container {
-  display: flex;
-  height: 100vh;
-}
-
-.sidebar {
-  width: 280px;
-  background: #ffffff;
-  padding: 20px;
-  border-right: 2px solid #e0e0e0;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-}
-
-.content {
+/* === Khu vực nội dung === */
+.content-area {
   flex-grow: 1;
-  margin: 100px 20px;
-  overflow-y: auto;
+  min-width: 0; 
+}
+
+.content-card {
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08);
+  border: 1px solid #D9E2EC;
+  padding: 24px;
+  min-height: calc(100vh - 90px - 48px);
+}
+
+.placeholder {
+  text-align: center;
+  padding: 40px;
+  color: #5A738E;
 }
 </style>

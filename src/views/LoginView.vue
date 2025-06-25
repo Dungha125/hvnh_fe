@@ -31,7 +31,7 @@ onBeforeMount(async () => {
         sessionStorage.setItem('contest', "true");
         router.push('/contest');
       } else {
-        router.push('/problems');
+        router.push('/home');
       }
     } else {
       router.push('/admin/users');
@@ -59,7 +59,7 @@ const login = async () => {
         sessionStorage.setItem('contest', "true");
         router.push('/contest');
       } else {
-        router.push('/problems');
+        router.push('/home');
       }
     } else if (response.data.user.role === 'teacher') {
       router.push('/lecturer/questions');

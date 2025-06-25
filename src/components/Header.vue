@@ -84,10 +84,10 @@ const getAvatarName = (name) => {
 <template>
   <header class="header">
     <div class="header-content">
-      <div class="logo" @click="goTo('/problems')">Học viện Ngân Hàng</div>
+      <div class="logo" @click="goTo('/home')">Học viện Ngân Hàng</div>
 
       <!-- Desktop Navigation -->
-      <nav class="navigation desktop-nav">
+      <!-- <nav class="navigation desktop-nav">
         <div class="nav-item" :style="styleNavItem('/problems')" @click="goTo('/problems')">
           <img src="../static/img/problem.svg" alt="Bài tập icon">
           <span class="nav-text">Bài tập</span>
@@ -104,7 +104,7 @@ const getAvatarName = (name) => {
           <img src="../static/img/ranking_icon.svg" alt="Bảng xếp hạng icon">
           <span class="nav-text">Bảng xếp hạng</span>
         </div>
-      </nav>
+      </nav> -->
 
       <!-- User Actions for Desktop -->
       <div class="user-actions desktop-actions">

@@ -269,7 +269,7 @@ const router = createRouter({
 })
 
 router.beforeEach(async(to, from, next) => {
-    if (to.path === '/' || to.path === '/home') {
+    if (to.path === '/') {
         try {
             const user = JSON.parse(localStorage.getItem('user') || 'null');
             console.log(user)
@@ -279,7 +279,7 @@ router.beforeEach(async(to, from, next) => {
                 if (contest) {
                     next('/contest');
                 } else {
-                    next('/problems');
+                    next('/home');
                 }
             } else if (user && user.member_group === 2) {
                 next('/lecturer/questions')

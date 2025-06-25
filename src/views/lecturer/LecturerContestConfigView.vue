@@ -18,7 +18,6 @@ const router = useRouter();
 const route = useRoute();
 const contestDetails = ref({});
 const contestIDs = ref([]);
-const activeTabKey = ref('1');
 onBeforeMount(async () => {
   try {
     const response = await axiosInstance.get("courses/studying");
@@ -531,125 +530,315 @@ const antDesignTheme = {
               <a-tag :color="getStatusTag(text)">{{ getStatusText(text) }}</a-tag>
             </template>
           </a-table-column>
-          <a-table-column title="Thao tác" key="action" fixed="right" width="100px">
-            <template #default="{ record }">
-              <a-dropdown>
-                <a-button type="text" shape="circle">
-                    <EllipsisOutlined />
-                </a-button>
-                <template #overlay>
-                  <a-menu @click="({ key }) => handleAction(key, record)">
-                    <a-menu-item key="student">Sinh viên</a-menu-item>
-                    <a-menu-item key="exam_room">Phòng thi</a-menu-item>
-                    <a-menu-item v-if="record.icpc === 1 || record.ioi === 1" key="ranking">Bảng xếp hạng</a-menu-item>
-                    <a-menu-item key="teacher">Giảng viên</a-menu-item>
-                    <a-menu-item key="questions">Bài tập</a-menu-item>
-                    <a-menu-item key="activity">Hoạt động</a-menu-item>
-                    <a-menu-divider/>
-                    <a-menu-item key="edit" @click="showEditModal(record.id)">Sửa</a-menu-item>
-                    <a-menu-item key="delete" @click="confirmDelete(record.id)">Xóa</a-menu-item>
-                  </a-menu>
-                </template>
-              </a-dropdown>
+          <a-table-column title="Thao tác" key="action">
+        <template #default="{ record }">
+          <a-dropdown>
+            <a-button>⋮</a-button>
+            <template #overlay>
+              <a-menu @click="({ key }) => handleAction(key, record)">
+                <a-menu-item key="student">Sinh viên</a-menu-item>
+                <a-menu-item key="exam_room">Phòng thi</a-menu-item>
+                <a-menu-item v-if="record.icpc === 1 || record.ioi === 1" key="ranking">Bảng xếp hạng</a-menu-item>
+                <a-menu-item key="teacher">Giảng viên</a-menu-item>
+                <a-menu-item key="questions">Bài tập</a-menu-item>
+                <a-menu-item key="activity">Hoạt động</a-menu-item>
+                <a-menu-divider/>
+                <a-menu-item key="edit" @click="showEditModal(record.id)">
+                  Sửa
+                  <a-modal
+                      v-model:open="isModalEditVisible"
+                      title="Sửa bài thực hành"
+                      @ok="handleUpdateContest(record.id)"
+                      @cancel="handleEditCancel"
+                      style="width: 1000px"
+                  >
+                    <div class="form-content">
+                      <!-- Cột 1 -->
+                      <div class="form-column">
+                        <a-form-item label="Tên">
+                          <a-input v-model:value="contestDetails.name"/>
+                        </a-form-item>
+                        <a-form-item label="Địa điểm">
+                          <a-input v-model:value="contestDetails.address"/>
+                        </a-form-item>
+                        <a-form-item label="Môn Học">
+                          <a-select v-model:value="selectedCourse">
+                            <a-select-option
+                                v-for="subject in subjects"
+                                :key="subject.value"
+                                :value="subject.value"
+                            >
+                              {{ subject.label }}
+                            </a-select-option>
+                          </a-select>
+                        </a-form-item>
+                        <a-form-item label="Học kỳ">
+                          <a-select v-model:value="contestDetails.semester">
+                            <a-select-option
+                                v-for="semester in semesters"
+                                :key="semester.value"
+                                :value="semester.value"
+                            >
+                              {{ semester.label }}
+                            </a-select-option>
+                          </a-select>
+                        </a-form-item>
+                        <a-form-item label="Nhóm">
+                          <a-select v-model:value="contestDetails.course">
+                            <a-select-option
+                                v-for="course in courses"
+                                :key="course.value"
+                                :value="course.value"
+                            >
+                              {{ course.label }}
+                            </a-select-option>
+                          </a-select>
+                        </a-form-item>
+                        <a-form-item label="Thời gian bắt đầu">
+                          <a-date-picker
+                              v-model:value="contestDetails.start_time"
+                              show-time
+                              format="YYYY-MM-DD HH:mm:ss"
+                              placeholder="Chọn thời gian bắt đầu"
+                          />
+                        </a-form-item>
+                        <a-form-item label="Thời gian kết thúc">
+                          <a-date-picker
+                              v-model:value="contestDetails.end_time"
+                              show-time
+                              format="YYYY-MM-DD HH:mm:ss"
+                              placeholder="Chọn thời gian kết thúc"
+                          />
+                        </a-form-item>
+                        <a-form-item label="Thời gian dừng xếp hạng">
+                          <a-date-picker
+                              v-model:value="contestDetails.ranking_stop_time"
+                              show-time
+                              format="YYYY-MM-DD HH:mm:ss"
+                              placeholder="Chọn thời gian dừng xếp hạng"
+                          />
+                        </a-form-item>
+                      </div>
+
+                      <!-- Cột 2 -->
+                      <div class="form-column">
+                        <a-form-item label="Bài thực hành số">
+                          <a-input-number
+                              v-model:value="contestDetails.ordinal"
+                              :min="1"
+                          />
+                        </a-form-item>
+                        <a-form-item label="Trạng thái">
+                          <a-radio-group v-model:value="contestDetails.status">
+                            <a-radio value="1">Hoạt động</a-radio>
+                            <a-radio value="0">Không hoạt động</a-radio>
+                          </a-radio-group>
+                        </a-form-item>
+                        <a-form-item label="Tùy chọn">
+                          <div class="checkbox-group">
+                            <a-checkbox v-model:checked="frozenTimeChecked"
+                            >Đóng băng bài thi
+                            </a-checkbox
+                            >
+                            <a-checkbox v-model:checked="allowBrowserChecked"
+                            >Cho phép trình duyệt
+                            </a-checkbox
+                            >
+                            <a-checkbox
+                              v-model:checked="ioiChecked"
+                            >
+                              Chế độ IOI
+                            </a-checkbox>
+
+                            <a-checkbox
+                              v-model:checked="icpcChecked"
+                            >
+                              Chế độ ICPC
+                            </a-checkbox>
+                            <a-checkbox v-model:checked="displayDetailChecked"
+                            >Ẩn câu hỏi
+                            </a-checkbox
+                            >
+                            <a-checkbox v-model:checked="publicRankingChecked"
+                            >Công khai bảng xếp hạng
+                            </a-checkbox
+                            >
+                          </div>
+                        </a-form-item>
+                        <a-form-item label="Thời gian phạt">
+                          <a-input-number
+                              v-model:value="contestDetails.penalty_time"
+                              :min="20"
+                          />
+                        </a-form-item>
+                        <a-form-item label="Thời gian đóng băng">
+                          <a-input-number
+                              v-model:value="contestDetails.frozen_time"
+                              :min="30"
+                          />
+                        </a-form-item>
+                        <a-form-item label="Loại nộp bài">
+                          <a-radio-group
+                              v-model:value="contestDetails.submit_type"
+                          >
+                            <a-radio value="1">Tải lên</a-radio>
+                            <a-radio value="2">Chấm thủ công</a-radio>
+                          </a-radio-group>
+                        </a-form-item>
+                      </div>
+                    </div>
+                  </a-modal>
+                </a-menu-item>
+                <a-menu-item key="delete" @click="confirmDelete(record.id)"
+                >Xóa
+                </a-menu-item
+                >
+              </a-menu>
+            </template>
+          </a-dropdown>
             </template>
           </a-table-column>
         </a-table>
       </a-card>
 
       <!-- Modal Thêm mới -->
-      <a-modal v-model:open="isModalVisible" title="Thêm mới kỳ thi" :footer="null" @cancel="handleCancel" width="90vw" style="max-width: 1100px;" centered>
-        <a-form layout="vertical" @finish="handleOk" class="modal-form">
-          <a-tabs v-model:activeKey="activeTabKey" class="modal-tabs">
-            <a-tab-pane key="1" tab="Thông tin cơ bản">
-              <div class="form-grid">
-                <a-form-item label="Tên" name="name" :rules="[{ required: true, message: 'Vui lòng nhập tên!' }]"><a-input v-model:value="createContestDTO.name"/></a-form-item>
-                <a-form-item label="Địa điểm"><a-input v-model:value="createContestDTO.address"/></a-form-item>
-                <a-form-item label="Môn Học" name="subject" :rules="[{ required: true, message: 'Vui lòng chọn môn học!' }]"><a-select v-model:value="selectedCourse" :options="subjects" /></a-form-item>
-                <a-form-item label="Học kỳ" name="semester" :rules="[{ required: true, message: 'Vui lòng chọn học kỳ!' }]"><a-select v-model:value="createContestDTO.semester" :options="semesters" /></a-form-item>
-                <a-form-item label="Nhóm"><a-select v-model:value="createContestDTO.course" :options="courses" /></a-form-item>
-                <a-form-item label="Bài thực hành số"><a-input-number v-model:value="createContestDTO.ordinal" :min="1" style="width: 100%;" /></a-form-item>
-              </div>
-            </a-tab-pane>
-            <a-tab-pane key="2" tab="Cài đặt thời gian">
-              <div class="form-grid">
-                <a-form-item label="Thời gian bắt đầu" name="start_time" :rules="[{ required: true, message: 'Vui lòng chọn thời gian!' }]"><a-date-picker v-model:value="createContestDTO.start_time" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%;" /></a-form-item>
-                <a-form-item label="Thời gian kết thúc" name="end_time" :rules="[{ required: true, message: 'Vui lòng chọn thời gian!' }]"><a-date-picker v-model:value="createContestDTO.end_time" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%;" /></a-form-item>
-                <a-form-item label="Thời gian dừng xếp hạng"><a-date-picker v-model:value="createContestDTO.ranking_stop_time" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%;" /></a-form-item>
-                <a-form-item label="Thời gian phạt (phút)"><a-input-number v-model:value="createContestDTO.penalty_time" :min="0" style="width: 100%;" /></a-form-item>
-                <a-form-item label="Thời gian đóng băng (phút)"><a-input-number v-model:value="createContestDTO.frozen_time" :min="0" style="width: 100%;" /></a-form-item>
-              </div>
-            </a-tab-pane>
-            <a-tab-pane key="3" tab="Chế độ & Tùy chọn">
-               <div class="form-grid">
-                  <a-form-item label="Trạng thái"><a-radio-group v-model:value="createContestDTO.status"><a-radio value="1">Hoạt động</a-radio><a-radio value="0">Không hoạt động</a-radio></a-radio-group></a-form-item>
-                  <a-form-item label="Loại nộp bài"><a-radio-group v-model:value="createContestDTO.submit_type"><a-radio value="1">Tải lên</a-radio><a-radio value="2">Chấm thủ công</a-radio></a-radio-group></a-form-item>
-               </div>
-               <a-form-item label="Tùy chọn khác">
-                  <div class="checkbox-grid">
-                      <a-checkbox v-model:checked="createContestDTO.frozen_time">Đóng băng bài thi</a-checkbox>
-                      <a-checkbox v-model:checked="createContestDTO.allow_browser">Cho phép trình duyệt</a-checkbox>
-                      <a-checkbox v-model:checked="createContestDTO.ioi">Chế độ IOI</a-checkbox>
-                      <a-checkbox v-model:checked="createContestDTO.icpc">Chế độ ICPC</a-checkbox>
-                      <a-checkbox v-model:checked="createContestDTO.display_detail">Ẩn câu hỏi</a-checkbox>
-                      <a-checkbox v-model:checked="createContestDTO.public_ranking">Công khai bảng xếp hạng</a-checkbox>
-                  </div>
-               </a-form-item>
-            </a-tab-pane>
-          </a-tabs>
-           <a-form-item class="modal-footer">
-              <a-button key="back" @click="handleCancel">Hủy</a-button>
-              <a-button key="submit" type="primary" html-type="submit">Tạo</a-button>
-           </a-form-item>
-        </a-form>
-      </a-modal>
-      
-      <!-- Modal Sửa -->
-      <a-modal v-model:open="isModalEditVisible" title="Sửa bài thực hành" :footer="null" @cancel="handleEditCancel" width="90vw" style="max-width: 1100px;" centered>
-        <a-form layout="vertical" @finish="handleUpdateContest" class="modal-form">
-          <a-tabs v-model:activeKey="activeTabKey" class="modal-tabs">
-            <a-tab-pane key="1" tab="Thông tin cơ bản">
-              <div class="form-grid">
-                <a-form-item label="Tên" name="name" :rules="[{ required: true, message: 'Vui lòng nhập tên!' }]"><a-input v-model:value="contestDetails.name"/></a-form-item>
-                <a-form-item label="Địa điểm"><a-input v-model:value="contestDetails.address"/></a-form-item>
-                <a-form-item label="Môn Học" name="subject" :rules="[{ required: true, message: 'Vui lòng chọn môn học!' }]"><a-select v-model:value="selectedCourse" :options="subjects" /></a-form-item>
-                <a-form-item label="Học kỳ" name="semester" :rules="[{ required: true, message: 'Vui lòng chọn học kỳ!' }]"><a-select v-model:value="contestDetails.semester" :options="semesters" /></a-form-item>
-                <a-form-item label="Nhóm"><a-select v-model:value="contestDetails.course" :options="courses" /></a-form-item>
-                <a-form-item label="Bài thực hành số"><a-input-number v-model:value="contestDetails.ordinal" :min="1" style="width: 100%;" /></a-form-item>
-              </div>
-            </a-tab-pane>
-            <a-tab-pane key="2" tab="Cài đặt thời gian">
-              <div class="form-grid">
-                <a-form-item label="Thời gian bắt đầu" name="start_time" :rules="[{ required: true, message: 'Vui lòng chọn thời gian!' }]"><a-date-picker v-model:value="contestDetails.start_time" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%;" /></a-form-item>
-                <a-form-item label="Thời gian kết thúc" name="end_time" :rules="[{ required: true, message: 'Vui lòng chọn thời gian!' }]"><a-date-picker v-model:value="contestDetails.end_time" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%;" /></a-form-item>
-                <a-form-item label="Thời gian dừng xếp hạng"><a-date-picker v-model:value="contestDetails.ranking_stop_time" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%;" /></a-form-item>
-                <a-form-item label="Thời gian phạt (phút)"><a-input-number v-model:value="contestDetails.penalty_time" :min="0" style="width: 100%;" /></a-form-item>
-                <a-form-item label="Thời gian đóng băng (phút)"><a-input-number v-model:value="contestDetails.frozen_time" :min="0" style="width: 100%;" /></a-form-item>
-              </div>
-            </a-tab-pane>
-            <a-tab-pane key="3" tab="Chế độ & Tùy chọn">
-               <div class="form-grid">
-                  <a-form-item label="Trạng thái"><a-radio-group v-model:value="contestDetails.status"><a-radio value="1">Hoạt động</a-radio><a-radio value="0">Không hoạt động</a-radio></a-radio-group></a-form-item>
-                  <a-form-item label="Loại nộp bài"><a-radio-group v-model:value="contestDetails.submit_type"><a-radio value="1">Tải lên</a-radio><a-radio value="2">Chấm thủ công</a-radio></a-radio-group></a-form-item>
-               </div>
-               <a-form-item label="Tùy chọn khác">
-                  <div class="checkbox-grid">
-                      <a-checkbox v-model:checked="contestDetails.frozen_time">Đóng băng bài thi</a-checkbox>
-                      <a-checkbox v-model:checked="contestDetails.allow_browser">Cho phép trình duyệt</a-checkbox>
-                      <a-checkbox v-model:checked="contestDetails.ioi">Chế độ IOI</a-checkbox>
-                      <a-checkbox v-model:checked="contestDetails.icpc">Chế độ ICPC</a-checkbox>
-                      <a-checkbox v-model:checked="contestDetails.display_detail">Ẩn câu hỏi</a-checkbox>
-                      <a-checkbox v-model:checked="contestDetails.public_ranking">Công khai bảng xếp hạng</a-checkbox>
-                  </div>
-               </a-form-item>
-            </a-tab-pane>
-          </a-tabs>
-           <a-form-item class="modal-footer">
-              <a-button key="back" @click="handleEditCancel">Hủy</a-button>
-              <a-button key="submit" type="primary">Lưu thay đổi</a-button>
-           </a-form-item>
-        </a-form>
-      </a-modal>
+      <a-modal
+      v-model:open="isModalVisible"
+      title="Thêm mới kỳ thi"
+      @ok="handleOk"
+      @cancel="handleCancel"
+      style="width: 1000px"
+  >
+    <div class="form-content">
+      <!-- Cột 1 -->
+      <div class="form-column">
+        <a-form-item label="Tên">
+          <a-input v-model:value="createContestDTO.name"/>
+        </a-form-item>
+        <a-form-item label="Địa điểm">
+          <a-input v-model:value="createContestDTO.address"/>
+        </a-form-item>
+        <a-form-item label="Môn Học">
+          <a-select v-model:value="selectedCourse">
+            <a-select-option
+                v-for="subject in subjects"
+                :key="subject.value"
+                :value="subject.value"
+            >
+              {{ subject.label }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="Học kỳ">
+          <a-select v-model:value="createContestDTO.semester">
+            <a-select-option
+                v-for="semester in semesters"
+                :key="semester.value"
+                :value="semester.value"
+            >
+              {{ semester.label }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="Nhóm">
+          <a-select v-model:value="createContestDTO.course">
+            <a-select-option
+                v-for="course in courses"
+                :key="course.value"
+                :value="course.value"
+            >
+              {{ course.label }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="Thời gian bắt đầu">
+          <a-date-picker
+              v-model:value="createContestDTO.start_time"
+              show-time
+              format="YYYY-MM-DD HH:mm:ss"
+              placeholder="Chọn thời gian bắt đầu"
+          />
+        </a-form-item>
+        <a-form-item label="Thời gian kết thúc">
+          <a-date-picker
+              v-model:value="createContestDTO.end_time"
+              show-time
+              format="YYYY-MM-DD HH:mm:ss"
+              placeholder="Chọn thời gian kết thúc"
+          />
+        </a-form-item>
+        <a-form-item label="Thời gian dừng xếp hạng">
+          <a-date-picker
+              v-model:value="createContestDTO.ranking_stop_time"
+              show-time
+              format="YYYY-MM-DD HH:mm:ss"
+              placeholder="Chọn thời gian dừng xếp hạng"
+          />
+        </a-form-item>
+      </div>
 
+      <!-- Cột 2 -->
+      <div class="form-column">
+        <a-form-item label="Bài thực hành số">
+          <a-input-number v-model:value="createContestDTO.ordinal" :min="1"/>
+        </a-form-item>
+        <a-form-item label="Trạng thái">
+          <a-radio-group v-model:value="createContestDTO.status">
+            <a-radio value="1">Hoạt động</a-radio>
+            <a-radio value="0">Không hoạt động</a-radio>
+          </a-radio-group>
+        </a-form-item>
+        <a-form-item label="Tùy chọn">
+          <div class="checkbox-group">
+            <a-checkbox v-model:checked="createContestDTO.frozen_time"
+            >Đóng băng bài thi
+            </a-checkbox
+            >
+            <a-checkbox v-model:checked="createContestDTO.allow_browser"
+            >Cho phép trình duyệt
+            </a-checkbox
+            >
+            <a-checkbox v-model:checked="createContestDTO.ioi"
+            >Chế độ IOI
+            </a-checkbox
+            >
+            <a-checkbox v-model:checked="createContestDTO.icpc"
+            >Chế độ ICPC
+            </a-checkbox
+            >
+            <a-checkbox v-model:checked="createContestDTO.display_detail"
+            >Ẩn câu hỏi
+            </a-checkbox
+            >
+            <a-checkbox v-model:checked="createContestDTO.public_ranking"
+            >Công khai bảng xếp hạng
+            </a-checkbox
+            >
+          </div>
+        </a-form-item>
+        <a-form-item label="Thời gian phạt">
+          <a-input-number
+              v-model:value="createContestDTO.penalty_time"
+              :min="20"
+          />
+        </a-form-item>
+        <a-form-item label="Thời gian đóng băng">
+          <a-input-number
+              v-model:value="createContestDTO.frozen_time"
+              :min="30"
+          />
+        </a-form-item>
+        <a-form-item label="Loại nộp bài">
+          <a-radio-group v-model:value="createContestDTO.submit_type">
+            <a-radio value="1">Tải lên</a-radio>
+            <a-radio value="2">Chấm thủ công</a-radio>
+          </a-radio-group>
+        </a-form-item>
+      </div>
+    </div>
+  </a-modal>
+      
+              
     </a-config-provider>
   </div>
 </template>
