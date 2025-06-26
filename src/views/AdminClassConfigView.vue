@@ -56,8 +56,8 @@ const pagination = ref({
   total: 0,
 })
 
-const filterSubject = ref('')
-const filterSemester = ref('')
+const filterSubject = ref(null)
+const filterSemester = ref(null)
 
 const isModalVisible = ref(false)
 const isEditing = ref(false)
@@ -75,28 +75,37 @@ let editingId = null
 // Fetch all classes
 const fetchAllClasses = async (page = 1) => {
   loading.value = true
+
+  const params = {
+    page: pagination.value.current,
+    per_page: pagination.value.pageSize,
+    subject_id: filterSubject.value,
+    semester_id: filterSemester.value
+  }
+
   try {
     // Debug the API endpoint
     console.log('Fetching classes with page:', page)
     
     // Try a simpler request first to see if the API works
-    const response = await axios.get('/courses')
+    const response = await axios.get('/courses',{ params })
     console.log('Raw API response:', response)
     
     if (response.data && response.data.code === 200) {
       classes.value = response.data.data.map((item, index) => {
         const subjectName = item.subject ? item.subject.name : 'N/A'
         const semesterName = item.semester ? item.semester.name : 'N/A'
+        const subjectId = item.subject ? item.subject_id : 'N/A'
         
         return {
           id: item.id,
           index: index + 1, // Simplified index calculation
           name: item.name,
           subject: subjectName,
-          subject_id: item.subject_id,
+          subject_id: subjectId,
           semester: semesterName,
           semester_id: item.semester_id,
-          students: item.student_count || 0,
+          students: item.students || 0,
           status: item.status === 1 ? 'Hoạt động' : 'Không hoạt động',
           notice: item.notice || '',
           about: item.about || ''
@@ -118,26 +127,49 @@ const fetchAllClasses = async (page = 1) => {
 }
 
 // Fetch class detail
-const fetchClassDetail = async (id) => {
-  try {
-    const response = await axios.get(`/courses/${id}`)
-    if (response.data && response.data.code === 200) {
-      return response.data.data
-    } else {
-      console.error('Failed to load class detail:', response.data)
-      message.error('Không thể tải thông tin chi tiết lớp học')
-      return null
-    }
-  } catch (error) {
-    console.error('Error fetching class detail:', error)
-    message.error('Lỗi khi tải thông tin chi tiết lớp học')
-    return null
-  }
-}
+const findAndSetDefaultFilters = async () => {
+  for (const subject of subjects.value) {
+    for (const semester of semesters.value) {
+      try {
+        // Gọi API để kiểm tra xem cặp filter này có dữ liệu không
+        const { data } = await axios.get('/courses', { 
+          params: { 
+            subject_id: subject.value, 
+            semester_id: semester.value,
+            per_page: 1 // Chỉ cần 1 bản ghi để xác nhận
+          } 
+        });
 
+        // Nếu có, đặt làm mặc định và thoát
+        if (data && data.code === 200 && data.data.length > 0) {
+          filterSubject.value = subject.value;
+          filterSemester.value = semester.value;
+          return; 
+        }
+      } catch (error) {
+        console.error(`Lỗi khi kiểm tra filter:`, error);
+      }
+    }
+  }
+
+  // Phương án dự phòng: nếu không có cặp nào có dữ liệu, chọn cặp đầu tiên
+  if (subjects.value.length > 0) {
+    filterSubject.value = subjects.value[0].value;
+  }
+  if (semesters.value.length > 0) {
+    filterSemester.value = semesters.value[0].value;
+  }
+};
+
+
+// --- LIFECYCLE & WATCHERS ---
 onBeforeMount(async () => {
-  await Promise.all([fetchSubjects(), fetchSemesters()])
-  await fetchAllClasses()
+  // 1. Tải danh sách cho bộ lọc
+  await Promise.all([fetchSubjects(), fetchSemesters()]);
+  
+  // 2. Tìm và đặt bộ lọc mặc định (logic mới)
+  // Watcher sẽ tự động gọi fetchAllClasses khi filter thay đổi
+  await findAndSetDefaultFilters();
 })
 
 // Watch for filter changes
@@ -297,27 +329,25 @@ const handleAction = (key, record) => {
     <div class="content-wrapper">
       <div class="header-area">
         <h1>Lớp học</h1>
-        <a-select 
-          v-model:value="filterSubject" 
-          style="width: 200px; margin-right: 10px"
-          placeholder="Lọc theo môn học"
-          allowClear
-        >
-          <a-select-option v-for="subject in subjects" :key="subject.value" :value="subject.value">
-            {{ subject.label }}
-          </a-select-option>
-        </a-select>
-        <a-select 
-          v-model:value="filterSemester" 
-          style="width: 250px; margin-right: 10px"
-          placeholder="Lọc theo học kỳ"
-          allowClear
-        >
-          <a-select-option v-for="semester in semesters" :key="semester.value" :value="semester.value">
-            {{ semester.label }}
-          </a-select-option>
-        </a-select>
-        <a-button type="primary" class="add-button" @click="showModalAdd">Thêm mới</a-button>
+        <div class="filter-group">
+            <a-select 
+              v-model:value="filterSubject" 
+              style="width: 220px"
+              placeholder="Lọc theo môn học"
+              allowClear
+              show-search
+              :options="subjects"
+              :filter-option="(input, option) => option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0"
+            />
+            <a-select 
+              v-model:value="filterSemester" 
+              style="width: 250px"
+              placeholder="Lọc theo học kỳ"
+              allowClear
+              :options="semesters"
+            />
+            <a-button type="primary" class="add-button" @click="showModalAdd">Thêm mới</a-button>
+        </div>
       </div>
 
       <a-table 
@@ -329,22 +359,19 @@ const handleAction = (key, record) => {
         :loading="loading"
         @change="handleTableChange"
       >
-        <template #bodyCell="{ column, record, index }">
-          <template v-if="column.dataIndex === 'index'">
-            {{ index + 1 }}
-          </template>
-          <template v-else-if="column.dataIndex === 'status'">
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.dataIndex === 'status'">
             <a-tag :class="statusClass(record.status)">{{ record.status }}</a-tag>
           </template>
           <template v-else-if="column.dataIndex === 'actions'">
             <a-dropdown>
-              <a-button> ⋮ </a-button>
+              <a-button shape="circle"> ⋮ </a-button>
               <template #overlay>
                 <a-menu @click="({ key }) => handleAction(key, record)">
-                  <a-menu-item key="student">Sinh Viên</a-menu-item>
-                  <a-menu-item key="lecturer">Giảng viên</a-menu-item>
+                  <a-menu-item key="student">Danh sách sinh viên</a-menu-item>
+                  <a-menu-item key="lecturer">Danh sách giảng viên</a-menu-item>
                   <a-menu-divider/>
-                  <a-menu-item key="edit" danger>Sửa</a-menu-item>
+                  <a-menu-item key="edit">Sửa thông tin</a-menu-item>
                 </a-menu>
               </template>
             </a-dropdown>
@@ -356,35 +383,39 @@ const handleAction = (key, record) => {
     <!-- Modal Thêm/Sửa lớp học -->
     <a-modal
       v-model:open="isModalVisible"
-      :title="isEditing ? `Sửa lớp học ${selectedRecord.name || ''}` : 'Thêm lớp học'"
-      @ok="onSubmit"
+      :title="isEditing ? `Sửa lớp học: ${selectedRecord.name}` : 'Thêm lớp học mới'"
       @cancel="closeModal"
-      okText="Lưu"
-      cancelText="Hủy"
       width="800px"
-      :confirmLoading="loading"
+      :footer="null"
     >
-      <a-form layout="vertical">
-        <a-form-item label="Tên *" required>
-          <a-input v-model:value="tempClass.name" placeholder="Nhập tên nhóm lớp (VD: 01)" />
+      <a-form layout="vertical" @submit.prevent="onSubmit">
+        <a-form-item label="Tên nhóm" required>
+          <a-input v-model:value="tempClass.name" placeholder="Nhập tên nhóm lớp (VD: 01, 02,...)" />
         </a-form-item>
 
-        <a-form-item label="Môn học *" required>
-          <a-select v-model:value="tempClass.subject_id">
-            <a-select-option v-for="subject in subjects" :key="subject.value" :value="subject.value">
-              {{ subject.label }}
-            </a-select-option>
-          </a-select>
-        </a-form-item>
-
-        <a-form-item label="Học kỳ *" required>
-          <a-select v-model:value="tempClass.semester_id">
-            <a-select-option v-for="semester in semesters" :key="semester.value" :value="semester.value">
-              {{ semester.label }}
-            </a-select-option>
-          </a-select>
-        </a-form-item>
-
+        <a-row :gutter="16">
+            <a-col :span="12">
+                <a-form-item label="Môn học" required>
+                    <a-select 
+                        v-model:value="tempClass.subject_id"
+                        placeholder="Chọn môn học"
+                        show-search
+                        :options="subjects"
+                        :filter-option="(input, option) => option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0"
+                    />
+                </a-form-item>
+            </a-col>
+            <a-col :span="12">
+                <a-form-item label="Học kỳ" required>
+                    <a-select 
+                        v-model:value="tempClass.semester_id"
+                        placeholder="Chọn học kỳ"
+                        :options="semesters"
+                    />
+                </a-form-item>
+            </a-col>
+        </a-row>
+        
         <a-form-item label="Trạng thái">
           <a-select v-model:value="tempClass.status">
             <a-select-option value="Hoạt động">Hoạt động</a-select-option>
@@ -393,44 +424,60 @@ const handleAction = (key, record) => {
         </a-form-item>
 
         <a-form-item label="Thông báo (Hiển thị tới sinh viên - Hỗ trợ HTML)">
-          <a-textarea v-model:value="tempClass.notice" placeholder="Thông báo cho lớp" rows="4" />
+          <a-textarea v-model:value="tempClass.notice" placeholder="Thông báo cho lớp" :rows="4" />
         </a-form-item>
         
         <a-form-item label="Mô tả">
-          <a-textarea v-model:value="tempClass.about" placeholder="Mô tả lớp học" rows="4" />
+          <a-textarea v-model:value="tempClass.about" placeholder="Mô tả lớp học" :rows="4" />
+        </a-form-item>
+        
+        <a-form-item>
+            <div style="text-align: right;">
+                <a-button @click="closeModal" style="margin-right: 8px">Hủy</a-button>
+                <a-button type="primary" html-type="submit" :loading="loading">Lưu</a-button>
+            </div>
         </a-form-item>
       </a-form>
-      
-      <template #footer>
-        <a-button @click="closeModal">Hủy</a-button>
-        <a-button type="primary" @click="onSubmit">Lưu</a-button>
-      </template>
     </a-modal>
   </div>
 </template>
 
 <style scoped>
 .class-container {
-  background: #fff;
+  background: #f0f2f5;
   padding: 24px;
   min-height: 100vh;
 }
 
 .content-wrapper {
-  max-width: 1200px;
+  background: #fff;
+  padding: 24px;
+  border-radius: 8px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
+/* Fix: Bố cục Header Area */
 .header-area {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
+  gap: 16px; 
 }
 
 .header-area h1 {
-  margin-right: 20px;
-  margin-bottom: 0;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .add-button {
@@ -450,8 +497,8 @@ const handleAction = (key, record) => {
 }
 
 .status-inactive {
-  color: #ff4d4f;
-  background: #fff1f0;
-  border-color: #ffa39e;
+  color: #8c8c8c;
+  background: #fafafa;
+  border-color: #d9d9d9;
 }
 </style>

@@ -1399,22 +1399,22 @@ watch(
       />
     </div>
 
-    <a-config-provider
-        :theme="{
-        token: {
-          colorPrimary: '#A7453C',
-          colorTextHeading: '#000000',
-          colorText: '#A7453C',
-          colorBorderSecondary: 'rgba(186,151,147,0.45)',
-        },
-      }"
-    />
+<a-config-provider
+          :theme="{
+            token: {
+              colorPrimary: '#00AFFF', /* Màu nhấn chính, rực rỡ */
+              colorTextHeading: '#007ACC',  /* Màu cho tiêu đề */
+              colorText: '#2c3e50',       /* Màu chữ chính */
+              colorBorderSecondary: '#D9E2EC', /* Màu viền phụ, nhạt */
+            },
+          }"
+        />
   </a-spin>
 </template>
 
 <style scoped>
 .body {
-  color: #5A738E;
+  color: #2c3e50;
   display: flex;
   margin-top: 90px;
 }
