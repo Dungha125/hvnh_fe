@@ -294,9 +294,6 @@ const handleAction = (key, record) => {
   CSS cho Component Cấu hình Lớp học - Chủ đề Neo-Futuristic Sáng
 */
 
-.class-config-container {
-  /* Component này được thiết kế để nằm trong một card khác, nên không cần padding/margin ở đây */
-}
 
 /* === Bảng dữ liệu === */
 .class-table :deep(.ant-table) {

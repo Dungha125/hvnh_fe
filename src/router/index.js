@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
-import ProblemView from '../views/ProblemView.vue'
+
 import StatusView from "@/views/StatusView.vue";
 import HistoryView from "@/views/HistoryView.vue";
 import RankingView from "@/views/RankingView.vue";
-import ProblemDetailView from "@/views/ProblemDetailView.vue";
+
 import HomeView from "@/views/HomeView.vue";
 import ProfileView from "@/views/ProfileView.vue";
 import EditProfile from "@/views/EditProfileView.vue";
@@ -61,11 +61,6 @@ const router = createRouter({
             component: HomeView
         },
         {
-            path: '/problems',
-            name: 'problems',
-            component: ProblemView
-        },
-        {
             path: '/status',
             name: 'status',
             component: StatusView
@@ -109,11 +104,6 @@ const router = createRouter({
             path: '/contest/history',
             name: 'contest-history',
             component: HistoryContestView
-        },
-        {
-            path: '/problems/:id',
-            name: 'problem-detail',
-            component: ProblemDetailView
         },
         {
             path: '/profile',

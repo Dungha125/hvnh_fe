@@ -2,10 +2,14 @@
 import AdminHeader from "@/components/AdminHeader.vue";
 import {onBeforeMount, ref, computed, reactive, watch, createVNode} from "vue";
 import {useRouter} from "vue-router";
-import {EllipsisOutlined, ExclamationCircleOutlined} from "@ant-design/icons-vue";
+import {EllipsisOutlined, ExclamationCircleOutlined, EyeOutlined,
+  EyeInvisibleOutlined,
+  EditOutlined,
+  DeleteOutlined,} from "@ant-design/icons-vue";
 import axios from "@/configs/axios.js";
 import {message, Modal} from "ant-design-vue";
 import {Ckeditor, useCKEditorCloud} from "@ckeditor/ckeditor5-vue";
+
 
 const router = useRouter();
 const currentTab = ref(["problems"]);
@@ -37,6 +41,9 @@ const selectedGroups = [];
 const selectedSubGroups = [];
 const customMainFunctions = ref([]);
 const listComment = ref([])
+const isEditModalVisible = ref(false);
+const isEditModalLoading = ref(false);
+const editingComment = ref(null);
 const problemDetail = reactive({
   code: "",
   name: "",
@@ -802,6 +809,93 @@ const handleConfirmTableChange = (pagination) => {
   fetchApprovals(pagination.current, pagination.pageSize);
 };
 
+const openEditCommentModal = (comment) => {
+  // Tạo một bản sao để không ảnh hưởng đến dữ liệu gốc khi chưa lưu
+  editingComment.value = { ...comment };
+  isEditModalVisible.value = true;
+};
+
+/**
+ * Gọi API để lưu bình luận đã chỉnh sửa.
+ */
+const handleSaveComment = async () => {
+  if (!editingComment.value || !editingComment.value.content.trim()) {
+    message.error("Nội dung bình luận không được để trống.");
+    return;
+  }
+  
+  isEditModalLoading.value = true;
+  try {
+    const payload = { comment: editingComment.value.content };
+    // API: PUT /api/comments/{id}
+    await axios.put(`/comments/${editingComment.value.id}`, payload);
+    
+    // Cập nhật lại listComment trên UI
+    const index = listComment.value.findIndex(c => c.id === editingComment.value.id);
+    if (index !== -1) {
+      listComment.value[index].content = editingComment.value.content;
+    }
+    
+    message.success("Cập nhật bình luận thành công!");
+    isEditModalVisible.value = false;
+  } catch (error) {
+    message.error("Có lỗi xảy ra khi cập nhật bình luận.");
+    console.error("Lỗi sửa bình luận:", error);
+  } finally {
+    isEditModalLoading.value = false;
+  }
+};
+
+/**
+ * Xử lý ẩn/hiện bình luận.
+ */
+const handleToggleCommentStatus = async (comment) => {
+  const newStatus = comment.status === 1 ? 0 : 1;
+  const actionText = newStatus === 1 ? 'Hiện' : 'Ẩn';
+  try {
+    // API: GET /api/comments/{id}/hidden
+    await axios.get(`/comments/${comment.id}/hidden`);
+    message.success(`${actionText} bình luận thành công!`);
+    comment.status = newStatus; // Cập nhật UI ngay lập tức
+  } catch (error) {
+    message.error(`Lỗi khi ${actionText.toLowerCase()} bình luận.`);
+    console.error(error);
+  }
+};
+
+/**
+ * Hiển thị modal xác nhận trước khi xóa.
+ */
+const showDeleteCommentConfirm = (commentId) => {
+  Modal.confirm({
+    title: 'Bạn có chắc muốn xóa bình luận này?',
+    icon: createVNode(ExclamationCircleOutlined),
+    content: 'Hành động này không thể hoàn tác.',
+    okText: 'Xóa',
+    okType: 'danger',
+    cancelText: 'Hủy',
+    onOk() {
+      handleDeleteComment(commentId);
+    },
+  });
+};
+
+/**
+ * Gọi API để xóa bình luận.
+ */
+const handleDeleteComment = async (commentId) => {
+  try {
+    // API: DELETE /api/comments/{id}
+    await axios.delete(`/comments/${commentId}`);
+    message.success("Xóa bình luận thành công!");
+    // Xóa bình luận khỏi danh sách trên UI
+    listComment.value = listComment.value.filter(c => c.id !== commentId);
+  } catch (error) {
+    message.error("Lỗi khi xóa bình luận.");
+    console.error("Lỗi xóa bình luận:", error);
+  }
+};
+
 const formatDateTime = (dateTimeString) => {
   if (!dateTimeString) return 'N/A';
   return new Date(dateTimeString).toLocaleString('vi-VN');
@@ -840,7 +934,7 @@ const commentColumns = [
     title: 'Nội dung bình luận', 
     dataIndex: 'content', 
     key: 'content', 
-    ellipsis: true // Tự động thêm "..." nếu nội dung quá dài
+    ellipsis: true 
   },
   { 
     title: 'Bài tập', 
@@ -851,7 +945,7 @@ const commentColumns = [
   },
   { 
     title: 'Trạng thái', 
-    key: 'status', // Dùng key vì ta sẽ custom render
+    key: 'status', 
     width: 120, 
     align: 'center' 
   },
@@ -860,6 +954,12 @@ const commentColumns = [
     dataIndex: 'created_at', 
     key: 'created_at', 
     width: 160 
+  },
+  { 
+    title: 'Hành động', 
+    key: 'action', 
+    width: 160,
+    align: 'center'
   },
 ];
 
@@ -1480,8 +1580,44 @@ watch(
                   <template v-if="column.key === 'created_at'">
                     <span>{{ formatDateTime(record.created_at) }}</span>
                   </template>
+                  <template v-if="column.key === 'action'">
+                  <a-space :size="'middle'">
+                    <a-tooltip title="Ẩn/Hiện">
+                      <a @click="handleToggleCommentStatus(record)">
+                        <EyeInvisibleOutlined v-if="record.status === 1" />
+                        <EyeOutlined v-else />
+                      </a>
+                    </a-tooltip>
+
+                    <a-tooltip title="Sửa bình luận">
+                      <a @click="openEditCommentModal(record)">
+                        <EditOutlined />
+                      </a>
+                    </a-tooltip>
+                    
+                    <a-tooltip title="Xóa bình luận">
+                      <a @click="showDeleteCommentConfirm(record.id)">
+                        <DeleteOutlined style="color: red;" />
+                      </a>
+                    </a-tooltip>
+                  </a-space>
+                </template>
                 </template>
               </a-table>
+            <a-modal
+                v-model:open="isEditModalVisible"
+                title="Chỉnh sửa bình luận"
+                ok-text="Lưu thay đổi"
+                cancel-text="Hủy"
+                @ok="handleSaveComment"
+                :confirm-loading="isEditModalLoading"
+              >
+                <a-textarea
+                  v-model:value="editingComment.content"
+                  placeholder="Nhập nội dung bình luận"
+                  :rows="4"
+                />
+              </a-modal>
             </div>
             
             <div v-if="currentTab[0] === 'confirm'" class="problem-list-container">
