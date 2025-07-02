@@ -445,8 +445,8 @@ const handleViewUserProfile = async (record) => {
 
                 <div style="display: flex; justify-content: space-between; margin-top: 10px">
                   <div class="search-container">
-                    <img src="../static/img/search_icon.svg" alt=""/>
-                    <a-input type="text" style="border: none; height: 100%; width: 100%"
+                    <img src="../static/img/search_icon.svg" alt="" style="width: 20px; margin: 0 2px;"/>
+                    <a-input type="text" style="border: none; height: 100%; width: 100%;"
                              placeholder="Tìm kiếm..." v-model:value="searchQuery" 
                              @pressEnter="handleSearch(searchQuery)" @change="handleSearch(searchQuery)" allow-clear/>
                   </div>
@@ -848,9 +848,10 @@ a-button {
   border: 1px solid #cacaca;
   width: 30%;
   height: 40px;
-  padding: 10px;
+  padding: 4px;
   background-color: #fff;
   border-radius: 10px;
   margin-bottom: 10px;
 }
+
 </style>

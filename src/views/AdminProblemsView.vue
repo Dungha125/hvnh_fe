@@ -17,7 +17,17 @@ const subjects = ref([]);
 const current_subject = ref(null);
 const difficulties = ref([]);
 const listCompilers = ref([]);
+const confirmList = ref([]);
+const confirmLoading = ref(false);
+const confirmPagination = reactive({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+  showSizeChanger: true,
+  pageSizeOptions: ['10', '20', '50'],
+});
 const subTopics = ref([]);
+const commentLoading = ref(false);
 const typeProblems = ref([]);
 const statusProblems = ref([]);
 const group = ref([]);
@@ -26,7 +36,7 @@ const selectedSubjects = ref([]);
 const selectedGroups = [];
 const selectedSubGroups = [];
 const customMainFunctions = ref([]);
-const listComment = reactive([])
+const listComment = ref([])
 const problemDetail = reactive({
   code: "",
   name: "",
@@ -276,21 +286,10 @@ onBeforeMount(async () => {
   }
   try {
     // Fetch subjects
-    const resComments = await axios.get("/comments");
-    if (resComments.data.data) {
-      listComment.value = resComments.data.data.map((comment) => ({
-        id: comment.id,
-        title: comment.question.name,
-        user: comment.name,
-        question: comment.question.code,
-        status: comment.status,
-        created_at: comment.created_at,
-      }));
-
-      if (subjects.value.length > 0) {
-        current_subject.value = subjects.value[0].value;
+     const response = await axios.get("/comments"); // Hoặc endpoint tương ứng
+      if (response.data.code === 200) {
+        listComment.value = response.data.data; // Gán trực tiếp mảng dữ liệu
       }
-    }
   } catch (error) {
     message.error("Lỗi khi lấy danh sách bình luận");
     console.error(error);
@@ -357,6 +356,7 @@ const fetchProblems = async (subjectId, page = 1, pageSize = 50, search = '') =>
     isLoading.value = false;
   }
 };
+
 
 watch(
     () => current_subject.value,
@@ -768,6 +768,101 @@ const fetchQuestionData = async (code) => {
   }
 };
 
+const fetchApprovals = async (page = 1, pageSize = 10) => {
+  confirmLoading.value = true;
+  try {
+    const params = {
+      page: page,
+      per_page: pageSize,
+      order: 'desc', // Lấy yêu cầu mới nhất lên đầu
+      by: 'created_at',
+    };
+    const response = await axios.get('/approvals', { params });
+
+    if (response.data.code === 200) {
+      // ✅ Sửa lỗi: Lấy dữ liệu từ response.data.data
+      confirmList.value = response.data.data;
+      confirmPagination.total = response.data.total;
+      confirmPagination.current = response.data.current_page;
+    } else {
+      message.error("Lấy danh sách phê duyệt thất bại!");
+    }
+  } catch (error) {
+    console.error("Lỗi khi fetch approvals:", error);
+    message.error("Có lỗi xảy ra, không thể lấy danh sách phê duyệt.");
+  } finally {
+    confirmLoading.value = false;
+  }
+};
+
+/**
+ * Xử lý khi người dùng thay đổi trang trong bảng phê duyệt.
+ */
+const handleConfirmTableChange = (pagination) => {
+  fetchApprovals(pagination.current, pagination.pageSize);
+};
+
+const formatDateTime = (dateTimeString) => {
+  if (!dateTimeString) return 'N/A';
+  return new Date(dateTimeString).toLocaleString('vi-VN');
+};
+
+watch(currentTab, (newTabKey) => {
+  if (newTabKey[0] === 'confirm' && confirmList.value.length === 0) {
+    fetchApprovals();
+  }
+});
+
+// Định nghĩa cột cho bảng phê duyệt
+const confirmColumns = [
+  { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
+  { title: 'Người yêu cầu', dataIndex: ['user'], key: 'user', ellipsis: true },
+  { title: 'Câu hỏi', dataIndex: ['question', 'name'], key: 'question', ellipsis: true },
+  { title: 'Thời gian', dataIndex: 'created_at', key: 'created_at', width: 160 },
+  { title: 'Trạng thái', key: 'status', width: 180, align: 'center' },
+];
+
+const commentColumns = [
+  { 
+    title: 'ID', 
+    dataIndex: 'id', 
+    key: 'id', 
+    width: 60 
+  },
+  { 
+    title: 'Tài khoản', 
+    // Truy cập vào record.user.username
+    dataIndex: ['user', 'username'], 
+    key: 'user' ,
+    ellipsis: true
+  },
+  { 
+    title: 'Nội dung bình luận', 
+    dataIndex: 'content', 
+    key: 'content', 
+    ellipsis: true // Tự động thêm "..." nếu nội dung quá dài
+  },
+  { 
+    title: 'Bài tập', 
+    // Truy cập vào record.question.name
+    dataIndex: ['question', 'name'], 
+    key: 'question', 
+    ellipsis: true 
+  },
+  { 
+    title: 'Trạng thái', 
+    key: 'status', // Dùng key vì ta sẽ custom render
+    width: 120, 
+    align: 'center' 
+  },
+  { 
+    title: 'Thời gian', 
+    dataIndex: 'created_at', 
+    key: 'created_at', 
+    width: 160 
+  },
+];
+
 
 watch(
     () => problemDetail.groups,
@@ -840,7 +935,7 @@ watch(
                   "
                 >
                   <div class="search-container">
-                    <img src="../static/img/search_icon.svg" alt=""/>
+                    <img src="../static/img/search_icon.svg" alt="" style="width: 20px; margin: 0 2px;"/>
                     <a-input
                         type="text"
                         style="border: none; height: 100%; width: 100%"
@@ -1356,31 +1451,84 @@ watch(
                 </div>
               </div>
 
-              <div v-if="currentTab[0] === 'comments'"
-                   class="problem-list-container">
-                <table class="table-bordered">
-                  <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Tài khoản</th>
-                    <th>Mã</th>
-                    <th>Tiêu đề</th>
-                    <th>Trạng thái</th>
-                    <th>Thời gian</th>
-                  </tr>
-                  </thead>
-                  <tbody>
-                  <tr v-for="item in listComment.value" :key="item.id">
-                    <td>{{ item.id }}</td>
-                    <td class="red-text">{{ item.user }}</td>
-                    <td>{{ item.question }}</td>
-                    <td class="red-text">{{ item.title }}</td>
-                    <td>{{ item.status === 1 ? "Hiển thị" : "Ẩn" }}</td>
-                    <td>{{ item.created_at }}</td>
-                  </tr>
-                  </tbody>
-                </table>
+             <div v-if="currentTab[0] === 'comments'" class="problem-list-container">
+              <a-table
+                :columns="commentColumns"
+                :data-source="listComment"
+                :loading="commentLoading"
+                :row-key="record => record.id"
+                bordered
+                :pagination="{ pageSize: 10 }"
+              >
+                <template #bodyCell="{ column, record }">
+                  <template v-if="column.key === 'user'">
+                      <span v-if="record.user">
+                        {{ record.user.last_name }} {{ record.user.first_name }}
+                      </span>
+                      <span v-else>Không rõ</span>
+                    </template>
+                  <template v-if="column.key === 'user' || column.key === 'title'">
+                    <span class="red-text">{{ record[column.dataIndex] }}</span>
+                  </template>
 
+                  <template v-if="column.key === 'status'">
+                    <a-tag :color="record.status === 1 ? 'green' : 'default'">
+                      {{ record.status === 1 ? 'Hiển thị' : 'Ẩn' }}
+                    </a-tag>
+                  </template>
+                  
+                  <template v-if="column.key === 'created_at'">
+                    <span>{{ formatDateTime(record.created_at) }}</span>
+                  </template>
+                </template>
+              </a-table>
+            </div>
+            
+            <div v-if="currentTab[0] === 'confirm'" class="problem-list-container">
+                <a-table
+                  :columns="confirmColumns"
+                  :data-source="confirmList"
+                  :loading="confirmLoading"
+                  :pagination="confirmPagination"
+                  @change="handleConfirmTableChange"
+                  :row-key="record => record.id"
+                  bordered
+                >
+                  <template #bodyCell="{ column, record }">
+                    <template v-if="column.key === 'user'">
+                      <span v-if="record.user">
+                        {{ record.user.last_name }} {{ record.user.first_name }}
+                      </span>
+                      <span v-else>Không rõ</span>
+                    </template>
+
+                    <template v-if="column.key === 'content'">
+                      <a-tooltip placement="topLeft">
+                        <template #title>
+                          <pre>{{ JSON.parse(record.content) }}</pre>
+                        </template>
+                        <span>{{ record.content }}</span>
+                      </a-tooltip>
+                    </template>
+
+                    <template v-if="column.key === 'created_at'">
+                      <span>{{ formatDateTime(record.created_at) }}</span>
+                    </template>
+
+                     <template v-if="column.key === 'status'">
+                      <a-tag 
+                        v-if="record.response === null || record.response === 'đã chấp nhận'" 
+                        color="success"
+                      >
+                        Đã chấp nhận
+                      </a-tag>
+                      
+                      <a-tag v-else color="error">
+                        {{ record.response }}
+                      </a-tag>
+                    </template>
+                  </template>
+                </a-table>
               </div>
             </div>
           </div>
@@ -1473,7 +1621,7 @@ watch(
   border: 1px solid #cacaca;
   width: 30%;
   height: 40px;
-  padding: 10px;
+  padding: 4px;
   background-color: #fff;
   border-radius: 10px;
   margin-bottom: 10px;
