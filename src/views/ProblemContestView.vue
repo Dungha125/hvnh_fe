@@ -96,13 +96,13 @@ const getCountdown = () => {
     clearInterval(countdownInterval);
     return 'Hết giờ';
   }
-  const diff = end.diff(now, 'second');
-  const days = Math.floor(diff / (3600*24))
-  const hours = Math.floor(diff / 3600);
+  const diff = Math.floor((end - now) / 1000);
+  const days = Math.floor(diff / 86400);
+  const hours = Math.floor((diff % 86400) / 3600);
   const minutes = Math.floor((diff % 3600) / 60);
   const seconds = diff % 60;
 
-  return `${days.toString().padStart(2, '0')}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  return `${days.toString().padStart(2, '0')}d:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
 
 const updateCountdown = () => {
