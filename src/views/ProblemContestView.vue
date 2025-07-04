@@ -57,7 +57,7 @@ const fetchProblems = async () => {
         id: problem.id,
         title: problem.name,
         is_solved: problem.is_ac,
-        is_tried: problem.is_tried,
+        is_tried: problem.is_fail,
       }));
 
       // FIX: Chạy lại usePagination để cập nhật dataSource sau khi có dữ liệu
