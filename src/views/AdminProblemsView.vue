@@ -980,6 +980,13 @@ watch(
     {deep: true}
 );
 
+const navigateToProblem = (questionCode) => {
+    if (!questionCode) {
+        message.error("Không có mã bài tập.");
+        return;
+    }
+    router.push(`/admin/problems/${questionCode}`);
+};
 
 </script>
 
@@ -1067,7 +1074,7 @@ watch(
                       </template>
 
                       <template #default="{ record }">
-                        <a style="cursor: pointer; color: #a7453c">
+                        <a style="cursor: pointer; color: #a7453c" @click="navigateToProblem(record.code)">
                           {{ record.code }}
                         </a>
                       </template>
@@ -1079,7 +1086,7 @@ watch(
                       </template>
 
                       <template #default="{ record }">
-                        <a style="cursor: pointer; color: #a7453c">
+                        <a style="cursor: pointer; color: #a7453c" @click="navigateToProblem(record.code)">
                           {{ record.title.toUpperCase() }}
                         </a>
                       </template>

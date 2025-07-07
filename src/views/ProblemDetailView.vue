@@ -1,285 +1,210 @@
 <script setup>
-import Header from '../components/Header.vue';
-import {ref, reactive, onBeforeMount, computed} from 'vue';
+import { ref, reactive, onUnmounted, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import axios from "@/configs/axios.js";
+import { message } from "ant-design-vue";
 import {
-  RiseOutlined,
   UploadOutlined,
   LoadingOutlined,
-  CheckCircleTwoTone,
-  CloseCircleTwoTone
+  FieldTimeOutlined,
+  UserOutlined,
 } from '@ant-design/icons-vue';
-import {useRoute, useRouter} from 'vue-router';
-import {message} from "ant-design-vue";
-import {usePagination} from "vue-request";
+import AdminHeader from '@/components/AdminHeader.vue';
 import MonacoEditor from 'monaco-editor-vue3';
+import dayjs from "dayjs";
+import { marked } from 'marked'; // Thư viện để phân tích Markdown
 
-const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+//--- Core Setup ---//
 const route = useRoute();
+const router = useRouter();
+const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+//--- Component State ---//
 const isLoading = ref(true);
 const questionDetail = ref(null);
-const questionContent = ref(null);
-const fileList = ref([]);
-const uploading = ref(false);
-const chosenCompiler = ref();
-const result = ref('Pending');
+const compilers = ref([]);
 const comments = ref([]);
 const commentValue = ref('');
 const isSubmittingComment = ref(false);
+
+//--- Submission State ---//
+const fileList = ref([]);
+const uploading = ref(false);
+const chosenCompiler = ref();
+const result = ref(null);
 const currentUserSubmissions = ref([]);
-const compilers = ref([]);
-const openTopSubmissions = ref(false);
-const status = reactive([]);
-const isLoadingTopSubmissions = ref(true);
-const currentCourse = ref(null);
+const isHistoryLoading = ref(false);
+
+//--- Modal & Editor State ---//
 const isOpenCodeEditor = ref(false);
 const submittedCode = ref('');
 const selectedSubmission = ref(null);
 
-const id = route.params.id;
-const router = useRouter();
+//--- Timer ID for Cleanup ---//
+let pollTimeoutId = null;
 
 const editorOptions = {
   fontSize: 14,
-  minimap: {enabled: false},
+  minimap: { enabled: false },
   automaticLayout: true,
+  readOnly: true,
 };
 
-onBeforeMount(async () => {
-  if (!localStorage.getItem('currentCourse')) {
-    router.push('/not-found');
+//--- Computed Property for Markdown Rendering ---//
+const formattedContent = computed(() => {
+  if (questionDetail.value && questionDetail.value.content) {
+    const content = questionDetail.value.content.trim();
+    // FIX: Kiểm tra và loại bỏ toàn bộ dòng tiêu đề đầu tiên nếu nó bắt đầu bằng #
+    if (content.startsWith('#')) {
+      const firstLineEndIndex = content.indexOf('\n');
+      // Lấy nội dung từ sau dòng đầu tiên
+      const contentWithoutTitle = firstLineEndIndex !== -1 ? content.substring(firstLineEndIndex + 1) : '';
+      return marked(contentWithoutTitle);
+    }
+    // Nếu không có, hiển thị nội dung gốc
+    return marked(questionDetail.value.content);
   }
+  return '';
+});
 
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-  currentCourse.value = JSON.parse(localStorage.getItem('currentCourse') || '{}');
 
-  if ((currentUser && currentUser.member_group !== 1) || !currentCourse.value) {
-    router.push('/not-found');
-  }
-
+//--- API & Data Fetching ---//
+const fetchQuestionDetails = async (questionId) => {
+  isLoading.value = true;
   try {
-    const response = await axios.get(`questions/${id}?course_id=${currentCourse.value.id}`);
-    if (response.status === 200) {
-      isLoading.value = false;
-      questionDetail.value = response.data.data;
-      comments.value = response.data.data.comments;
-      comments.value.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      //questionContent.value = marked(response.data.data.content.replace(/^#\s*/, ''));
-      questionContent.value = response.data.data.content;
-    }
+    const response = await axios.get(`questions/${questionId}`);
+    if (response.data.code !== 200) throw new Error("Không tìm thấy câu hỏi");
 
-    const getSubmissionsResponse = await axios.get(`solutions?question_code=${id}&username=${currentUser.username}`);
-    if (getSubmissionsResponse.status === 200) {
-      currentUserSubmissions.value = getSubmissionsResponse.data.data;
-    }
-
-    compilers.value = questionDetail.value.allow_compilers.map((compiler) => ({
-      label: compiler.code,
-      value: compiler.id + ""
+    questionDetail.value = response.data.data;
+    comments.value = response.data.data.comments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    compilers.value = questionDetail.value.allow_compilers.map(c => ({
+      label: c.code,
+      value: c.id.toString()
     }));
 
     if (compilers.value.length > 0) {
       chosenCompiler.value = compilers.value[0].value;
     }
+    
+    await fetchUserSubmissions();
 
-    // await axios.get(`questions/${id}/top`).then(response => {
-    //   if (response.status === 200) {
-    //     isLoading.value = false;
-    //     const statusResponse = response.data.data;
-    //     statusResponse.forEach(sts => {
-    //       let runTime = sts.run_time;
-    //       if (runTime)
-    //         runTime = runTime.toFixed(2);
-
-    //       let createdDate = new Date(sts.created_at);
-    //       sts.created_at = (createdDate.getDate() > 9 ? createdDate.getDate() : '0' + createdDate.getDate()) + '/' + (createdDate.getMonth() > 9 ? createdDate.getMonth() : '0' + createdDate.getMonth()) + '/' + createdDate.getFullYear();
-
-
-    //       let username = sts.user.username + ' - ' + sts.user.last_name + ' ' + sts.user.first_name;
-
-    //       status.push({
-    //         id: sts.id,
-    //         date: sts.created_at,
-    //         account: username,
-    //         result: sts.result,
-    //         problem: sts.question.code + ' - ' + sts.question.name,
-    //         time: runTime + 's',
-    //         memory: sts.memory + 'Kb',
-    //         compiler: sts.compiler.code,
-    //       });
-    //     });
-
-    //     const uniqueSubmissions = [];
-    //     const map = new Map();
-    //     for (const item of status) {
-    //       if (!map.has(item.account)) {
-    //         map.set(item.account, true);
-    //         uniqueSubmissions.push(item);
-    //       }
-    //     }
-
-    //     status.length = 0;
-
-    //     status.push(...uniqueSubmissions);
-    //     isLoadingTopSubmissions.value = false;
-    //   }
-    // }).catch(error => {
-    //   router.push('/not-found');
-    // });
-   } catch (error) {
+  } catch (error) {
+    message.error("Không thể tải chi tiết bài tập.");
     router.push('/not-found');
+  } finally {
+    isLoading.value = false;
   }
+};
+
+const fetchUserSubmissions = async () => {
+  if (!questionDetail.value || !currentUser.username) return;
+  isHistoryLoading.value = true;
+  try {
+    const response = await axios.get(`solutions?question_code=${questionDetail.value.code}&username=${currentUser.username}`);
+    if (response.data.code === 200) {
+      currentUserSubmissions.value = response.data.data;
+    }
+  } catch (error) {
+    message.error("Không thể tải lịch sử nộp bài.");
+  } finally {
+    isHistoryLoading.value = false;
+  }
+};
+
+//--- Lifecycle Hooks ---//
+watch(
+  () => route.params.id,
+  (newId) => {
+    if (newId) {
+      if (!currentUser.id || currentUser.member_group === 1) {
+        router.push('/not-found');
+        return;
+      }
+      fetchQuestionDetails(newId);
+    }
+  },
+  { immediate: true }
+);
+
+onUnmounted(() => {
+  if (pollTimeoutId) clearTimeout(pollTimeoutId);
 });
 
 
-const handleRemove = file => {
-  const index = fileList.value.indexOf(file);
-  const newFileList = fileList.value.slice();
-  newFileList.splice(index, 1);
-  fileList.value = newFileList;
-};
-
-const beforeUpload = file => {
-  fileList.value = [...(fileList.value || []), file];
-  return false;
-};
-
 const handleUpload = async () => {
-  const file = fileList.value[0];
-
-  const allowedExtensions = ['py', 'c', 'cpp', 'java', 'zip', 'rar', 'cs'];
-  const fileExtension = file.name.split('.').pop().toLowerCase();
-
-  if (!allowedExtensions.includes(fileExtension)) {
-    message.error('File không hợp lệ!');
-    return;
-  }
-
-  if (!file) {
-    message.error('Vui lòng chọn file!');
-    return;
-  }
-
+  const file = fileList.value[0]?.originFileObj;
+  if (!file) return message.error('Vui lòng chọn file!');
+  
+  const problemId = route.params.id;
   const formData = new FormData();
-  formData.append('course_id', currentCourse.value.id);
-  formData.append('question', id);
+  formData.append('question', problemId);
   formData.append('compiler', chosenCompiler.value);
   formData.append('code_file', file);
 
   uploading.value = true;
+  result.value = null;
 
   try {
-    const response = await axios.post('solutions', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-
-    if (response.status === 200) {
-      result.value = null;
-      const submissionId = response.data.solution_id;
-      message.success('Nộp bài thành công');
-      const intervalId = setInterval(async () => {
-        const getSubmissionResponse = await axios.get(`solutions/${submissionId}`);
-        if (getSubmissionResponse.status === 200) {
-          result.value = getSubmissionResponse.data.data.result;
-          if (result.value) {
-            clearInterval(intervalId);
-            uploading.value = false;
-            if (result.value === 'AC') {
-              message.success('Chúc mừng bạn đã hoàn thành bài tập này!');
-            } else {
-              message.error('Rất tiếc, bài làm của bạn không đúng!');
-            }
-            const getSubmissionsResponse = await axios.get(`solutions?question_code=${id}&username=${currentUser.username}`);
-            if (getSubmissionsResponse.status === 200) {
-              currentUserSubmissions.value = getSubmissionsResponse.data.data;
-            }
-          }
-        }
-      }, 3000);
+    const response = await axios.post('solutions', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+    if (response.data.solution_id) {
+      message.success('Nộp bài thành công, đang chờ chấm...');
+      pollForResult(response.data.solution_id);
+    } else {
+      throw new Error(response.data.message || "Nộp bài thất bại");
     }
   } catch (error) {
     uploading.value = false;
-    message.error('Nộp bài thất bại');
+    message.error(error.message || 'Nộp bài thất bại');
   }
 };
 
-
-const getAvatarName = (name) => {
-  if (!name) return "User";
-  return name.split(' ').join('+');
+const pollForResult = async (submissionId) => {
+  if (pollTimeoutId) clearTimeout(pollTimeoutId);
+  try {
+    const response = await axios.get(`solutions/${submissionId}`);
+    const submissionData = response.data.data;
+    if (submissionData && submissionData.result) {
+      result.value = submissionData.result;
+      uploading.value = false;
+      message.success(result.value === 'AC' ? 'Chính xác!' : `Kết quả: ${result.value}`);
+      await fetchUserSubmissions();
+    } else {
+      pollTimeoutId = setTimeout(() => pollForResult(submissionId), 3000);
+    }
+  } catch (error) {
+    uploading.value = false;
+    message.error("Lỗi khi lấy kết quả chấm bài.");
+    clearTimeout(pollTimeoutId);
+  }
 };
 
 const handleComment = async () => {
   isSubmittingComment.value = true;
   try {
-    const response = await axios.post(`questions/${id}/comment`, {comment: commentValue.value});
+    const problemId = route.params.id;
+    const response = await axios.post(`questions/${problemId}/comment`, { comment: commentValue.value });
     if (response.status === 200) {
-      comments.value.push({
-        name: response.data.data.name,
-        content: response.data.data.content,
-        created_at: response.data.data.created_at,
-        user: {
-          photo: currentUser.profile_picture ?? null
-        }
-      });
-
+      comments.value.unshift(response.data.data); // Add to the top
       commentValue.value = '';
-      comments.value.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
       message.success('Bình luận thành công');
     }
   } catch (error) {
     message.error('Bình luận thất bại');
-    console.log(error);
+  } finally {
+    isSubmittingComment.value = false;
   }
-  isSubmittingComment.value = false;
-}
-
-const queryData = async params => {
-  return status;
 };
 
-const {data: dataSource, run, loading, current, pageSize} = usePagination(queryData, {
-  formatResult: res => {
-    return Array.isArray(res) ? res : [];
-  },
-  pagination: {
-    currentKey: 'page',
-    pageSizeKey: 'pageSize',
-  },
-});
+//--- UI Handlers & Helpers ---//
+const beforeUpload = file => { fileList.value = [file]; return false; };
+const handleRemove = () => { fileList.value = []; };
+const getAvatarName = (name) => name ? name.split(' ').join('+') : "User";
 
-const pagination = computed(() => ({
-  total: status.length,
-  current: current.value,
-  pageSize: pageSize.value,
-}));
-
-const genUuid = () => {
-  return Math.random().toString(36).substring(7);
-};
-
-const handleTableChange = (pag, filters, sorter) => {
-  run({
-    pageSize: pag.pageSize,
-    page: pag?.current,
-    sortField: sorter.field,
-    sortOrder: sorter.order,
-    ...filters,
-  });
-};
-
-const showEditor = async (id) => {
-  if (id === null) {
-    message.error('Không thể mở bài làm này!');
-    return;
-  }
-
+const showEditor = async (submissionId) => {
+  if (!submissionId) return;
   isLoading.value = true;
-  const response = await axios.get(`solutions/${id}`);
-  if (response.status === 200) {
+  try {
+    const response = await axios.get(`solutions/${submissionId}`);
     if (response.data.code === 200) {
       submittedCode.value = response.data.data.source_code;
       selectedSubmission.value = response.data.data;
@@ -287,334 +212,208 @@ const showEditor = async (id) => {
     } else {
       message.error('Không thể mở bài làm này!');
     }
-  } else {
-    message.error('Không thể mở bài làm này!');
+  } catch (error) {
+    message.error('Lỗi khi lấy chi tiết bài nộp.');
+  } finally {
+    isLoading.value = false;
   }
-  isLoading.value = false;
-}
+};
+
+const getResultTag = (resultCode) => {
+  const statusMap = {
+    'AC': { color: 'green', text: 'Accepted (Kết quả đúng)' },
+    'WA': { color: 'red', text: 'Wrong Answer (Kết quả sai)' },
+    'TLE': { color: 'orange', text: 'Time Limit Exceeded' },
+    'MLE': { color: 'red', text: 'Memory Limit Exceeded' },
+    'OLE': { color: 'red', text: 'Output Limit Exceeded' },
+    'RTE': { color: 'red', text: 'Runtime Error' },
+    'IR': { color: 'purple', text: 'Invalid Return' },
+    'CE': { color: 'purple', text: 'Compile Error' },
+  };
+  return statusMap[resultCode] || { color: 'blue', text: 'Đang chấm...' };
+};
 </script>
 
-
 <template>
-  <Header/>
+  <AdminHeader/>
   <div class="problem-page">
-       <a-spin :spinning="isLoading">
-        <div class="page-wrapper">
-          <div class="problem-layout">
-
-            <!-- Cột nội dung chính -->
-            <main class="main-content">
-              <div class="header-container">
-                <h2>{{ questionDetail?.name.toUpperCase() }}</h2>
-                <div class="underline"></div>
+    
+    <div class="page-wrapper">
+      <a-spin :spinning="isLoading">
+        <div v-if="questionDetail" class="problem-layout">
+          <!-- Cột nội dung chính -->
+          <main class="main-content">
+            <div class="header-container">
+              <h2>{{ questionDetail.name.toUpperCase() }}</h2>
+              <div class="underline"></div>
+            </div>
+            <div class="card-style problem-description">
+              <div class="markdown-content" v-html="formattedContent"></div>
+              <div class="problem-meta">
+                <span>Giới hạn thời gian: <b>{{ questionDetail.time_limit }}s</b></span>
+                <span>Giới hạn bộ nhớ: <b>{{ questionDetail.memory_limit }}Kb</b></span>
               </div>
-
-              <!-- Thẻ nội dung bài tập -->
-              <div class="card-style problem-description">
-                <div v-if="questionContent" v-html="questionContent"></div>
-                <div class="problem-meta">
-                  <span>Giới hạn thời gian: <b>{{ questionDetail?.time_limit }}s</b></span>
-                  <span>Giới hạn bộ nhớ: <b>{{ questionDetail?.memory_limit }}Kb</b></span>
+            </div>
+            <div class="card-style submission-tools">
+              <h3>Nộp bài</h3>
+              <div class="tools-grid">
+                <div class="compiler-container">
+                  <span>Ngôn ngữ:</span>
+                  <a-select v-model:value="chosenCompiler" :options="compilers" style="width: 100%;" />
+                </div>
+                <div class="upload-container">
+                  <span>Tải file lên:</span>
+                  <a-upload :file-list="fileList" :before-upload="beforeUpload" @remove="handleRemove" :max-count="1">
+                    <a-button block><UploadOutlined/> Chọn File</a-button>
+                  </a-upload>
                 </div>
               </div>
-
-              <!-- Thẻ công cụ và nộp bài -->
-              <div class="card-style submission-tools">
-                <div class="tools-grid">
-                  <div class="compiler-container">
-                    <h3>Trình biên dịch:</h3>
-                    <a-select v-model:value="chosenCompiler" :options="compilers" style="width: 100%;" />
-                  </div>
-                  <div class="upload-container">
-                    <h3>Tải file lên:</h3>
-                    <a-upload :file-list="fileList" :before-upload="beforeUpload" @remove="handleRemove">
-                      <a-button block :disabled="fileList.length === 1">
-                        <UploadOutlined/> Chọn File
-                      </a-button>
-                    </a-upload>
-                  </div>
+              <div class="submit-action-bar">
+                <div class="submit-status">
+                  <strong>Trạng thái:</strong>
+                  <a-tag v-if="result" :color="getResultTag(result).color">{{ getResultTag(result).text.split(' (')[0] }}</a-tag>
+                  <span v-else>Chưa nộp</span>
                 </div>
-                <div class="submit-action-bar">
-                  <div class="submit-status">
-                    Trạng thái:
-                    <span v-if="result === 'AC'" class="status-ac">AC</span>
-                    <span v-else-if="result" class="status-wa">{{ result }}</span>
-                    <LoadingOutlined v-else-if="uploading"/>
-                  </div>
-                  <a-button type="primary" :loading="uploading" @click="handleUpload" :disabled="fileList.length === 0">
-                    Nộp bài
-                  </a-button>
-                </div>
+                <a-button type="primary" :loading="uploading" @click="handleUpload" :disabled="fileList.length === 0">Nộp bài</a-button>
               </div>
-              
-              <!-- Khu vực bình luận -->
-              <div class="card-style comment-section">
-                 <h3>Bình luận</h3>
-                 <a-comment>
-                   <template #avatar>
-                     <a-avatar :src="currentUser.profile_picture ?? `https://ui-avatars.com/api/?name=${getAvatarName(currentUser.last_name + ' ' + currentUser.first_name)}&background=007ACC&color=FFFFFF`" alt="Avatar"/>
-                   </template>
-                   <template #content>
-                     <a-textarea v-model:value="commentValue" placeholder="Đặt câu hỏi, chia sẻ cách giải, nhưng không chia sẻ mã nguồn..." :rows="4"/>
-                     <a-button html-type="submit" :loading="isSubmittingComment" type="primary" @click="handleComment" style="margin-top: 10px;">
-                       Thêm bình luận
-                     </a-button>
-                   </template>
-                 </a-comment>
-                 <a-list
-                     v-if="comments.length"
-                     :data-source="comments"
-                     :header="`${comments.length} bình luận`"
-                     item-layout="horizontal"
-                     class="comment-list"
-                 >
-                   <template #renderItem="{ item }">
-                     <a-list-item>
-                       <a-comment
-                           :author="item.name"
-                           :avatar="item.user.photo && item.user.photo?.length > 0 ? item.user.photo : `https://ui-avatars.com/api/?name=${getAvatarName(item.name)}`"
-                           :content="item.content"
-                           :datetime="item.created_at"
-                       />
-                     </a-list-item>
-                   </template>
-                 </a-list>
-              </div>
-            </main>
-
-            <!-- Cột bên phải -->
-            <aside class="sidebar">
-              <div class="card-style submission-history">
-                <h3>Lịch sử nộp bài</h3>
-                 <div v-if="currentUserSubmissions && currentUserSubmissions.length > 0">
-                    <div v-for="submission in currentUserSubmissions" :key="submission.id" class="history-item">
-                        <div class="history-info">
-                            <p class="problem-name">{{ submission?.question?.name }}</p>
-                            <p class="timestamp">{{ submission?.created_at }}</p>
-                        </div>
-                        <a @click="showEditor(submission?.id)" class="history-status" :class="submission?.result">
-                            <span v-if="submission?.result">{{ submission?.result }}</span>
-                            <LoadingOutlined v-else />
-                        </a>
+            </div>
+            <div class="card-style comment-section">
+              <h3>Bình luận</h3>
+              <a-comment>
+                <template #avatar>
+                  <a-avatar :src="currentUser.profile_picture ?? `https://ui-avatars.com/api/?name=${getAvatarName(currentUser.last_name + ' ' + currentUser.first_name)}&background=007ACC&color=FFFFFF`" alt="Avatar"/>
+                </template>
+                <template #content>
+                  <a-textarea v-model:value="commentValue" placeholder="Đặt câu hỏi, chia sẻ cách giải, nhưng không chia sẻ mã nguồn..." :rows="4"/>
+                  <a-button html-type="submit" :loading="isSubmittingComment" type="primary" @click="handleComment" style="margin-top: 10px;">Thêm bình luận</a-button>
+                </template>
+              </a-comment>
+              <a-list
+                v-if="comments.length"
+                :data-source="comments"
+                :header="`${comments.length} bình luận`"
+                item-layout="horizontal"
+                class="comment-list"
+              >
+                <template #renderItem="{ item }">
+                  <a-list-item>
+                    <a-comment
+                      :author="item.name"
+                      :avatar="item.user.photo && item.user.photo?.length > 0 ? item.user.photo : `https://ui-avatars.com/api/?name=${getAvatarName(item.name)}`"
+                      :content="item.content"
+                      :datetime="dayjs(item.created_at).format('DD/MM/YYYY HH:mm')"
+                    />
+                  </a-list-item>
+                </template>
+              </a-list>
+            </div>
+          </main>
+          <!-- Cột bên phải -->
+          <aside class="sidebar">
+            <div class="card-style submission-history">
+              <h3>Lịch sử nộp bài</h3>
+              <a-spin :spinning="isHistoryLoading">
+                <div v-if="currentUserSubmissions.length > 0" class="history-list">
+                  <div v-for="submission in currentUserSubmissions" :key="submission.id" class="history-item">
+                    <div class="history-info">
+                      <p class="submission-time">{{ new Date(submission.created_at).toLocaleString('vi-VN') }}</p>
                     </div>
-                 </div>
-                 <a-empty v-else description="Chưa có lịch sử nộp bài." />
-              </div>
-            </aside>
-
-          </div>
+                    <a @click="showEditor(submission.id)" class="history-status">
+                      <a-tag :color="getResultTag(submission.result).color">{{ submission.result || '...' }}</a-tag>
+                    </a>
+                  </div>
+                </div>
+                <a-empty v-else description="Chưa có bài nộp nào." />
+              </a-spin>
+            </div>
+          </aside>
+        </div>
+        <div v-else class="loading-container">
+          <a-spin size="large" />
         </div>
       </a-spin>
+    </div>
   </div>
 </template>
+
 <style scoped>
+.problem-page { background-color: #F5F7FA; min-height: 100vh; }
+.page-wrapper { margin-top: 70px; padding: 24px; }
+.problem-layout { display: flex; gap: 24px; max-width: 1600px; margin: 0 auto; align-items: flex-start; }
+.main-content { width: 75%; flex-grow: 1; display: flex; flex-direction: column; gap: 24px; }
+.sidebar { width: 25%; min-width: 300px; flex-shrink: 0; position: sticky; top: 94px; }
+h2 { font-size: 1.8rem; font-weight: 700; color: #007ACC; text-transform: uppercase; }
+.underline { width: 100%; height: 3px; margin-top: 8px; background: linear-gradient(90deg, #00AFFF, #B3E5FC); border-radius: 2px; }
+.card-style { background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08); border: 1px solid #D9E2EC; padding: 24px; }
+.card-style h3 { font-size: 1.2rem; font-weight: 600; color: #007ACC; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #E8EFF5; }
 
-  .problem-page {
-    background-color: #F5F7FA;
-    min-height: 100vh;
-  }
+/* === Markdown Content Styling === */
+.problem-description .markdown-content {
+  line-height: 1.7;
+  color: #33475B;
+}
+.problem-description :deep(.markdown-content h1),
+.problem-description :deep(.markdown-content h2),
+.problem-description :deep(.markdown-content h3) {
+  color: #007ACC;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  border-bottom: 1px solid #E8EFF5;
+  padding-bottom: 0.3em;
+}
+.problem-description :deep(.markdown-content p) { margin-bottom: 1em; }
+.problem-description :deep(.markdown-content strong) { font-weight: 600; color: #1A2B3C; }
+.problem-description :deep(.markdown-content table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  border: 1px solid #D9E2EC;
+}
+.problem-description :deep(.markdown-content th),
+.problem-description :deep(.markdown-content td) {
+  border: 1px solid #D9E2EC;
+  padding: 10px 12px;
+  text-align: left;
+}
+.problem-description :deep(.markdown-content th) {
+  background-color: #F0F5FA;
+  font-weight: 600;
+}
+.problem-description :deep(.markdown-content tr:nth-child(even)) {
+  background-color: #f8f9fc;
+}
+/* === End Markdown Styling === */
 
-  .page-wrapper {
-    margin-top: 90px;
-    padding: 24px;
-  }
-
-  /* === Bố cục chính === */
-  .problem-layout {
-    display: flex;
-    gap: 24px;
-    max-width: 1600px;
-    margin: 0 auto;
-  }
-
-  .main-content {
-    width: 75%;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-
-  .sidebar {
-    width: 25%;
-    min-width: 300px;
-    flex-shrink: 0;
-  }
-
-  /* === Tiêu đề & Thẻ chung === */
-  .header-container {
-    margin-bottom: 0;
-  }
-
-  h2 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #007ACC;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .underline {
-    width: 100%;
-    height: 3px;
-    margin-top: 8px;
-    background: linear-gradient(90deg, #00AFFF, #B3E5FC);
-    border-radius: 2px;
-  }
-
-  .card-style {
-    background-color: #FFFFFF;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08);
-    border: 1px solid #D9E2EC;
-    padding: 24px;
-  }
-  .card-style h3 {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: #007ACC;
-      margin-bottom: 16px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #E8EFF5;
-  }
-
-  /* === Nội dung bài tập === */
-  .problem-description {
-    line-height: 1.7;
-  }
-  .problem-description :deep(p) { margin-bottom: 1em; }
-  .problem-description :deep(pre) {
-      background-color: #f8f9fc;
-      padding: 16px;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      word-break: break-all;
-  }
-  .problem-meta {
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 1px solid #E8EFF5;
-    display: flex;
-    gap: 24px;
-    font-size: 0.9rem;
-    color: #5a738e;
-  }
-
-  /* === Công cụ và Nộp bài === */
-  .tools-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-  }
-  .compiler-container span, .upload-container span {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 500;
-      color: #33475B;
-  }
-  .submit-action-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #E8EFF5;
-  }
-  .submit-status {
-    font-weight: 600;
-    color: #5a738e;
-  }
-  .submit-status .status-ac { color: #52c41a; }
-  .submit-status .status-wa { color: #d9363e; }
-  .submit-action-bar .ant-btn-primary {
-    background: linear-gradient(90deg, #007ACC, #00AFFF);
-    border: none;
-    font-weight: 600;
-  }
-
-  /* === Khu vực bình luận === */
-  .comment-section .ant-form-item {
-    margin-bottom: 10px;
-  }
-  .comment-list {
-    margin-top: 24px;
-  }
-  .comment-list .ant-list-header {
-      font-weight: 600;
-      color: #33475B;
-      border-bottom: 1px solid #E8EFF5;
-      padding-bottom: 10px;
-  }
-
-  /* === Sidebar - Lịch sử nộp bài === */
-  .submission-history {
-    position: sticky;
-    top: 90px; /* Vị trí dính sau header */
-  }
-  .history-list {
-      max-height: 60vh; /* Giới hạn chiều cao và cho phép cuộn */
-      overflow-y: auto;
-      padding-right: 5px; /* for scrollbar */
-  }
-  .history-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #E8EFF5;
-  }
-  .history-item:last-child {
-    border-bottom: none;
-  }
-  .history-info .problem-name {
-    font-weight: 600;
-    color: #2c3e50;
-    margin: 0;
-  }
-  .history-info .timestamp {
-    font-size: 0.85rem;
-    color: #5a738e;
-    margin: 0;
-  }
-  .history-status {
-    font-weight: bold;
-    cursor: pointer;
-    padding: 2px 8px;
-    border-radius: 4px;
-  }
-  .history-status.AC { color: #52c41a; background-color: #f6ffed; border: 1px solid #b7eb8f;}
-  .history-status.WA, .history-status.TLE, .history-status.MLE { color: #d9363e; background-color: #fff1f0; border: 1px solid #ffccc7;}
-  .history-status.CE { color: #722ed1; background-color: #f9f0ff; border: 1px solid #d3adf7;}
-
-  /* === RESPONSIVE === */
-  @media (max-width: 992px) {
-    .problem-layout {
-      flex-direction: column; /* Xếp chồng các cột */
-    }
-    .main-content, .sidebar {
-      width: 100%;
-      min-width: unset;
-    }
-    .sidebar {
-        order: 1; /* Đảm bảo sidebar (chứa lịch sử) luôn ở dưới */
-    }
-    .submission-history {
-        position: static; /* Gỡ bỏ sticky trên mobile */
-    }
-  }
-
-  @media (max-width: 576px) {
-    .page-wrapper { padding: 15px; }
-    h2 { font-size: 1.5rem; }
-    .card-style { padding: 15px; }
-    .tools-grid {
-        grid-template-columns: 1fr; /* Xếp chồng các công cụ */
-        gap: 16px;
-    }
-    .submit-action-bar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-    }
-  }
+.problem-meta { margin-top: 24px; padding-top: 16px; border-top: 1px solid #E8EFF5; display: flex; gap: 24px; font-size: 0.9rem; color: #5a738e; }
+.tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.compiler-container span, .upload-container span { display: block; margin-bottom: 8px; font-weight: 500; color: #33475B; }
+.submit-action-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #E8EFF5; }
+.submit-status { font-weight: 600; color: #5a738e; }
+.submit-status .ant-tag { margin-left: 8px; }
+.submit-action-bar .ant-btn-primary { background: linear-gradient(90deg, #007ACC, #00AFFF); border: none; font-weight: 600; }
+.comment-list { margin-top: 24px; }
+.submission-history .history-list { max-height: 60vh; overflow-y: auto; padding-right: 5px; }
+.history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #E8EFF5; }
+.history-item:last-child { border-bottom: none; }
+.history-info .submission-time { font-size: 0.85rem; color: #888; }
+.history-status { cursor: pointer; }
+.modal-title { font-weight: 600; font-size: 1.2rem; color: #007ACC; }
+.submission-details { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 16px; padding: 12px; background-color: #f8f9fc; border-radius: 8px; }
+.submission-details p { margin: 0; }
+.editor-container { border: 1px solid #d9e2ec; border-radius: 8px; overflow: hidden; }
+.modal-footer { display: flex; justify-content: flex-end; margin-top: 24px; }
+.code-modal :deep(.ant-modal-body) { padding-top: 16px; }
+@media (max-width: 992px) {
+  .problem-layout { flex-direction: column; }
+  .main-content, .sidebar { width: 100%; min-width: unset; }
+  .sidebar { order: 1; margin-top: 24px; }
+  .submission-history { position: static; }
+}
+@media (max-width: 576px) {
+  .page-wrapper { padding: 15px; }
+  h2 { font-size: 1.5rem; }
+  .card-style { padding: 15px; }
+  .tools-grid { grid-template-columns: 1fr; gap: 16px; }
+  .submit-action-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+}
 </style>

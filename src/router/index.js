@@ -4,7 +4,6 @@ import LoginView from '../views/LoginView.vue'
 import StatusView from "@/views/StatusView.vue";
 import HistoryView from "@/views/HistoryView.vue";
 import RankingView from "@/views/RankingView.vue";
-
 import HomeView from "@/views/HomeView.vue";
 import ProfileView from "@/views/ProfileView.vue";
 import EditProfile from "@/views/EditProfileView.vue";
@@ -41,6 +40,7 @@ import LecturerRejudgeView from '@/views/lecturer/LecturerRejudgeView.vue';
 import ContestRankingView from '@/views/LecturerContestRankingView.vue';
 import ICPCRankingView from '@/views/lecturer/ICPCRankingView.vue';
 import ICPCRankingViewStudent from '@/views/ICPCRankingViewStudent.vue';
+import ProblemDetailView from '@/views/ProblemDetailView.vue';
 
 const router = createRouter({
     history: createWebHistory(
@@ -124,6 +124,11 @@ const router = createRouter({
             path: '/admin/problems',
             name: 'admin-problems',
             component: AdminProblemsView
+        },
+        {
+            path: '/admin/problems/:id', 
+            name: 'admin-problem-detail',
+            component: ProblemDetailView
         },
         {
             path: '/admin/status',
@@ -255,7 +260,17 @@ const router = createRouter({
             name: 'AdminSystemConfig',
             component: AdminSystemConfigView
         },
-    ]
+    ],
+    scrollBehavior(to, from, savedPosition) {
+        // Nếu có vị trí đã lưu (khi nhấn nút back/forward), thì quay lại vị trí đó
+        if (savedPosition) {
+            return savedPosition
+        } 
+        // Ngược lại, luôn cuộn lên đầu trang
+        else {
+            return { top: 0, behavior: 'smooth' }
+        }
+    },
 })
 
 router.beforeEach(async(to, from, next) => {

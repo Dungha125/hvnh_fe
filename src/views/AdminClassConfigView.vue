@@ -3,6 +3,7 @@ import { ref, onBeforeMount, watch } from 'vue'
 import axios from '@/configs/axios.js'
 import { message } from 'ant-design-vue'
 import { useRoute, useRouter } from 'vue-router'
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 
 const classes = ref([])
 const loading = ref(false)
@@ -325,59 +326,88 @@ const handleAction = (key, record) => {
 </script>
 
 <template>
-  <div class="class-container">
-    <div class="content-wrapper">
-      <div class="header-area">
-        <h1>Lớp học</h1>
-        <div class="filter-group">
-            <a-select 
-              v-model:value="filterSubject" 
-              style="width: 220px"
-              placeholder="Lọc theo môn học"
-              allowClear
-              show-search
-              :options="subjects"
-              :filter-option="(input, option) => option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0"
-            />
-            <a-select 
-              v-model:value="filterSemester" 
-              style="width: 250px"
-              placeholder="Lọc theo học kỳ"
-              allowClear
-              :options="semesters"
-            />
-            <a-button type="primary" class="add-button" @click="showModalAdd">Thêm mới</a-button>
+  <div class="admin-classes">
+    <div class="admin-container">
+      <div class="admin-header">
+        <div class="header-content">
+          <h1 class="page-title">Quản lý Lớp học</h1>
+          <p class="page-description">Thêm, sửa và quản lý các lớp học trong hệ thống</p>
         </div>
       </div>
 
-      <a-table 
-        :columns="columns" 
-        :dataSource="classes" 
-        rowKey="id" 
-        bordered 
-        :pagination="pagination"
-        :loading="loading"
-        @change="handleTableChange"
-      >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.dataIndex === 'status'">
-            <a-tag :class="statusClass(record.status)">{{ record.status }}</a-tag>
-          </template>
-          <template v-else-if="column.dataIndex === 'actions'">
-            <a-dropdown>
-              <a-button shape="circle"> ⋮ </a-button>
-              <template #overlay>
-                <a-menu @click="({ key }) => handleAction(key, record)">
-                  <a-menu-item key="student">Danh sách sinh viên</a-menu-item>
-                  <a-menu-item key="lecturer">Danh sách giảng viên</a-menu-item>
-                  <a-menu-divider/>
-                  <a-menu-item key="edit">Sửa thông tin</a-menu-item>
-                </a-menu>
+      <div class="admin-content">
+        <div class="content-section">
+          <div class="section-header">
+            <div class="header-left">
+              <h2 class="section-title">Danh sách lớp học</h2>
+              <div class="filter-group">
+                <a-select 
+                  v-model:value="filterSubject" 
+                  style="width: 220px"
+                  placeholder="Lọc theo môn học"
+                  allowClear
+                  show-search
+                  :options="subjects"
+                  :filter-option="(input, option) => option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0"
+                />
+                <a-select 
+                  v-model:value="filterSemester" 
+                  style="width: 250px"
+                  placeholder="Lọc theo học kỳ"
+                  allowClear
+                  :options="semesters"
+                />
+              </div>
+            </div>
+            <div class="header-right">
+              <a-button type="primary" class="add-button" @click="showModalAdd">
+                <PlusOutlined />
+                Thêm mới
+              </a-button>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <a-table 
+              :columns="columns" 
+              :dataSource="classes" 
+              rowKey="id" 
+              bordered 
+              :pagination="pagination"
+              :loading="loading"
+              @change="handleTableChange"
+              class="classes-table"
+            >
+              <template #bodyCell="{ column, record }">
+                <template v-if="column.dataIndex === 'status'">
+                  <a-tag :color="record.status === 'Hoạt động' ? 'success' : 'error'" class="status-tag">{{ record.status }}</a-tag>
+                </template>
+                <template v-else-if="column.dataIndex === 'actions'">
+                  <a-dropdown>
+                    <a-button shape="circle" class="action-button-more"> <EllipsisOutlined /> </a-button>
+                    <template #overlay>
+                      <a-menu @click="({ key }) => handleAction(key, record)">
+                        <a-menu-item key="student"><UserOutlined /> Danh sách sinh viên</a-menu-item>
+                        <a-menu-item key="lecturer"><TeamOutlined /> Danh sách giảng viên</a-menu-item>
+                        <a-menu-divider/>
+                        <a-menu-item key="edit"><EditOutlined /> Sửa thông tin</a-menu-item>
+                        <a-popconfirm
+                          title="Bạn có chắc chắn muốn xóa lớp học này?"
+                          ok-text="Có"
+                          cancel-text="Không"
+                          @confirm="onDelete(record.id)"
+                        >
+                          <a-menu-item key="delete" danger><DeleteOutlined /> Xóa lớp</a-menu-item>
+                        </a-popconfirm>
+                      </a-menu>
+                    </template>
+                  </a-dropdown>
+                </template>
               </template>
-            </a-dropdown>
-          </template>
-        </template>
-      </a-table>
+            </a-table>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Modal Thêm/Sửa lớp học -->
@@ -387,6 +417,7 @@ const handleAction = (key, record) => {
       @cancel="closeModal"
       width="800px"
       :footer="null"
+      class="class-modal"
     >
       <a-form layout="vertical" @submit.prevent="onSubmit">
         <a-form-item label="Tên nhóm" required>
@@ -432,9 +463,9 @@ const handleAction = (key, record) => {
         </a-form-item>
         
         <a-form-item>
-            <div style="text-align: right;">
-                <a-button @click="closeModal" style="margin-right: 8px">Hủy</a-button>
-                <a-button type="primary" html-type="submit" :loading="loading">Lưu</a-button>
+            <div class="modal-footer-buttons">
+                <a-button @click="closeModal" class="cancel-button">Hủy</a-button>
+                <a-button type="primary" html-type="submit" :loading="loading" class="save-button">Lưu</a-button>
             </div>
         </a-form-item>
       </a-form>
@@ -443,22 +474,54 @@ const handleAction = (key, record) => {
 </template>
 
 <style scoped>
-.class-container {
-  background: #f0f2f5;
-  padding: 24px;
+/* General Page Layout */
+.admin-classes {
   min-height: 100vh;
+  background-color: #f7f8fa;
 }
 
-.content-wrapper {
-  background: #fff;
-  padding: 24px;
-  border-radius: 8px;
-  max-width: 1400px;
+.admin-container {
+  max-width: 1600px;
   margin: 0 auto;
+  padding: 24px;
 }
 
-/* Fix: Bố cục Header Area */
-.header-area {
+.admin-header {
+  margin-bottom: 24px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #eef2f7;
+}
+
+.header-content {
+  max-width: 800px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.page-description {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.admin-content {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #eef2f7;
+}
+
+/* Content Section Header */
+.content-section {
+  padding: 24px;
+}
+
+.section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -467,38 +530,178 @@ const handleAction = (key, record) => {
   gap: 16px; 
 }
 
-.header-area h1 {
-  font-size: 24px;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.section-title {
+  font-size: 18px;
   font-weight: 600;
+  color: #1e293b;
   margin: 0;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .filter-group {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .add-button {
-  background-color: #a7453c;
-  border-color: #a7453c;
+  height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-.add-button:hover {
-  background-color: #8a3931;
-  border-color: #8a3931;
+/* Table Styling */
+.table-wrapper {
+  margin-top: 16px;
+  border: 1px solid #eef2f7;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.status-active {
-  color: #52c41a;
-  background: #f6ffed;
-  border-color: #b7eb8f;
+:deep(.ant-table) {
+  background: transparent;
+  border-spacing: 0;
 }
 
-.status-inactive {
-  color: #8c8c8c;
-  background: #fafafa;
-  border-color: #d9d9d9;
+:deep(.ant-table-thead > tr > th) {
+  background: #f8fafc;
+  border-bottom: 1px solid #eef2f7;
+  padding: 12px 16px;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+:deep(.ant-table-tbody > tr > td) {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eef2f7;
+  color: #1e293b;
+  text-align: center;
+}
+
+:deep(.ant-table-tbody > tr:last-child > td) {
+  border-bottom: none;
+}
+
+:deep(.ant-table-tbody > tr:hover > td) {
+  background: #f8fafc;
+}
+
+.status-tag {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.action-button-more {
+  height: 32px;
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal Styling */
+:deep(.class-modal .ant-modal-header) {
+  border-bottom: 1px solid #eef2f7;
+  padding: 16px 24px;
+}
+
+:deep(.class-modal .ant-modal-title) {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+:deep(.class-modal .ant-modal-body) {
+  padding: 24px;
+}
+
+:deep(.class-modal .ant-modal-footer) {
+  display: none; /* Hide default footer as we have custom buttons */
+}
+
+.modal-footer-buttons {
+  text-align: right;
+  padding-top: 16px;
+  border-top: 1px solid #eef2f7;
+  margin-top: 24px; /* Adjust as needed */
+}
+
+.cancel-button {
+  margin-right: 8px;
+}
+
+:deep(.ant-form-item) {
+  margin-bottom: 20px;
+}
+
+:deep(.ant-form-item-label > label) {
+  font-weight: 500;
+  color: #374151;
+}
+
+:deep(.ant-input),
+:deep(.ant-input-number),
+:deep(.ant-select-selector),
+:deep(.ant-textarea) {
+  border-radius: 8px;
+  border-color: #d1d5db;
+  padding: 8px 12px;
+  height: auto;
+  min-height: 40px;
+}
+
+:deep(.ant-input:hover),
+:deep(.ant-input-number:hover),
+:deep(.ant-select-selector:hover),
+:deep(.ant-textarea:hover) {
+  border-color: #60a5fa;
+}
+
+:deep(.ant-input:focus),
+:deep(.ant-input-number:focus),
+:deep(.ant-select-selector:focus),
+:deep(.ant-textarea:focus) {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 16px;
+  }
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .header-left,
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .filter-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .add-button {
+    flex-grow: 1;
+  }
 }
 </style>

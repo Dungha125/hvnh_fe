@@ -84,6 +84,7 @@ const fetchSolution = async () =>
                     time: runTime ? runTime + 's' : '',
                     memory: sts.memory ? sts.memory + 'Kb' : '',
                     compiler: sts.compiler.code,
+                    code: sts.question.code,
                 });
             });
 
@@ -107,6 +108,14 @@ const handleTableChange = (pag, filters, sorter) =>
     pagination.current = pag.current;
     pagination.pageSize = pag.pageSize;
     fetchSolution();
+};
+
+const navigateToProblem = (questionCode) => {
+    if (!questionCode) {
+        message.error("Không có mã bài tập.");
+        return;
+    }
+    router.push(`/admin/problems/${questionCode}`);
 };
 
 const activeKey = ref([1]);

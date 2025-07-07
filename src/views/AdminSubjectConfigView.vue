@@ -1,41 +1,66 @@
 <template>
-  <div class="subject-container">
-    <div class="content-wrapper">
-      <div class="header-area">
-        <h1>Môn học</h1>
-        <a-button type="primary" class="add-button" @click="showModalAdd">Thêm mới</a-button>
+  <div class="admin-subjects">
+    <div class="admin-container">
+      <div class="admin-header">
+        <div class="header-content">
+          <h1 class="page-title">Quản lý môn học</h1>
+          <p class="page-description">Thêm, sửa và quản lý các môn học trong hệ thống</p>
+        </div>
       </div>
 
-      <a-table 
-        :columns="columns" 
-        :dataSource="subjects" 
-        rowKey="code" 
-        bordered 
-        :pagination="{ pageSize: 10 }"
-        :loading="loading"
-      >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.dataIndex === 'status'">
-            <a-tag :class="statusClass(record.status)">
-              {{ statusText(record.status) }}
-            </a-tag>
-          </template>
+      <div class="admin-content">
+        <div class="content-section">
+          <div class="section-header">
+            <div class="header-left">
+              <h2 class="section-title">Danh sách môn học</h2>
+            </div>
+            <div class="header-right">
+              <a-button type="primary" class="add-button" @click="showModalAdd">
+                <PlusOutlined />
+                Thêm mới
+              </a-button>
+            </div>
+          </div>
 
-          <template v-else-if="column.dataIndex === 'actions'">
-            <a-space>
-              <a-button type="primary" @click="onEdit(record)">Sửa</a-button>
-              <a-popconfirm
-                title="Bạn có chắc chắn muốn xóa môn học này?"
-                ok-text="Có"
-                cancel-text="Không"
-                @confirm="onDelete(record.code)"
-              >
-                <a-button danger>Xóa</a-button>
-              </a-popconfirm>
-            </a-space>
-          </template>
-        </template>
-      </a-table>
+          <div class="table-wrapper">
+            <a-table
+              :columns="columns"
+              :dataSource="subjects"
+              rowKey="code"
+              bordered
+              :pagination="{ pageSize: 10 }"
+              :loading="loading"
+              class="subjects-table"
+            >
+              <template #bodyCell="{ column, record }">
+                <template v-if="column.dataIndex === 'status'">
+                  <a-tag :color="record.status === 1 || record.status === '1' ? 'success' : 'error'" class="status-tag">
+                    {{ statusText(record.status) }}
+                  </a-tag>
+                </template>
+
+                <template v-else-if="column.dataIndex === 'actions'">
+                  <a-space>
+                    <a-button type="primary" @click="onEdit(record)" class="action-button-edit">
+                      <EditOutlined /> Sửa
+                    </a-button>
+                    <a-popconfirm
+                      title="Bạn có chắc chắn muốn xóa môn học này?"
+                      ok-text="Có"
+                      cancel-text="Không"
+                      @confirm="onDelete(record.code)"
+                    >
+                      <a-button danger class="action-button-delete">
+                        <DeleteOutlined /> Xóa
+                      </a-button>
+                    </a-popconfirm>
+                  </a-space>
+                </template>
+              </template>
+            </a-table>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Modal Thêm/Sửa Môn Học -->
@@ -48,16 +73,17 @@
       cancelText="Hủy"
       width="800px"
       :confirmLoading="loading"
+      class="subject-modal"
     >
       <a-form layout="vertical">
-        <a-form-item label="Mã *" required>
+        <a-form-item label="Mã " required>
           <a-input v-model:value="tempSubject.code" placeholder="Nhập mã môn học" :disabled="isEditing" />
         </a-form-item>
-        <a-form-item label="Tên *" required>
+        <a-form-item label="Tên " required>
           <a-input v-model:value="tempSubject.name" placeholder="Nhập tên môn học" />
         </a-form-item>
 
-        <a-form-item label="Trình biên dịch *" required>
+        <a-form-item label="Trình biên dịch " required>
           <a-checkbox-group v-model:value="tempSubject.compilers" :options="compilerOptions" :disabled="fetchingCompilers" />
         </a-form-item>
 
@@ -65,15 +91,15 @@
           <a-textarea v-model:value="tempSubject.description" placeholder="Mô tả môn học" />
         </a-form-item>
 
-        <a-form-item label="Tên rút gọn *" required>
+        <a-form-item label="Tên rút gọn " required>
           <a-input v-model:value="tempSubject.short_name" placeholder="Tên rút gọn" />
         </a-form-item>
 
-        <a-form-item label="Số TC học phí *" required>
+        <a-form-item label="Số TC học phí " required>
           <a-input-number v-model:value="tempSubject.tuition_credits" :min="1" style="width: 100%" />
         </a-form-item>
 
-        <a-form-item label="Số TC *" required>
+        <a-form-item label="Số TC " required>
           <a-input-number v-model:value="tempSubject.credits" :min="1" style="width: 100%" />
         </a-form-item>
 
@@ -82,7 +108,7 @@
         </a-form-item>
 
         <a-form-item label="Trạng thái">
-          <a-select v-model:value="tempSubject.status">
+          <a-select v-model:value="tempSubject.status" placeholder="Chọn trạng thái">
             <a-select-option value="1">Hoạt động</a-select-option>
             <a-select-option value="0">Không hoạt động</a-select-option>
           </a-select>
@@ -100,6 +126,7 @@
 import { ref, onMounted } from 'vue'
 import axios from '@/configs/axios.js'
 import { message } from 'ant-design-vue'
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 
 const subjects = ref([])
 const loading = ref(false)
@@ -190,9 +217,9 @@ onMounted(async () => {
 const showModalAdd = () => {
   isEditing.value = false
   editingCode = null
-  tempSubject.value = { 
-    status: '1', 
-    daily_ac_limit: 10, 
+  tempSubject.value = {
+    status: '1',
+    daily_ac_limit: 10,
     compilers: [],
     test_per_case: false,
     credits: 3,
@@ -275,7 +302,7 @@ const onEdit = (record) => {
   editingCode = record.code
   
   // Create a clean copy of the record with only the fields we need
-  tempSubject.value = { 
+  tempSubject.value = {
     code: record.code,
     name: record.name,
     short_name: record.short_name,
@@ -338,49 +365,226 @@ const onDelete = async (code) => {
 const statusText = (status) => {
   if (status === 1 || status === '1') return 'Hoạt động'
   if (status === 0 || status === '0') return 'Không hoạt động'
-  return status
+  return String(status)
 }
 
-const statusClass = (status) => {
-  return status === 1 || status === '1' ? 'status-active' : 'status-inactive'
-}
 </script>
 
 <style scoped>
-.subject-container {
-  background: #fff;
+/* General Page Layout */
+.admin-subjects {
   min-height: 100vh;
+  background-color: #f7f8fa;
 }
 
-.content-wrapper {
+.admin-container {
+  max-width: 1600px;
+  margin: 0 auto;
   padding: 24px;
-  margin-top: 20px;
 }
 
-.header-area {
+.admin-header {
+  margin-bottom: 24px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #eef2f7;
+}
+
+.header-content {
+  max-width: 800px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.page-description {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.admin-content {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #eef2f7;
+}
+
+/* Content Section Header */
+.content-section {
+  padding: 24px;
+}
+
+.section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .add-button {
-  background-color: #c62828;
-  color: #fff;
+  height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Table Styling */
+.table-wrapper {
+  margin-top: 16px;
+  border: 1px solid #eef2f7;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+:deep(.ant-table) {
+  background: transparent;
+  border-spacing: 0;
+}
+
+:deep(.ant-table-thead > tr > th) {
+  background: #f8fafc;
+  border-bottom: 1px solid #eef2f7;
+  padding: 12px 16px;
+  color: #64748b;
   font-weight: 600;
+  text-transform: uppercase;
+  font-size: 13px;
 }
 
-.add-button:hover {
-  background-color: #a71d1d;
+:deep(.ant-table-tbody > tr > td) {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eef2f7;
+  color: #1e293b;
+  text-align: center;
 }
 
-.status-active {
-  color: #52c41a;
-  border-color: #52c41a;
+:deep(.ant-table-tbody > tr:last-child > td) {
+  border-bottom: none;
 }
 
-.status-inactive {
-  color: #f5222d;
-  border-color: #f5222d;
+:deep(.ant-table-tbody > tr:hover > td) {
+  background: #f8fafc;
+}
+
+.status-tag {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.action-button-edit,
+.action-button-delete {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Modal Styling */
+:deep(.subject-modal .ant-modal-header) {
+  border-bottom: 1px solid #eef2f7;
+  padding: 16px 24px;
+}
+
+:deep(.subject-modal .ant-modal-title) {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+:deep(.subject-modal .ant-modal-body) {
+  padding: 24px;
+}
+
+:deep(.subject-modal .ant-modal-footer) {
+  border-top: 1px solid #eef2f7;
+  padding: 16px 24px;
+}
+
+:deep(.ant-form-item) {
+  margin-bottom: 20px;
+}
+
+:deep(.ant-form-item-label > label) {
+  font-weight: 500;
+  color: #374151;
+}
+
+:deep(.ant-input),
+:deep(.ant-input-number),
+:deep(.ant-select-selector),
+:deep(.ant-textarea),
+:deep(.ant-checkbox-group),
+:deep(.ant-radio-group) {
+  border-radius: 8px;
+  border-color: #d1d5db;
+  padding: 8px 12px;
+  height: auto;
+  min-height: 40px;
+}
+
+:deep(.ant-input:hover),
+:deep(.ant-input-number:hover),
+:deep(.ant-select-selector:hover),
+:deep(.ant-textarea:hover) {
+  border-color: #60a5fa;
+}
+
+:deep(.ant-input:focus),
+:deep(.ant-input-number:focus),
+:deep(.ant-select-selector:focus),
+:deep(.ant-textarea:focus) {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+:deep(.ant-checkbox-wrapper),
+:deep(.ant-radio-wrapper) {
+  color: #374151;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 16px;
+  }
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .header-left,
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .add-button {
+    flex-grow: 1;
+  }
 }
 </style>
