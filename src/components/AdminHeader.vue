@@ -13,6 +13,7 @@ import {
 } from "@ant-design/icons-vue";
 import axios from "@/configs/axios.js";
 import { message } from "ant-design-vue";
+import IconSupport from "./icons/IconSupport.vue";
 
 const route = useRoute();
 const currentPath = route.path;
@@ -107,6 +108,10 @@ const getAvatarName = (name) => {
           <img src="../static/img/ranking_icon.svg" alt="Bảng xếp hạng icon">
           <span class="nav-text">Bảng xếp hạng</span>
         </div>
+        <div class="nav-item" :style="styleNavItem('/admin/support')" @click="goTo('/admin/support')">
+          <IconSupport/>
+          <span class="nav-text">Hỗ trợ</span>
+        </div>
       </nav>
 
       <!-- User Actions for Desktop -->
@@ -164,6 +169,10 @@ const getAvatarName = (name) => {
         <div class="nav-item" :style="styleNavItem('/admin/ranking')" @click="goTo('/admin/ranking'); toggleMobileMenu();">
           <img src="../static/img/ranking_icon.svg" alt="Bảng xếp hạng icon">
           <span class="nav-text">Bảng xếp hạng</span>
+        </div>
+        <div class="nav-item" :style="styleNavItem('/admin/support')" @click="goTo('/admin/support'); toggleMobileMenu();">
+          <IconSupport/>
+          <span class="nav-text">Hỗ trợ</span>
         </div>
         <div class="nav-item" @click="goTo('/guide'); toggleMobileMenu();">
            <img class="action-icon" src="../static/img/icon_question.svg" alt="Hướng dẫn">

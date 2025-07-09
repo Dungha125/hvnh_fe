@@ -41,6 +41,7 @@ import ContestRankingView from '@/views/LecturerContestRankingView.vue';
 import ICPCRankingView from '@/views/lecturer/ICPCRankingView.vue';
 import ICPCRankingViewStudent from '@/views/ICPCRankingViewStudent.vue';
 import ProblemDetailView from '@/views/ProblemDetailView.vue';
+import AdminSupportView from '@/views/AdminSupportView.vue';
 
 const router = createRouter({
     history: createWebHistory(
@@ -154,6 +155,11 @@ const router = createRouter({
             path: '/admin/ranking',
             name: 'admin-ranking',
             component: AdminRankingView
+        },
+        {
+            path: '/admin/support',
+            name: 'admin-support',
+            component: AdminSupportView
         },
         {
             path: '/lecturer/questions',

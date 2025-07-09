@@ -1,9 +1,10 @@
 <script setup>
+import AdminHeader from "@/components/AdminHeader.vue";
 import Header from "@/components/Header.vue";
 </script>
 
 <template>
-  <Header />
+  <AdminHeader />
   <div class="container">
     <div class="header-section">
       <h2>Hướng dẫn nộp bài trực tuyến</h2>

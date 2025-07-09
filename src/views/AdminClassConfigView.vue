@@ -3,7 +3,7 @@ import { ref, onBeforeMount, watch } from 'vue'
 import axios from '@/configs/axios.js'
 import { message } from 'ant-design-vue'
 import { useRoute, useRouter } from 'vue-router'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, EditOutlined, DeleteOutlined, EllipsisOutlined } from '@ant-design/icons-vue'
 
 const classes = ref([])
 const loading = ref(false)
@@ -590,11 +590,12 @@ const handleAction = (key, record) => {
   padding: 12px 16px;
   border-bottom: 1px solid #eef2f7;
   color: #1e293b;
-  text-align: center;
+  text-align: center;  
 }
 
 :deep(.ant-table-tbody > tr:last-child > td) {
   border-bottom: none;
+  text-align: center;
 }
 
 :deep(.ant-table-tbody > tr:hover > td) {
