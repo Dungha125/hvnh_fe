@@ -279,7 +279,7 @@ const togglePassword = () => {
   position: absolute;
   right: 12px;
   cursor: pointer;
-  color: #00AFFF; /* Accent color for icon */
+  color: #00AFFF; 
   font-size: 18px; /* Slightly smaller */
   transition: color 0.3s ease;
 }
