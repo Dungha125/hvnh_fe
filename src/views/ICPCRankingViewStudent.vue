@@ -365,12 +365,12 @@ h1 {
 .pending { background-color: #bbdefb; }
 .neutral { background-color: transparent; }
 
-/* === IOI Specific Styles === */
+
 .score-positive {
     font-weight: 600;
     color: #2e7d32;
 }
-/* Add padding back for non-ICPC tables */
+
 .ranking-table:not(:has(.cell-content)) :deep(.ant-table-tbody > tr > td) {
     padding: 10px;
 }

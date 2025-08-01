@@ -127,8 +127,8 @@ const router = createRouter({
             component: AdminProblemsView
         },
         {
-            path: '/admin/problems/:id', 
-            name: 'admin-problem-detail',
+            path: '/problems/:id', 
+            name: 'problem-detail',
             component: ProblemDetailView
         },
         {

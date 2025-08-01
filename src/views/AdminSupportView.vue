@@ -8,18 +8,15 @@ import AdminHeader from "@/components/AdminHeader.vue";
 import dayjs from "dayjs";
 import { useRouter } from 'vue-router';
 
-// --- STATE MANAGEMENT ---
 const router = useRouter();
 const isModalVisible = ref(false);
 const selectedSupport = ref(null);
 const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 let intervalId = null;
 
-// Reply state
 const replyContent = ref('');
 const isReplying = ref(false);
 
-// Filter states
 const searchQuery = ref('');
 const statusFilter = ref(null);
 
@@ -29,7 +26,6 @@ const statusOptions = [
     { value: 2, label: 'Đã đóng' }
 ];
 
-// --- API & DATA FETCHING ---
 const fetchSupports = async (params = {}) => {
     try {
         const response = await axios.get('/supports', { params });
@@ -53,7 +49,6 @@ const fetchSupports = async (params = {}) => {
         if (error.response) {
             message.error(`Lỗi từ máy chủ: ${error.response.status} - ${error.response.data.message || 'Vui lòng thử lại.'}`);
         } else if (error.request) {
-            // message.error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.");
         } else {
             message.error("Đã có lỗi xảy ra khi gửi yêu cầu.");
         }
@@ -66,8 +61,6 @@ const { data: dataSource, run, loading, current, pageSize, total } = usePaginati
         currentKey: 'page',
         pageSizeKey: 'per_page',
     },
-    // FIX: Loại bỏ polling tự động để kiểm soát trạng thái loading
-    // pollingInterval: 5000, 
      manual: true,
 });
 const initialLoading = ref(true);

@@ -40,6 +40,26 @@ const isOpenCodeEditor = ref(false);
 const submittedCode = ref('');
 const selectedSubmission = ref(null);
 
+// --- TABS STATE ---
+const testCases = ref([]);
+const submissions = ref([]);
+const editForm = reactive({});
+const showCustomMain = ref(false);
+
+// Form options
+const subjects = ref([]);
+const groups = ref([]);
+const subGroups = ref([]);
+const difficulties = ref([]);
+const typeProblems = ref([]);
+const listCompilers = ref([]);
+const selectedGroups = ref({});
+const selectedSubGroups = ref({});
+
+const listComment = ref([]);
+const isEditCommentModalVisible = ref(false);
+const editingComment = ref(null);
+
 //--- Timer ID for Cleanup ---//
 let pollTimeoutId = null;
 
@@ -232,188 +252,260 @@ const getResultTag = (resultCode) => {
   };
   return statusMap[resultCode] || { color: 'blue', text: 'Đang chấm...' };
 };
+
+//-----------COMMENT--------------//
+const handleToggleCommentStatus = async (comment) => {
+    const newStatus = comment.status === 1 ? 0 : 1;
+    try {
+        await axios.patch(`/comments/${comment.id}`, { status: newStatus });
+        message.success("Cập nhật trạng thái bình luận thành công!");
+        comment.status = newStatus; // Update UI immediately
+    } catch (error) {
+        message.error("Lỗi khi cập nhật trạng thái.");
+    }
+};
+
+const showEditCommentModal = (comment) => {
+    editingComment.value = { ...comment };
+    isEditCommentModalVisible.value = true;
+};
+
+const handleUpdateComment = async () => {
+    if (!editingComment.value || !editingComment.value.content.trim()) {
+        message.warning("Nội dung bình luận không được để trống.");
+        return;
+    }
+    try {
+        await axios.put(`/comments/${editingComment.value.id}`, { content: editingComment.value.content });
+        message.success("Cập nhật bình luận thành công!");
+        isEditCommentModalVisible.value = false;
+        fetchComments(); // Refresh comment list
+    } catch (error) {
+        message.error("Lỗi khi cập nhật bình luận.");
+    }
+};
+
+const confirmDeleteComment = (commentId) => {
+    Modal.confirm({
+        title: "Bạn có chắc muốn xóa bình luận này?",
+        icon: createVNode(ExclamationCircleOutlined),
+        content: "Hành động này không thể hoàn tác.",
+        okText: "Xóa",
+        okType: 'danger',
+        cancelText: "Hủy",
+        onOk: () => handleDeleteComment(commentId),
+    });
+};
+
+const handleDeleteComment = async (commentId) => {
+    try {
+        await axios.delete(`/comments/${commentId}`);
+        message.success("Xóa bình luận thành công!");
+        fetchComments(); // Refresh comment list
+    } catch (error) {
+        message.error("Lỗi khi xóa bình luận.");
+    }
+};
+
 </script>
 
 <template>
-  <AdminHeader/>
-  <div class="problem-page">
-    
-    <div class="page-wrapper">
+  <div class="page-container">
+    <AdminHeader/>
+   <div class="page-wrapper">
       <a-spin :spinning="isLoading">
         <div v-if="questionDetail" class="problem-layout">
-          <!-- Cột nội dung chính -->
-          <main class="main-content">
-            <div class="header-container">
-              <h2>{{ questionDetail.name.toUpperCase() }}</h2>
-              <div class="underline"></div>
-            </div>
-            <div class="card-style problem-description">
-              <div class="markdown-content" v-html="formattedContent"></div>
-              <div class="problem-meta">
-                <span>Giới hạn thời gian: <b>{{ questionDetail.time_limit }}s</b></span>
-                <span>Giới hạn bộ nhớ: <b>{{ questionDetail.memory_limit }}Kb</b></span>
-              </div>
-            </div>
-            <div class="card-style submission-tools">
-              <h3>Nộp bài</h3>
-              <div class="tools-grid">
-                <div class="compiler-container">
-                  <span>Ngôn ngữ:</span>
-                  <a-select v-model:value="chosenCompiler" :options="compilers" style="width: 100%;" />
-                </div>
-                <div class="upload-container">
-                  <span>Tải file lên:</span>
-                  <a-upload :file-list="fileList" :before-upload="beforeUpload" @remove="handleRemove" :max-count="1">
-                    <a-button block><UploadOutlined/> Chọn File</a-button>
-                  </a-upload>
-                </div>
-              </div>
-              <div class="submit-action-bar">
-                <div class="submit-status">
-                  <strong>Trạng thái:</strong>
-                  <a-tag v-if="result" :color="getResultTag(result).color">{{ getResultTag(result).text.split(' (')[0] }}</a-tag>
-                  <span v-else>Chưa nộp</span>
-                </div>
-                <a-button type="primary" :loading="uploading" @click="handleUpload" :disabled="fileList.length === 0">Nộp bài</a-button>
-              </div>
-            </div>
-            <div class="card-style comment-section">
-              <h3>Bình luận</h3>
-              <a-comment>
-                <template #avatar>
-                  <a-avatar :src="currentUser.profile_picture ?? `https://ui-avatars.com/api/?name=${getAvatarName(currentUser.last_name + ' ' + currentUser.first_name)}&background=007ACC&color=FFFFFF`" alt="Avatar"/>
-                </template>
-                <template #content>
-                  <a-textarea v-model:value="commentValue" placeholder="Đặt câu hỏi, chia sẻ cách giải, nhưng không chia sẻ mã nguồn..." :rows="4"/>
-                  <a-button html-type="submit" :loading="isSubmittingComment" type="primary" @click="handleComment" style="margin-top: 10px;">Thêm bình luận</a-button>
-                </template>
-              </a-comment>
-              <a-list
-                v-if="comments.length"
-                :data-source="comments"
-                :header="`${comments.length} bình luận`"
-                item-layout="horizontal"
-                class="comment-list"
-              >
-                <template #renderItem="{ item }">
-                  <a-list-item>
-                    <a-comment
-                      :author="item.name"
-                      :avatar="item.user.photo && item.user.photo?.length > 0 ? item.user.photo : `https://ui-avatars.com/api/?name=${getAvatarName(item.name)}`"
-                      :content="item.content"
-                      :datetime="dayjs(item.created_at).format('DD/MM/YYYY HH:mm')"
-                    />
-                  </a-list-item>
-                </template>
-              </a-list>
-            </div>
-          </main>
-          <!-- Cột bên phải -->
-          <aside class="sidebar">
-            <div class="card-style submission-history">
-              <h3>Lịch sử nộp bài</h3>
-              <a-spin :spinning="isHistoryLoading">
-                <div v-if="currentUserSubmissions.length > 0" class="history-list">
-                  <div v-for="submission in currentUserSubmissions" :key="submission.id" class="history-item">
-                    <div class="history-info">
-                      <p class="submission-time">{{ new Date(submission.created_at).toLocaleString('vi-VN') }}</p>
-                    </div>
-                    <a @click="showEditor(submission.id)" class="history-status">
-                      <a-tag :color="getResultTag(submission.result).color">{{ submission.result || '...' }}</a-tag>
-                    </a>
+          <div class="header-container">
+            <h2>{{ questionDetail.name.toUpperCase() }}</h2>
+            <div class="underline"></div>
+          </div>
+
+          <div class="content-card">
+            <a-tabs v-model:activeKey="activeTabKey" class="main-tabs">
+              
+              <a-tab-pane key="details">
+                <template #tab><FileTextOutlined /> Chi tiết</template>
+                <div class="tab-content">
+                  <div class="markdown-content" v-html="formattedContent"></div>
+                  <div class="problem-meta">
+                    <span>Giới hạn thời gian: <b>{{ questionDetail.time_limit }}s</b></span>
+                    <span>Giới hạn bộ nhớ: <b>{{ questionDetail.memory_limit }}Kb</b></span>
                   </div>
                 </div>
-                <a-empty v-else description="Chưa có bài nộp nào." />
-              </a-spin>
-            </div>
-          </aside>
+                <template><HistoryOutlined /> Quản lý bình luận</template>
+                 <div class="tab-content">
+                    <h4>Toàn bộ bình luận cho {{ questionDetail.code }}</h4>
+                    <a-table :dataSource="listComment" :columns="[
+                        { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
+                        { title: 'Người gửi', dataIndex: ['user', 'name'], key: 'user' },
+                        { title: 'Nội dung', dataIndex: 'content', key: 'content' },
+                        { title: 'Trạng thái', dataIndex: 'status', key: 'status', align: 'center', width: 120 },
+                        { title: 'Thời gian', dataIndex: 'created_at', key: 'time', align: 'center', width: 180 },
+                        { title: 'Thao tác', key: 'action', align: 'center', width: 120 }
+                    ]">
+                        <template #bodyCell="{ column, record }">
+                            <template v-if="column.key === 'status'">
+                                <a-tag :color="record.status === 1 ? 'green' : 'red'">
+                                    {{ record.status === 1 ? 'Hiển thị' : 'Đã ẩn' }}
+                                </a-tag>
+                            </template>
+                            <template v-if="column.key === 'action'">
+                                <a-dropdown :trigger="['click']">
+                                    <a-button type="text" shape="circle" class="action-button"><EllipsisOutlined /></a-button>
+                                    <template #overlay>
+                                        <a-menu>
+                                            <a-menu-item @click="handleToggleCommentStatus(record)">
+                                                {{ record.status === 1 ? 'Ẩn' : 'Hiện' }}
+                                            </a-menu-item>
+                                            <a-menu-item @click="showEditCommentModal(record)">Sửa</a-menu-item>
+                                            <a-menu-item @click="confirmDeleteComment(record.id)" danger>Xóa</a-menu-item>
+                                        </a-menu>
+                                    </template>
+                                </a-dropdown>
+                            </template>
+                        </template>
+                    </a-table>
+                 </div>
+              </a-tab-pane>
+
+              <a-tab-pane key="testcases">
+                 <template #tab><ExperimentOutlined /> Quản lý Testcase</template>
+                 <div class="tab-content">
+                    <h4>Danh sách Testcase</h4>
+                    <a-table :dataSource="testCases" :columns="[{title: 'Tên file', dataIndex: 'name'}, {title: 'Kích thước', dataIndex: 'size'}, {title: 'Thao tác'}]" />
+                    <a-upload-dragger style="margin-top: 20px;">
+                        <p class="ant-upload-drag-icon"><UploadOutlined /></p>
+                        <p class="ant-upload-text">Nhấn hoặc kéo file .zip chứa testcase vào đây</p>
+                    </a-upload-dragger>
+                 </div>
+              </a-tab-pane>
+
+              <a-tab-pane key="submissions">
+                 <template #tab><HistoryOutlined /> Các bài đã nộp</template>
+                 <div class="tab-content">
+                    <h4>Toàn bộ bài nộp cho {{ questionDetail.code }}</h4>
+                    <a-table :dataSource="submissions" :columns="[{title: 'ID'}, {title: 'Người nộp'}, {title: 'Kết quả'}, {title: 'Thời gian'}]" />
+                 </div>
+              </a-tab-pane>
+
+              <a-tab-pane key="comments">
+                 <template #tab><HistoryOutlined /> Quản lý bình luận</template>
+                 <div class="tab-content">
+                    <h4>Toàn bộ bình luận cho {{ questionDetail.code }}</h4>
+                    <a-table :dataSource="listComment" :columns="[
+                        { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
+                        { title: 'Người gửi', dataIndex: ['user', 'name'], key: 'user' },
+                        { title: 'Nội dung', dataIndex: 'content', key: 'content' },
+                        { title: 'Trạng thái', dataIndex: 'status', key: 'status', align: 'center', width: 120 },
+                        { title: 'Thời gian', dataIndex: 'created_at', key: 'time', align: 'center', width: 180 },
+                        { title: 'Thao tác', key: 'action', align: 'center', width: 120 }
+                    ]">
+                        <template #bodyCell="{ column, record }">
+                            <template v-if="column.key === 'status'">
+                                <a-tag :color="record.status === 1 ? 'green' : 'red'">
+                                    {{ record.status === 1 ? 'Hiển thị' : 'Đã ẩn' }}
+                                </a-tag>
+                            </template>
+                            <template v-if="column.key === 'action'">
+                                <a-dropdown :trigger="['click']">
+                                    <a-button type="text" shape="circle" class="action-button"><EllipsisOutlined /></a-button>
+                                    <template #overlay>
+                                        <a-menu>
+                                            <a-menu-item @click="handleToggleCommentStatus(record)">
+                                                {{ record.status === 1 ? 'Ẩn' : 'Hiện' }}
+                                            </a-menu-item>
+                                            <a-menu-item @click="showEditCommentModal(record)">Sửa</a-menu-item>
+                                            <a-menu-item @click="confirmDeleteComment(record.id)" danger>Xóa</a-menu-item>
+                                        </a-menu>
+                                    </template>
+                                </a-dropdown>
+                            </template>
+                        </template>
+                    </a-table>
+                 </div>
+              </a-tab-pane>
+
+              <a-tab-pane key="edit">
+                 <template #tab><EditOutlined /> Sửa bài tập</template>
+                 <div class="tab-content">
+                    <a-form layout="vertical" :model="editForm" @finish="handleEditSubmit" class="form-layout">
+                        <div class="form-grid">
+                          <div class="form-column">
+                            <a-form-item label="Mã bài tập" required><a-input v-model:value="editForm.code" /></a-form-item>
+                            <a-form-item label="Tiêu đề" required><a-input v-model:value="editForm.name" /></a-form-item>
+                          </div>
+                          <div class="form-column">
+                            <a-form-item label="Độ khó" required><a-select v-model:value="editForm.level" :options="difficulties" /></a-form-item>
+                            <a-form-item label="Loại bài tập" required><a-select v-model:value="editForm.type" :options="typeProblems"/></a-form-item>
+                          </div>
+                        </div>
+                         <a-form-item label="Nội dung" required>
+                           <ckeditor v-if="editor" :editor="editor" v-model="editForm.content" :config="config" />
+                         </a-form-item>
+                        <a-button type="primary" html-type="submit">Lưu thay đổi</a-button>
+                    </a-form>
+                 </div>
+              </a-tab-pane>
+
+              <a-tab-pane key="actions">
+                 <template #tab><ToolOutlined /> Thao tác khác</template>
+                 <div class="tab-content">
+                    <h4>Chấm lại bài</h4>
+                    <p>Hành động này sẽ đưa tất cả các bài đã nộp cho bài tập này vào hàng đợi để chấm lại từ đầu.</p>
+                    <a-button type="primary" danger @click="handleRejudge">Chấm lại toàn bộ</a-button>
+                 </div>
+              </a-tab-pane>
+            </a-tabs>
+          </div>
         </div>
         <div v-else class="loading-container">
           <a-spin size="large" />
         </div>
       </a-spin>
     </div>
+    
+    <!-- Edit Comment Modal -->
+    <a-modal v-model:open="isEditCommentModalVisible" title="Sửa bình luận" @ok="handleUpdateComment">
+        <a-textarea v-if="editingComment" v-model:value="editingComment.content" :rows="4" />
+    </a-modal>
   </div>
 </template>
 
 <style scoped>
-.problem-page { background-color: #F5F7FA; min-height: 100vh; }
+.page-container { background-color: #F5F7FA; min-height: 100vh; }
 .page-wrapper { margin-top: 70px; padding: 24px; }
-.problem-layout { display: flex; gap: 24px; max-width: 1600px; margin: 0 auto; align-items: flex-start; }
-.main-content { width: 75%; flex-grow: 1; display: flex; flex-direction: column; gap: 24px; }
-.sidebar { width: 25%; min-width: 300px; flex-shrink: 0; position: sticky; top: 94px; }
+.header-container { max-width: 1400px; margin: 0 auto 24px auto; }
 h2 { font-size: 1.8rem; font-weight: 700; color: #007ACC; text-transform: uppercase; }
 .underline { width: 100%; height: 3px; margin-top: 8px; background: linear-gradient(90deg, #00AFFF, #B3E5FC); border-radius: 2px; }
-.card-style { background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08); border: 1px solid #D9E2EC; padding: 24px; }
-.card-style h3 { font-size: 1.2rem; font-weight: 600; color: #007ACC; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #E8EFF5; }
+.content-card { background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08); border: 1px solid #D9E2EC; max-width: 1400px; margin: 0 auto; }
+.main-tabs :deep(.ant-tabs-nav) { padding: 0 24px; margin-bottom: 0 !important; }
+.tab-content { padding: 24px; }
+.tab-content h4 { font-size: 1.2rem; font-weight: 600; color: #007ACC; margin-bottom: 16px; }
 
 /* === Markdown Content Styling === */
-.problem-description .markdown-content {
-  line-height: 1.7;
-  color: #33475B;
-}
-.problem-description :deep(.markdown-content h1),
-.problem-description :deep(.markdown-content h2),
-.problem-description :deep(.markdown-content h3) {
-  color: #007ACC;
-  margin-top: 1.5em;
-  margin-bottom: 0.5em;
-  border-bottom: 1px solid #E8EFF5;
-  padding-bottom: 0.3em;
-}
-.problem-description :deep(.markdown-content p) { margin-bottom: 1em; }
-.problem-description :deep(.markdown-content strong) { font-weight: 600; color: #1A2B3C; }
-.problem-description :deep(.markdown-content table) {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1.5em 0;
-  border: 1px solid #D9E2EC;
-}
-.problem-description :deep(.markdown-content th),
-.problem-description :deep(.markdown-content td) {
-  border: 1px solid #D9E2EC;
-  padding: 10px 12px;
-  text-align: left;
-}
-.problem-description :deep(.markdown-content th) {
-  background-color: #F0F5FA;
-  font-weight: 600;
-}
-.problem-description :deep(.markdown-content tr:nth-child(even)) {
-  background-color: #f8f9fc;
-}
-/* === End Markdown Styling === */
+.markdown-content { line-height: 1.7; color: #33475B; }
+.markdown-content :deep(h1), .markdown-content :deep(h2), .markdown-content :deep(h3) { color: #007ACC; margin-top: 1.5em; margin-bottom: 0.5em; border-bottom: 1px solid #E8EFF5; padding-bottom: 0.3em; }
+.markdown-content :deep(p) { margin-bottom: 1em; }
+.markdown-content :deep(strong) { font-weight: 600; color: #1A2B3C; }
+.markdown-content :deep(table) { width: 100%; border-collapse: collapse; margin: 1.5em 0; border: 1px solid #D9E2EC; }
+.markdown-content :deep(th), .markdown-content :deep(td) { border: 1px solid #D9E2EC; padding: 10px 12px; text-align: left; }
+.markdown-content :deep(th) { background-color: #F0F5FA; font-weight: 600; }
+.markdown-content :deep(tr:nth-child(even)) { background-color: #f8f9fc; }
 
 .problem-meta { margin-top: 24px; padding-top: 16px; border-top: 1px solid #E8EFF5; display: flex; gap: 24px; font-size: 0.9rem; color: #5a738e; }
-.tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.compiler-container span, .upload-container span { display: block; margin-bottom: 8px; font-weight: 500; color: #33475B; }
-.submit-action-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #E8EFF5; }
-.submit-status { font-weight: 600; color: #5a738e; }
-.submit-status .ant-tag { margin-left: 8px; }
-.submit-action-bar .ant-btn-primary { background: linear-gradient(90deg, #007ACC, #00AFFF); border: none; font-weight: 600; }
-.comment-list { margin-top: 24px; }
-.submission-history .history-list { max-height: 60vh; overflow-y: auto; padding-right: 5px; }
-.history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #E8EFF5; }
-.history-item:last-child { border-bottom: none; }
-.history-info .submission-time { font-size: 0.85rem; color: #888; }
-.history-status { cursor: pointer; }
-.modal-title { font-weight: 600; font-size: 1.2rem; color: #007ACC; }
-.submission-details { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 16px; padding: 12px; background-color: #f8f9fc; border-radius: 8px; }
-.submission-details p { margin: 0; }
-.editor-container { border: 1px solid #d9e2ec; border-radius: 8px; overflow: hidden; }
-.modal-footer { display: flex; justify-content: flex-end; margin-top: 24px; }
-.code-modal :deep(.ant-modal-body) { padding-top: 16px; }
+.loading-container { display: flex; justify-content: center; align-items: center; height: 80vh; }
+
+.form-layout { margin-top: 16px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+
 @media (max-width: 992px) {
-  .problem-layout { flex-direction: column; }
-  .main-content, .sidebar { width: 100%; min-width: unset; }
-  .sidebar { order: 1; margin-top: 24px; }
-  .submission-history { position: static; }
+  .form-grid { grid-template-columns: 1fr; gap: 0; }
 }
-@media (max-width: 576px) {
+@media (max-width: 768px) {
   .page-wrapper { padding: 15px; }
+  .content-card { padding: 0; }
+  .main-tabs { padding: 0; }
+  .tab-content { padding: 15px; }
   h2 { font-size: 1.5rem; }
-  .card-style { padding: 15px; }
-  .tools-grid { grid-template-columns: 1fr; gap: 16px; }
-  .submit-action-bar { flex-direction: column; align-items: stretch; gap: 12px; }
 }
 </style>

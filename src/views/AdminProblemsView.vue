@@ -985,7 +985,7 @@ const navigateToProblem = (questionCode) => {
         message.error("Không có mã bài tập.");
         return;
     }
-    router.push(`/admin/problems/${questionCode}`);
+    router.push(`/problems/${questionCode}`);
 };
 
 </script>
