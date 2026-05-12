@@ -42,6 +42,7 @@ import ICPCRankingView from '@/views/lecturer/ICPCRankingView.vue';
 import ICPCRankingViewStudent from '@/views/ICPCRankingViewStudent.vue';
 import ProblemDetailView from '@/views/ProblemDetailView.vue';
 import AdminSupportView from '@/views/AdminSupportView.vue';
+import AdminUserProfileView from '@/views/AdminUserProfileView.vue';
 
 const router = createRouter({
     history: createWebHistory(
@@ -120,6 +121,11 @@ const router = createRouter({
             path: '/admin/users',
             name: 'admin-home',
             component: AdminUsersView
+        },
+        {
+            path: '/admin/users/:id',
+            name: 'admin-user-profile',
+            component: AdminUserProfileView
         },
         {
             path: '/admin/problems',

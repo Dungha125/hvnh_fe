@@ -128,7 +128,7 @@ const handleLoginStudent = async (studentID) => {
       localStorage.setItem("username", user.username);
       message.info(`Đăng nhập vào tài khoản: ${user.username}`);
       if(user.member_group === 1) {
-        router.push(`/problems`);
+        router.push(`/home`);
       } else {
         router.push(`/lecturer/questions`);
       }

@@ -7,27 +7,22 @@ const router = useRouter();
 const goToHome = () =>
 {
   const user = JSON.parse(localStorage.getItem('user') || 'null');
-  if(user)
-  {
-    if(user && user.member_group === 1)
-    {
-      if(sessionStorage.getItem('contest'))
-      {
-        router.push('/contest');
-        return;
-      }
-      else
-      {
-        router.push('/problems');
-        return;
-      }
-    }
-    else if(user && user.member_group === 2){
-      router.push('/lecturer/questions');
-      return;
-    }
+  if (!user) {
+    router.push('/login');
+    return;
   }
-  router.push('/login');
+
+  if (user.role === 'admin') {
+    router.push('/admin/users');
+    return;
+  }
+
+  if (user.member_group === 2) {
+    router.push('/lecturer/questions');
+    return;
+  }
+
+  router.push('/home');
 };
 </script>
 
