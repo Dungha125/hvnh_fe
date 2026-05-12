@@ -123,6 +123,7 @@ const pagination = computed(() => ({
   total: queryData().length,
   current: current.value,
   pageSize: pageSize.value,
+  size: 'small',
 }));
 
 const genUuid = () => {

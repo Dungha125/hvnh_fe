@@ -150,7 +150,7 @@ const showEditor = async (submissionId) => {
                 <a-table
                   :row-key="genUuid"
                   :data-source="status"
-                  :pagination="{ pageSize: 10 }"
+                  :pagination="{ pageSize: 10, size: 'small' }"
                   :scroll="{ x: 'max-content' }"
                 >
                   <a-table-column title="ID" data-index="id" :width="100">

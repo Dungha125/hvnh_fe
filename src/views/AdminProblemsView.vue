@@ -29,6 +29,7 @@ const confirmPagination = reactive({
   total: 0,
   showSizeChanger: true,
   pageSizeOptions: ['10', '20', '50'],
+  size: 'small',
 });
 const subTopics = ref([]);
 const commentLoading = ref(false);
@@ -313,6 +314,7 @@ const pagination = reactive({
   total: 0,
   showSizeChanger: true,
   pageSizeOptions: ['10', '20', '50', '100'],
+  size: 'small',
 });
 
 const fetchProblems = async (subjectId, page = 1, pageSize = 50, search = '') => {
@@ -1565,7 +1567,7 @@ const navigateToProblem = (questionCode) => {
                 :loading="commentLoading"
                 :row-key="record => record.id"
                 bordered
-                :pagination="{ pageSize: 10 }"
+                :pagination="{ pageSize: 10, size: 'small' }"
               >
                 <template #bodyCell="{ column, record }">
                   <template v-if="column.key === 'user'">

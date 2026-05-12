@@ -40,6 +40,7 @@ const pagination = ref({
   current: 1,
   pageSize: 50,
   total: 0,
+  size: 'small',
 });
 const handleTableChange = (paginationData) => {
   pagination.value.current = paginationData.current;

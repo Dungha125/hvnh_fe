@@ -34,6 +34,7 @@ const pagination = computed(() => ({
   total: problems.value.length,
   current: current.value,
   pageSize: pageSize.value,
+  size: 'small',
 }));
 
 // --- API & DATA FETCHING ---

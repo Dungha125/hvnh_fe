@@ -67,52 +67,82 @@ a:hover {
 /* === ANT DESIGN: TABLE === */
 
 /* General table wrapper styles */
-:where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper {
+:where(.ant-table-wrapper) {
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--c-border);
   box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08);
 }
-:where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table {
+:where(.ant-table-wrapper) .ant-table {
   font-size: 1em; /* Using em for scalability */
   line-height: 1.6 !important;
   text-align: center;
 }
 
 /* Table Header */
-:where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table-thead > tr > th,
-:where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table-thead th.ant-table-column-sort {
+:where(.ant-table-wrapper) .ant-table-thead > tr > th,
+:where(.ant-table-wrapper) .ant-table-thead th.ant-table-column-sort {
   background-color: #f0f5fa !important;
   color: var(--c-heading) !important;
   font-weight: 600;
   text-align: center;
 }
-:where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table-thead th.ant-table-column-has-sorters:hover {
+:where(.ant-table-wrapper) .ant-table-thead th.ant-table-column-has-sorters:hover {
   background-color: #e6f0fa !important;
 }
 
 /* Table Body */
-:where(.css-dev-only-do-not-override-1792ce6).ant-table-wrapper .ant-table-tbody > tr:hover > td {
+:where(.ant-table-wrapper) .ant-table-tbody > tr:hover > td {
    background: rgba(0, 175, 255, 0.05) !important;
+}
+
+/* Balanced density tweaks (keep size=\"middle\" but slightly tighter) */
+:where(.ant-table-wrapper) .ant-table-thead > tr > th {
+  padding: 10px 12px !important;
+}
+:where(.ant-table-wrapper) .ant-table-tbody > tr > td {
+  padding: 8px 12px !important;
+}
+
+/* Pagination: visually smaller & consistent */
+:where(.ant-pagination) {
+  font-size: 13px;
+}
+:where(.ant-pagination) .ant-pagination-item,
+:where(.ant-pagination) .ant-pagination-prev,
+:where(.ant-pagination) .ant-pagination-next,
+:where(.ant-pagination) .ant-pagination-jump-prev,
+:where(.ant-pagination) .ant-pagination-jump-next {
+  min-width: 28px;
+  height: 28px;
+  line-height: 26px;
+}
+
+/* Tabs: balanced nav spacing */
+:where(.ant-tabs) .ant-tabs-nav {
+  margin: 0 0 12px 0;
+}
+:where(.ant-tabs) .ant-tabs-tab {
+  padding: 8px 12px;
 }
 
 
 /* === ANT DESIGN: COLLAPSE === */
 
-:where(.css-dev-only-do-not-override-1792ce6).ant-collapse {
+:where(.ant-collapse) {
   border: 1px solid var(--c-border);
   background-color: var(--c-white);
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 90, 170, 0.08);
 }
 
-:where(.css-dev-only-do-not-override-1792ce6).ant-collapse > .ant-collapse-item > .ant-collapse-header {
+:where(.ant-collapse) > .ant-collapse-item > .ant-collapse-header {
   background-color: var(--c-white) !important;
   font-weight: 600;
   color: var(--c-accent-secondary);
 }
 
-:where(.css-dev-only-do-not-override-1792ce6).ant-collapse .ant-collapse-content {
+:where(.ant-collapse) .ant-collapse-content {
   border-top: 1px solid var(--c-border);
   background-color: #fafcfe;
 }
@@ -128,7 +158,7 @@ a:hover {
   color: var(--c-accent-primary);
 }
 
-:where(.css-dev-only-do-not-override-1792ce6).ant-checkbox-group {
+:where(.ant-checkbox-group) {
   display: flex;
   flex-direction: column;
   gap: 8px; /* Use gap for spacing instead of margin */
@@ -137,7 +167,7 @@ a:hover {
 
 /* === ANT DESIGN: MISCELLANEOUS === */
 
-:where(.css-dev-only-do-not-override-1792ce6).ant-dropdown .ant-dropdown-menu .ant-dropdown-menu-item-selected {
+:where(.ant-dropdown) .ant-dropdown-menu .ant-dropdown-menu-item-selected {
   background-color: rgba(0, 175, 255, 0.1);
   color: var(--c-accent-secondary);
 }

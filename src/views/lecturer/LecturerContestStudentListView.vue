@@ -124,6 +124,7 @@ const pagination = ref({
   current: 1,
   pageSize: 50,
   total: 0,
+  size: 'small',
 });
 const contestDetail = ref({});
 const editStudent = ref({ student_list: "" });

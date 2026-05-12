@@ -31,6 +31,7 @@ const pagination = reactive({
   total: 0,
   showSizeChanger: true,
   pageSizeOptions: ['10', '20', '50', '100'],
+  size: 'small',
 });
 
 // --- DATA FETCHING & LIFECYCLE ---

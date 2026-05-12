@@ -147,6 +147,7 @@ const pagination = computed(() => ({
     pageSize: pageSize.value,
     showSizeChanger: true,
     pageSizeOptions: ['10', '20', '50', '100'],
+    size: 'small',
 }));
 
 const genUuid = () =>

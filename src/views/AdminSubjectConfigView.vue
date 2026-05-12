@@ -28,7 +28,7 @@
               :dataSource="subjects"
               rowKey="code"
               bordered
-              :pagination="{ pageSize: 10 }"
+              :pagination="{ pageSize: 10, size: 'small' }"
               :loading="loading"
               class="subjects-table"
             >
