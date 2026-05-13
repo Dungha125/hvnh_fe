@@ -13,7 +13,6 @@ const router = useRouter();
 const isHover = ref(false);
 const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 const isTeacherLogin = sessionStorage.getItem("teacher_login");
-const publicRanking = sessionStorage.getItem("public_ranking");
 
 
 const switchBackToTeacher = () => {
@@ -115,18 +114,6 @@ const getAvatarName = (name) => {
              @mouseout="removeHoverEvent(event, path='/contest/problems')">
           <img src="../static/img/problem.svg">
           Bài tập
-        </div>
-
-        <div
-        v-if="publicRanking == 1"
-        class="nav-item"
-        :style="styleNavItem('/contest/ranking_contest')"
-        @click="goTo('/contest/ranking_contest')"
-        @mouseover="addHoverEvent($event, '/contest/ranking_contest')"
-        @mouseout="removeHoverEvent($event, '/contest/ranking_contest')"
-      >
-        <img src="../static/img/ranking_icon.svg">
-        Bảng xếp hạng
         </div>
 
         <div class="nav-item"

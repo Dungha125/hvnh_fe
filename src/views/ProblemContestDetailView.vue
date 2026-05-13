@@ -553,8 +553,8 @@ const getResultTag = (resultCode) => {
                 </a-button>
               </a-upload>
 
-              <div class="submit-status-container">
-                <p><strong>Trạng thái:</strong>
+              <div class="submit-status-container" :class="{ 'submit-status-only': Number(contestSubmitType) === 2 }">
+                <p v-if="Number(contestSubmitType) !== 2"><strong>Trạng thái:</strong>
                   <a-tag v-if="result" :color="getResultTag(result).color">{{ getResultTag(result).text.split(' (')[0] }}</a-tag>
                   <span v-else>Chưa nộp</span>
                 </p>
@@ -572,20 +572,24 @@ const getResultTag = (resultCode) => {
           <p style="font-weight: bold; margin-bottom: 15px;">Lịch sử nộp bài</p>
           <a-spin :spinning="isHistoryLoading">
             <div v-if="currentUserSubmissions.length > 0">
-              <div v-for="submission in currentUserSubmissions" :key="submission.id">
-                <div class="submission-item">
+              <template v-for="submission in currentUserSubmissions" :key="submission.id">
+                <div
+                  class="submission-item"
+                  :class="{ 'submission-item-clickable': Number(contestSubmitType) === 2 }"
+                  @click="Number(contestSubmitType) === 2 && showEditor(submission)"
+                >
                   <div>
                     <p class="submission-title">{{ submission.question?.name }}</p>
                     <p class="submission-time">{{ new Date(submission.created_at).toLocaleString('vi-VN') }}</p>
                   </div>
-                  <a @click="showEditor(submission)">
+                  <a v-if="Number(contestSubmitType) !== 2" @click.stop="showEditor(submission)">
                     <a-tag :color="getResultTag(submission.result).color">
                       {{ getResultTag(submission.result).text.split(' (')[0] }}
                     </a-tag>
                   </a>
                 </div>
                 <div class="underline-item"></div>
-              </div>
+              </template>
             </div>
             <div v-else class="no-submission">
               Chưa có bài nộp nào.
@@ -686,6 +690,16 @@ const getResultTag = (resultCode) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+.submit-status-container.submit-status-only {
+  justify-content: flex-end;
+}
+.submission-item-clickable {
+  cursor: pointer;
+}
+.submission-item-clickable:hover {
+  background: rgba(0, 122, 204, 0.06);
+  border-radius: 8px;
 }
 .submission-item {
   display: flex;

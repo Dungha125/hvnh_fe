@@ -218,7 +218,7 @@ const showEditor = async (record) => {
           </div>
         </div>
         <div class="history-layout">
-          <main class="main-content">
+            <main class="main-content" :class="{ 'main-content-full': isCmcHistory }">
             <div class="header-container">
               <h2>Lịch sử nộp bài</h2>
               <div class="underline"></div>
@@ -237,7 +237,7 @@ const showEditor = async (record) => {
                      </template>
                   </a-table-column>
                   <a-table-column title="Thời gian" data-index="date" :width="180" />
-                  <a-table-column title="Kết quả" data-index="result" :width="100">
+                  <a-table-column v-if="!isCmcHistory" title="Kết quả" data-index="result" :width="100">
                      <template #default="{ record }">
                        <a @click="showEditor(record)" style="cursor:pointer">
                          <a-tag v-if="record.result === 'AC'" color="green">AC</a-tag>
@@ -267,7 +267,7 @@ const showEditor = async (record) => {
               </div>
             </div>
           </main>
-          <aside class="sidebar">
+          <aside v-if="!isCmcHistory" class="sidebar">
             <div class="card-style legend-card">
               <h4>Chú giải kết quả</h4>
               <ul>
@@ -296,7 +296,7 @@ const showEditor = async (record) => {
             <p><b>Thời gian nộp bài:</b> {{ dayjs(currentSubmission?.created_at).format('DD/MM/YYYY HH:mm:ss') }}</p>
             <p v-if="currentSubmission?.cmcStatus != null"><b>Trạng thái (CMC):</b> {{ currentSubmission.cmcStatus }}</p>
             <p><b>{{ isCmcHistory ? 'Tệp nộp' : 'Ngôn ngữ' }}:</b> {{ currentSubmission?.compiler?.name }}</p>
-            <p><b>Kết quả:</b>
+            <p v-if="!isCmcHistory"><b>Kết quả:</b>
                 <span v-if="currentSubmission?.result === 'AC'" style="color: #52c41a; font-weight: bold;">{{ currentSubmission?.result }}</span>
                 <span v-else-if="['WA', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'CE'].includes(currentSubmission?.result)" style="color: #d9363e; font-weight: bold;">{{ currentSubmission?.result }}</span>
                 <span v-else-if="currentSubmission?.result === null"><LoadingOutlined/></span>
@@ -367,6 +367,9 @@ const showEditor = async (record) => {
 .main-content {
   width: 75%;
   flex-grow: 1;
+}
+.main-content-full {
+  width: 100%;
 }
 
 .sidebar {
