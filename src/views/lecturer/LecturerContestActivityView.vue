@@ -5,6 +5,7 @@ import axiosInstance from "@/configs/axios.js";
 import LecturerHeader from "@/components/LecturerHeader.vue";
 import { message } from "ant-design-vue";
 import dayjs from "dayjs";
+import { h } from "vue";
 
 const route = useRoute();
 
@@ -20,9 +21,40 @@ const pagination = ref({
   total: 0,
 });
 
+const normalizeActivityInfo = (rawInfo) => {
+  const s = String(rawInfo ?? "").trim();
+  if (!s) return "";
+
+  // Split "YYYY-MM-DD HH:mm:ss ..." repeated blocks into separate lines.
+  // Example:
+  // 2026-05-13 12:01:29 A 2026-05-13 12:01:30 B -> two lines.
+  const re = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/g;
+  const parts = s.split(re).filter(Boolean);
+
+  // If no timestamp pattern, keep original.
+  if (parts.length <= 1) return s;
+
+  const lines = [];
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i];
+    if (!/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}$/.test(p)) continue;
+    const msg = String(parts[i + 1] ?? "").trim();
+    lines.push(msg ? `${p} ${msg}` : p);
+  }
+  return lines.length ? lines.join("\n") : s;
+};
+
 const columns = [
   { title: "STT", dataIndex: "stt", key: "stt", width: 72 },
-  { title: "Thông tin", dataIndex: "info", key: "info", ellipsis: true },
+  {
+    title: "Thông tin",
+    dataIndex: "info",
+    key: "info",
+    className: "lecturer-contest-activity-col-info",
+    ellipsis: false,
+    customRender: ({ text }) =>
+      h("span", { class: "lecturer-contest-activity-info-inner" }, String(text ?? "")),
+  },
   { title: "Tài khoản", dataIndex: "account", key: "account", width: 140 },
   { title: "Địa chỉ IP", dataIndex: "ip", key: "ip", width: 140 },
   { title: "Trình duyệt", dataIndex: "browser", key: "browser", ellipsis: true },
@@ -39,14 +71,15 @@ const mapActivityRow = (raw, index, page, pageSize) => {
   return {
     key: raw.id ?? `${page}-${index}`,
     stt: (page - 1) * pageSize + index + 1,
-    info:
+    info: normalizeActivityInfo(
       raw.message ??
-      raw.info ??
-      raw.action ??
-      raw.description ??
-      raw.content ??
-      raw.detail ??
-      "",
+        raw.info ??
+        raw.action ??
+        raw.description ??
+        raw.content ??
+        raw.detail ??
+        ""
+    ),
     account:
       raw.username ??
       raw.account ??
@@ -180,5 +213,19 @@ watch(
 :deep(.ant-card-head-title) {
   font-weight: 600;
   font-size: 18px;
+}
+
+.lecturer-contest-activity-table :deep(.lecturer-contest-activity-col-info) {
+  white-space: normal !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+.lecturer-contest-activity-table :deep(.lecturer-contest-activity-info-inner) {
+  display: block;
+  max-width: 100%;
+  white-space: pre-line;
 }
 </style>
