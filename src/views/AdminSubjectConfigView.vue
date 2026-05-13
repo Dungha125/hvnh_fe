@@ -87,24 +87,24 @@
           <a-checkbox-group v-model:value="tempSubject.compilers" :options="compilerOptions" :disabled="fetchingCompilers" />
         </a-form-item>
 
-        <a-form-item label="Mô tả">
-          <a-textarea v-model:value="tempSubject.description" placeholder="Mô tả môn học" />
+        <a-form-item label="Giới thiệu / about">
+          <a-textarea v-model:value="tempSubject.about" placeholder="Mô tả môn học" />
         </a-form-item>
 
         <a-form-item label="Tên rút gọn " required>
           <a-input v-model:value="tempSubject.short_name" placeholder="Tên rút gọn" />
         </a-form-item>
 
-        <a-form-item label="Số TC học phí " required>
-          <a-input-number v-model:value="tempSubject.tuition_credits" :min="1" style="width: 100%" />
+        <a-form-item label="Số TC học phí (study_credit)" required>
+          <a-input-number v-model:value="tempSubject.study_credit" :min="0" style="width: 100%" />
         </a-form-item>
 
-        <a-form-item label="Số TC " required>
-          <a-input-number v-model:value="tempSubject.credits" :min="1" style="width: 100%" />
+        <a-form-item label="Số TC (credit)" required>
+          <a-input-number v-model:value="tempSubject.credit" :min="0" style="width: 100%" />
         </a-form-item>
 
         <a-form-item label="Daily AC Limit">
-          <a-input-number v-model:value="tempSubject.daily_ac_limit" :min="1" style="width: 100%" />
+          <a-input-number v-model:value="tempSubject.daily_ac_limit" :min="0" style="width: 100%" />
         </a-form-item>
 
         <a-form-item label="Trạng thái">
@@ -112,10 +112,6 @@
             <a-select-option value="1">Hoạt động</a-select-option>
             <a-select-option value="0">Không hoạt động</a-select-option>
           </a-select>
-        </a-form-item>
-
-        <a-form-item>
-          <a-checkbox v-model:checked="tempSubject.test_per_case">Chấm từng test</a-checkbox>
         </a-form-item>
       </a-form>
     </a-modal>
@@ -195,8 +191,11 @@ const fetchSubjects = async () => {
     console.log('API Response:', res)
     
     if (res.data && res.data.code === 200 && Array.isArray(res.data.data)) {
-      subjects.value = res.data.data
-      console.log('Processed subjects:', subjects.value)
+      subjects.value = res.data.data.map((s) => ({
+        ...s,
+        credits: s.credits ?? s.credit,
+        tuition_credits: s.tuition_credits ?? s.study_credit
+      }))
     } else {
       console.error('Invalid API response format:', res.data)
       message.error('Không thể tải dữ liệu môn học: Định dạng dữ liệu không hợp lệ')
@@ -221,15 +220,32 @@ const showModalAdd = () => {
     status: '1',
     daily_ac_limit: 10,
     compilers: [],
-    test_per_case: false,
-    credits: 3,
-    tuition_credits: 3,
-    short_name: ''
+    credit: 3,
+    study_credit: 3,
+    short_name: '',
+    about: ''
   }
   isModalVisible.value = true
 }
 
 const closeModal = () => isModalVisible.value = false
+
+const buildSubjectApiPayload = (t) => {
+  const compilers = (t.compilers || []).map((c) => parseInt(c, 10)).filter((id) => !Number.isNaN(id))
+  return {
+    name: String(t.name ?? '').trim(),
+    code: String(t.code ?? '').trim(),
+    about: String(t.about ?? '').trim(),
+    short_name: String(t.short_name ?? '').trim(),
+    credit: t.credit === '' || t.credit == null ? '' : Number(t.credit),
+    study_credit: t.study_credit === '' || t.study_credit == null ? '' : Number(t.study_credit),
+    daily_ac_limit: t.daily_ac_limit === '' || t.daily_ac_limit == null ? '' : Number(t.daily_ac_limit),
+    status: t.status === '1' || t.status === 1 ? 1 : 0,
+    display_detail: 1,
+    sec: 1,
+    compilers
+  }
+}
 
 const onSubmit = async () => {
   if (!tempSubject.value.code || !tempSubject.value.name || !tempSubject.value.short_name) {
@@ -242,25 +258,12 @@ const onSubmit = async () => {
     return
   }
 
-  // Create a simplified payload with only the required fields
-  const payload = {
-    code: String(tempSubject.value.code).trim(),
-    name: String(tempSubject.value.name).trim(),
-    short_name: String(tempSubject.value.short_name).trim(),
-    credits: parseInt(tempSubject.value.credits) || 3,
-    tuition_credits: parseInt(tempSubject.value.tuition_credits) || 3,
-    daily_ac_limit: parseInt(tempSubject.value.daily_ac_limit) || 10,
-    status: tempSubject.value.status === '1' ? 1 : 0,
-    test_per_case: tempSubject.value.test_per_case ? 1 : 0,
-    compilers: tempSubject.value.compilers.map(c => parseInt(c))
-  }
-  
-  // Only add description if it exists
-  if (tempSubject.value.description) {
-    payload.description = String(tempSubject.value.description).trim()
+  if (tempSubject.value.credit === '' || tempSubject.value.credit == null || tempSubject.value.study_credit === '' || tempSubject.value.study_credit == null) {
+    message.warning('Vui lòng nhập số tín chỉ (credit) và số TC học phí (study_credit)!')
+    return
   }
 
-  console.log('🔥 Payload gửi lên:', JSON.stringify(payload, null, 2))
+  const payload = buildSubjectApiPayload(tempSubject.value)
   loading.value = true
 
   try {
@@ -301,17 +304,17 @@ const onEdit = (record) => {
   isEditing.value = true
   editingCode = record.code
   
-  // Create a clean copy of the record with only the fields we need
+  const credit = record.credit ?? record.credits
+  const studyCredit = record.study_credit ?? record.tuition_credits
   tempSubject.value = {
     code: record.code,
     name: record.name,
-    short_name: record.short_name,
-    description: record.description || '',
-    credits: parseInt(record.credits) || 3,
-    tuition_credits: parseInt(record.tuition_credits) || 3,
-    daily_ac_limit: parseInt(record.daily_ac_limit) || 10,
-    status: record.status === 1 || record.status === '1' ? '1' : '0',
-    test_per_case: record.test_per_case === 1 || record.test_per_case === '1'
+    short_name: record.short_name ?? '',
+    about: record.about ?? record.description ?? '',
+    credit: credit !== undefined && credit !== '' ? parseInt(credit, 10) : 3,
+    study_credit: studyCredit !== undefined && studyCredit !== '' ? parseInt(studyCredit, 10) : 3,
+    daily_ac_limit: record.daily_ac_limit != null && record.daily_ac_limit !== '' ? parseInt(record.daily_ac_limit, 10) : 10,
+    status: record.status === 1 || record.status === '1' ? '1' : '0'
   }
   
   // Handle compilers field - convert to array of IDs

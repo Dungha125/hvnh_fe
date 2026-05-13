@@ -214,8 +214,8 @@ const onSubmit = async () => {
     // Make sure subject_id and semester_id are properly set as numbers
     const payload = {
       name: tempClass.value.name,
-      subject_id: tempClass.value.subject_id || '',
-      semester_id: tempClass.value.semester_id || '',
+      subject: tempClass.value.subject_id || '',
+      semester: tempClass.value.semester_id || '',
       status: tempClass.value.status === 'Hoạt động' ? 1 : 0,
       notice: tempClass.value.notice || '',
       about: tempClass.value.about || ''
@@ -268,8 +268,8 @@ const onEdit = async (record) => {
   if (classDetail) {
     tempClass.value = {
       name: classDetail.name || record.name,
-      subject_id: classDetail.subject_id || record.subject_id,
-      semester_id: classDetail.semester_id || record.semester_id,
+      subject: classDetail.subject_id || record.subject_id,
+      semester: classDetail.semester_id || record.semester_id,
       status: classDetail.status === 1 ? 'Hoạt động' : 'Không hoạt động',
       notice: classDetail.notice || record.notice || '',
       about: classDetail.about || ''

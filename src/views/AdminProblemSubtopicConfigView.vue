@@ -2,7 +2,7 @@
     <div class="sub-topic-container">
       <div class="header">
         <h2>Chủ đề con bài tập</h2>
-        <a-button type="primary" class="add-button" @click="showModal = true">Thêm mới</a-button>
+        <a-button type="primary" class="add-button" @click="openAddModal">Thêm mới</a-button>
       </div>
   
       <a-table :columns="columns" :dataSource="subTopics" rowKey="code" bordered :pagination="false">
@@ -39,8 +39,22 @@
             <a-input v-model:value="form.name" />
           </a-form-item>
           <a-form-item label="Môn học *" required>
-            <a-select v-model:value="form.subject">
-              <a-select-option v-for="s in subjects" :key="s" :value="s">{{ s }}</a-select-option>
+            <a-select
+              v-model:value="form.subject_id"
+              placeholder="Chọn môn học"
+              allow-clear
+              show-search
+              option-filter-prop="label"
+              style="width: 100%"
+            >
+              <a-select-option
+                v-for="s in subjects"
+                :key="s.id"
+                :value="s.id"
+                :label="s.name"
+              >
+                {{ s.name }}
+              </a-select-option>
             </a-select>
           </a-form-item>
           <a-form-item label="Mô tả">
@@ -146,7 +160,7 @@ const onSubmit = async () => {
   const payload = {
     code: form.value.code,
     name: form.value.name,
-    subject_id: form.value.subject_id,
+    subject: form.value.subject_id,
     description: form.value.description,
     order: form.value.order,
     status: form.value.status === 'Hoạt động' ? 1 : 0
@@ -203,11 +217,16 @@ const onEdit = (record) => {
   form.value = {
     code: record.code,
     name: record.name,
-    subject_id: record.subject_id,
+    subject: record.subject_id ?? null,
     description: record.description,
     order: record.order,
     status: record.status
   }
+  showModal.value = true
+}
+
+const openAddModal = () => {
+  resetForm()
   showModal.value = true
 }
 

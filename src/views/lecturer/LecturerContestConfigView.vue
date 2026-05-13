@@ -276,6 +276,8 @@ const handleAction = (key, record) => {
     router.push(`${route.path}/${record.id}/teacher_list`);
   } else if (key === "questions") {
     router.push(`${route.path}/${record.id}/list_question`);
+  } else if (key === "activity") {
+    router.push(`${route.path}/${record.id}/activity`);
   }
 };
 const isModalVisible = ref(false);

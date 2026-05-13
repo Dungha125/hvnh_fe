@@ -1,13 +1,21 @@
 <script setup>
-import {onBeforeMount, ref} from 'vue'
+import {onBeforeMount, ref, computed} from 'vue'
 import {useRoute} from 'vue-router'
 import axiosInstance from "@/configs/axios.js";
 import LecturerHeader from "@/components/LecturerHeader.vue";
+import AdminHeader from "@/components/AdminHeader.vue";
+import { PlusOutlined } from "@ant-design/icons-vue";
+import { message } from "ant-design-vue";
+
+const route = useRoute();
+const isAdminClassRoute = computed(() => route.path.startsWith("/admin/class/"));
 
 const lecturers = ref([]);
-const route = useRoute();
 const isModalVisible = ref(false);
 const editLecturer = ref({accountList: ""});
+const addModalVisible = ref(false);
+const newLecturerAccounts = ref("");
+const addSubmitting = ref(false);
 
 const columns = [
   {title: "STT", dataIndex: "id", key: "id"},
@@ -51,11 +59,56 @@ const showEditModal = () => {
   isModalVisible.value = true;
 };
 
+const showAddLecturerModal = () => {
+  newLecturerAccounts.value = "";
+  addModalVisible.value = true;
+};
+
+const handleAddLecturersSubmit = async () => {
+  const incoming = newLecturerAccounts.value
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (incoming.length === 0) {
+    message.warning("Vui lòng nhập ít nhất một tên đăng nhập.");
+    return Promise.reject(new Error("validation"));
+  }
+  const existing = lecturers.value.map((l) => l.account);
+  const username_list = [...existing];
+  for (const u of incoming) {
+    if (!username_list.includes(u)) username_list.push(u);
+  }
+  addSubmitting.value = true;
+  try {
+    await axiosInstance.post(`/courses/${route.params.id}/sync_teacher`, {
+      username_list,
+    });
+    message.success("Đã cập nhật danh sách giảng viên.");
+    addModalVisible.value = false;
+    await fetchLecturers(pagination.value.current);
+  } catch (error) {
+    console.error(error);
+    message.error(
+      error.response?.data?.message || "Không thêm được giảng viên. Kiểm tra tài khoản hoặc quyền API."
+    );
+    throw error;
+  } finally {
+    addSubmitting.value = false;
+  }
+};
+
 </script>
 
 <template>
-  <LecturerHeader/>
+  <AdminHeader v-if="isAdminClassRoute" />
+  <LecturerHeader v-else />
   <a-card title="Giảng viên" style="width: 100%; margin: auto; padding-top: 70px">
+    <template v-if="isAdminClassRoute" #extra>
+      <a-button type="primary" @click="showAddLecturerModal">
+        <template #icon><PlusOutlined /></template>
+        Thêm giảng viên
+      </a-button>
+    </template>
     <a-table
         :data-source="lecturers"
         :columns="columns"
@@ -74,10 +127,33 @@ const showEditModal = () => {
     </a-table>
   </a-card>
 
+  <a-modal
+    v-model:open="addModalVisible"
+    title="Thêm giảng viên"
+    :confirm-loading="addSubmitting"
+    ok-text="Lưu"
+    cancel-text="Hủy"
+    @ok="handleAddLecturersSubmit"
+  >
+    <p class="add-modal-hint">
+      Nhập tên đăng nhập cần thêm, mỗi dòng một tài khoản. Các giảng viên hiện tại được giữ nguyên.
+    </p>
+    <a-textarea
+      v-model:value="newLecturerAccounts"
+      :rows="8"
+      placeholder="Mỗi dòng một tên đăng nhập"
+    />
+  </a-modal>
 
 </template>
 
 <style scoped>
+.add-modal-hint {
+  margin: 0 0 12px;
+  color: #64748b;
+  font-size: 14px;
+}
+
 /* Card chỉnh gọn, đổ bóng */
 .ant-card {
   max-width: 900px;

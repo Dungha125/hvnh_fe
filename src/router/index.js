@@ -24,6 +24,7 @@ import LecturerConfigView from "@/views/lecturer/LecturerConfigView.vue";
 import LecturerContestStudentListView from "@/views/lecturer/LecturerContestStudentListView.vue";
 import LecturerContestTeacherListView from "@/views/lecturer/LecturerContestTeacherListView.vue";
 import LecturerContestQuestionListView from "@/views/lecturer/LecturerContestQuestionListView.vue";
+import LecturerContestActivityView from "@/views/lecturer/LecturerContestActivityView.vue";
 import ContestViewStudent from '@/views/lecturer/ContestViewStudent.vue';
 import ProblemContestViewStudent from '@/views/lecturer/ProblemContestViewStudent.vue';
 import HistoryContestViewStudent from '@/views/lecturer/HistoryContestViewStudent.vue';
@@ -168,6 +169,16 @@ const router = createRouter({
             component: AdminSupportView
         },
         {
+            path: '/admin/class/:id/student_list',
+            name: 'admin-class-student_list',
+            component: LecturerClassStudentList
+        },
+        {
+            path: '/admin/class/:id/teacher_list',
+            name: 'admin-class-teacher_list',
+            component: LecturerClassTeacherListView
+        },
+        {
             path: '/lecturer/questions',
             name: 'lecturer-questions',
             component: LecturerProblemsView
@@ -216,6 +227,11 @@ const router = createRouter({
             path: '/lecturer/settings/:id/list_question',
             name: 'lecturer-question_list',
             component: LecturerContestQuestionListView
+        },
+        {
+            path: '/lecturer/settings/:id/activity',
+            name: 'lecturer-contest-activity',
+            component: LecturerContestActivityView
         },
         {
             path: '/lecturer/contest',

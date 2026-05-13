@@ -48,11 +48,11 @@ const tabs = ref([
     label: 'Thêm nhiều người dùng',
     title: 'Thêm nhiều người dùng',
   },
-  // {
-  //     key: 'activities',
-  //     label: 'Hoạt động',
-  //     title: 'Hoạt động',
-  // }
+  {
+    key: 'activities',
+    label: 'Hoạt động',
+    title: 'Hoạt động',
+  },
 ]);
 
 const newUser = ref({
@@ -424,6 +424,160 @@ const handleViewUserProfile = async (record) => {
   }
 };
 
+const activityRows = ref([]);
+const activityLoading = ref(false);
+const activitySearch = ref('');
+const activityUsername = ref('');
+const activityContestId = ref('');
+const activityWithTrashed = ref(false);
+const activityPagination = ref({
+  current: 1,
+  pageSize: 20,
+  total: 0,
+  showSizeChanger: true,
+  pageSizeOptions: ['10', '20', '50', '100'],
+  size: 'small',
+});
+
+const activityColumns = [
+  { title: 'STT', dataIndex: 'stt', key: 'stt', width: 64 },
+  { title: 'Thông tin', dataIndex: 'info', key: 'info', ellipsis: true },
+  { title: 'Tài khoản', dataIndex: 'account', key: 'account', width: 140 },
+  { title: 'Địa chỉ IP', dataIndex: 'ip', key: 'ip', width: 130 },
+  {
+    title: 'Trình duyệt',
+    dataIndex: 'browser',
+    key: 'browser',
+    className: 'admin-users-activity-col-ua',
+    ellipsis: false,
+    width: 320,
+    customRender: ({ text }) =>
+      h('span', { class: 'admin-users-activity-ua-inner' }, String(text ?? '')),
+  },
+  { title: 'Thời gian', dataIndex: 'time', key: 'time', width: 170 },
+];
+
+/** created_at API dạng UTC (…Z); hiển thị theo Asia/Ho_Chi_Minh */
+const formatActivityTime = (value) => {
+  if (value == null || value === '') return '';
+  const str = String(value).trim();
+  const hasTz = str.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(str);
+  let d;
+  if (hasTz || str.includes('T')) {
+    d = new Date(str);
+  } else {
+    return str.length >= 19 ? str.slice(0, 19) : str;
+  }
+  if (Number.isNaN(d.getTime())) return str.replace('T', ' ').slice(0, 19);
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(d);
+  const get = (type) => parts.find((p) => p.type === type)?.value ?? '';
+  return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
+};
+
+const mapActivityItem = (raw, index, page, pageSize) => {
+  const props =
+    raw.properties && typeof raw.properties === 'object' && !Array.isArray(raw.properties)
+      ? raw.properties
+      : {};
+  const t = raw.created_at ?? raw.time ?? raw.logged_at ?? raw.timestamp ?? '';
+  return {
+    key: raw.id ?? `act-${page}-${index}`,
+    stt: (page - 1) * pageSize + index + 1,
+    info:
+      raw.description ??
+      raw.message ??
+      raw.info ??
+      raw.action ??
+      raw.content ??
+      raw.detail ??
+      '',
+    account:
+      raw.causer?.username ??
+      raw.username ??
+      raw.account ??
+      raw.user?.username ??
+      '',
+    ip: props.ip ?? raw.ip ?? raw.ip_address ?? raw.remote_addr ?? '',
+    browser: props.user_agent ?? raw.user_agent ?? raw.browser ?? raw.agent ?? '',
+    time: formatActivityTime(t),
+  };
+};
+
+const parseActivityList = (root) => {
+  if (Array.isArray(root?.data)) return root.data;
+  if (root?.data?.data && Array.isArray(root.data.data)) return root.data.data;
+  return [];
+};
+
+const fetchActivityLog = async (page = 1) => {
+  activityLoading.value = true;
+  try {
+    const params = {
+      page,
+      per_page: activityPagination.value.pageSize,
+    };
+    const q = activitySearch.value?.trim();
+    if (q) params.s = q;
+    const un = activityUsername.value?.trim();
+    if (un) params.username = un;
+    const cid = activityContestId.value?.toString().trim();
+    if (cid) params.contest_id = cid;
+    if (activityWithTrashed.value) params.with_trashed = 1;
+
+    const response = await axios.get('/users/activity', { params });
+    const root = response.data || {};
+    const list = parseActivityList(root);
+    const currentPage = Number(root.current_page) || page;
+    const perPage = Number(root.per_page) || activityPagination.value.pageSize;
+    const total = Number(root.total);
+    const p = Number.isFinite(currentPage) ? currentPage : page;
+    const ps = Number.isFinite(perPage) && perPage > 0 ? perPage : activityPagination.value.pageSize;
+
+    activityRows.value = list.map((item, index) => mapActivityItem(item, index, p, ps));
+    activityPagination.value.current = p;
+    activityPagination.value.pageSize = ps;
+    activityPagination.value.total = Number.isFinite(total) ? total : list.length;
+  } catch (error) {
+    console.error('Lỗi khi tải hoạt động:', error);
+    message.error(error.response?.data?.message || 'Không tải được nhật ký hoạt động');
+    activityRows.value = [];
+    activityPagination.value.total = 0;
+  } finally {
+    activityLoading.value = false;
+  }
+};
+
+const onActivitySearch = () => {
+  activityPagination.value.current = 1;
+  fetchActivityLog(1);
+};
+
+const handleActivityTableChange = (pag) => {
+  const p = pag && typeof pag === 'object' ? pag : {};
+  const next = typeof p.current === 'number' ? p.current : activityPagination.value.current;
+  const nextSize =
+    typeof p.pageSize === 'number' ? p.pageSize : activityPagination.value.pageSize;
+  const sizeChanged = nextSize !== activityPagination.value.pageSize;
+  activityPagination.value.pageSize = nextSize;
+  activityPagination.value.current = sizeChanged ? 1 : next;
+  fetchActivityLog(activityPagination.value.current);
+};
+
+watch(currentTab, (keys) => {
+  if (keys[0] === 'activities') {
+    fetchActivityLog(activityPagination.value.current);
+  }
+});
+
 </script>
 
 <template>
@@ -752,6 +906,44 @@ const handleViewUserProfile = async (record) => {
                 </a-form>
               </div>
 
+              <div v-if="currentTab[0] === 'activities'" class="user-list-container">
+                <p style="margin-top: 10px; font-size: 110%; font-weight: bold; margin-bottom: 12px">
+                  Nhật ký hoạt động người dùng:</p>
+                <a-space wrap style="margin-bottom: 16px" :size="12">
+                  <a-input-search
+                    v-model:value="activitySearch"
+                    placeholder="Tìm theo hoạt động (s)..."
+                    style="width: 260px"
+                    allow-clear
+                    enter-button
+                    @search="onActivitySearch"
+                  />
+                  <a-input
+                    v-model:value="activityUsername"
+                    placeholder="Tài khoản (username, tuỳ chọn)"
+                    style="width: 220px"
+                    allow-clear
+                  />
+                  <a-input
+                    v-model:value="activityContestId"
+                    placeholder="Contest ID (tuỳ chọn)"
+                    style="width: 160px"
+                    allow-clear
+                  />
+                  <a-checkbox v-model:checked="activityWithTrashed">Kèm bản ghi đã xóa</a-checkbox>
+                  <a-button type="primary" @click="onActivitySearch">Lọc</a-button>
+                </a-space>
+                <a-table
+                  class="admin-users-activity-table"
+                  :columns="activityColumns"
+                  :data-source="activityRows"
+                  :row-key="(r) => r.key"
+                  :pagination="activityPagination"
+                  :loading="activityLoading"
+                  :scroll="{ x: 1100 }"
+                  @change="handleActivityTableChange"
+                />
+              </div>
 
             </div>
           </div>
@@ -853,6 +1045,19 @@ a-button {
   background-color: #fff;
   border-radius: 10px;
   margin-bottom: 10px;
+}
+
+.admin-users-activity-table :deep(.admin-users-activity-col-ua) {
+  white-space: normal !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+.admin-users-activity-table :deep(.admin-users-activity-ua-inner) {
+  display: block;
+  max-width: 100%;
 }
 
 </style>

@@ -1,5 +1,6 @@
 <template>
-  <LecturerHeader />
+  <AdminHeader v-if="isAdminClassRoute" />
+  <LecturerHeader v-else />
   <a-card
       title="Danh sách sinh viên"
       style="width: 100%; margin: auto; padding-top: 70px"
@@ -17,15 +18,20 @@
       >Import</a-button
       >
       <a-button
+          v-if="isAdminClassRoute"
+          type="primary"
+          @click="showEditModal"
+      >Thêm / cập nhật sinh viên</a-button>
+      <a-button
+          v-else
           @click="showEditModal"
           style="background-color: #a7453c; color: white"
-      >Sửa</a-button
-      >
+      >Sửa</a-button>
     </div>
     <a-table
         :dataSource="studentList"
         :columns="columns"
-        :rowKey="(record) => record.id"
+        :rowKey="(record) => record.user_id"
         :pagination="pagination"
         @change="handleTableChange"
     >
@@ -70,7 +76,7 @@
   </a-card>
   <a-modal
       v-model:open="isModalVisible"
-      title="Chỉnh sửa danh sách sinh viên"
+      :title="isCourseStudentRoute ? 'Danh sách sinh viên lớp (mỗi dòng một tài khoản)' : 'Chỉnh sửa danh sách sinh viên'"
       style="min-width: 1000px"
   >
     <a-form layout="vertical">
@@ -95,14 +101,22 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount } from "vue";
+import { ref, onBeforeMount, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { message } from "ant-design-vue";
 import axiosInstance from "@/configs/axios.js";
 import LecturerHeader from "@/components/LecturerHeader.vue";
+import AdminHeader from "@/components/AdminHeader.vue";
 
 const route = useRoute();
+const isAdminClassRoute = computed(() => route.path.startsWith("/admin/class/"));
+/** Danh sách SV theo lớp (course), không phải theo cuộc thi (contest) */
+const isCourseStudentRoute = computed(
+  () => route.path.includes("/class/") && route.path.includes("student_list")
+);
 const router = useRouter();
+/** Toàn bộ SV lớp (API luôn trả full list, không phân trang server) */
+const courseStudentsAll = ref([]);
 const studentList = ref([]);
 const pagination = ref({
   current: 1,
@@ -113,47 +127,54 @@ const contestDetail = ref({});
 const editStudent = ref({ student_list: "" });
 const isModalVisible = ref(false);
 const showEditModal = () => {
-  console.log(studentList.value);
-  editStudent.value.student_list = studentList.value
+  editStudent.value.student_list = courseStudentsAll.value
       .map((student) => student.account)
       .join("\n");
   isModalVisible.value = true;
 };
 onBeforeMount(async () => {
-  await fetchContestDetail();
+  if (!isCourseStudentRoute.value) {
+    await fetchContestDetail();
+  }
   await fetchStudentList();
 });
+
+watch(
+  () => route.params.id,
+  () => {
+    if (isCourseStudentRoute.value) {
+      pagination.value.current = 1;
+      fetchStudentList();
+    }
+  }
+);
 const handleUpdate = async () => {
   try {
-    // Khởi tạo payload
-    const payload = { username_list: [] };
-
-    // Tách danh sách tài khoản (mỗi dòng là một username)
     const accountList = editStudent.value.student_list
         .split("\n")
         .map((acc) => acc.trim())
         .filter((acc) => acc);
 
-    console.log("Danh sách tài khoản:", accountList);
-
-    for (let account of accountList) {
-      payload.username_list.push(account);
-    }
-
-    console.log("Payload gửi đi:", payload);
-
-    if (payload.username_list.length === 0) {
+    if (accountList.length === 0) {
       message.warning("Không có tài khoản hợp lệ để cập nhật!");
       return;
     }
 
-    await axiosInstance.post(
-        `contests/${route.params.id}/sync_student`,
-        payload
-    );
+    const syncPath = isCourseStudentRoute.value
+      ? `/courses/${route.params.id}/sync_student`
+      : `/contests/${route.params.id}/sync_student`;
+
+    const payload = isCourseStudentRoute.value
+      ? {
+          username_list: accountList,
+          practice_group: accountList.map(() => ""),
+        }
+      : { username_list: accountList };
+
+    await axiosInstance.post(syncPath, payload);
     message.success("Cập nhật thành công!");
     isModalVisible.value = false;
-    await fetchStudentList();
+    await fetchStudentList({ resetPage: true });
   } catch (error) {
     console.error(error);
     message.error("Cập nhật thất bại!");
@@ -161,7 +182,7 @@ const handleUpdate = async () => {
 };
 
 const columns = [
-  { title: "STT", dataIndex: "id", key: "id" },
+  { title: "STT", dataIndex: "stt", key: "stt" },
   { title: "Tài khoản", dataIndex: "account", key: "account" },
   { title: "Họ", dataIndex: "last_name", key: "last_name" },
   { title: "Tên", dataIndex: "first_name", key: "first_name" },
@@ -171,44 +192,99 @@ const columns = [
   { title: "Thao tác", dataIndex: "actions", key: "actions" },
 ];
 
-const fetchStudentList = async (page = 1) => {
+const mapCourseStudent = (student) => ({
+  user_id: student.id,
+  account: student.username,
+  last_name: student.last_name,
+  first_name: student.first_name,
+  room: student.room || "",
+  ip: student.ip || "",
+  computer: student.computer || "",
+  exam: student.exam || "",
+  solved: student.pivot?.solved ?? 0,
+  tried: student.pivot?.tried ?? 0,
+  submitted: student.pivot?.submitted ?? 0,
+});
+
+const parseStudentListPayload = (root) => {
+  const inner = root.data && !Array.isArray(root.data) ? root.data : null;
+  if (Array.isArray(root.data)) return root.data;
+  if (inner && Array.isArray(inner.data)) return inner.data;
+  return [];
+};
+
+/** Cắt trang trên FE từ courseStudentsAll */
+const applyCourseStudentPage = () => {
+  const all = courseStudentsAll.value;
+  const pageSize = pagination.value.pageSize;
+  let current = pagination.value.current;
+  pagination.value.total = all.length;
+  const maxPage = Math.max(1, Math.ceil(all.length / pageSize) || 1);
+  if (current > maxPage) {
+    current = maxPage;
+    pagination.value.current = current;
+  }
+  const start = (current - 1) * pageSize;
+  const slice = all.slice(start, start + pageSize);
+  studentList.value = slice.map((row, index) => ({
+    ...row,
+    stt: start + index + 1,
+  }));
+};
+
+/**
+ * Tải full danh sách sinh viên lớp (backend bỏ qua page/per_page).
+ * @param {object} opts
+ * @param {boolean} [opts.resetPage] — về trang 1 sau khi load (sau sync/xóa)
+ */
+const fetchStudentList = async (opts = {}) => {
+  const resetPage = typeof opts === "boolean" ? opts : opts?.resetPage === true;
+  if (!isCourseStudentRoute.value) {
+    await fetchStudentListContestLegacy();
+    return;
+  }
   try {
     const response = await axiosInstance.get(
-        `/courses/${route.params.id}/student_list`,
-        {
-          params: {
-            page: page,
-            limit: pagination.value.pageSize,
-          },
-        }
+      `/courses/${route.params.id}/student_list`
     );
-
-    if (response.data && response.data.data) {
-      studentList.value = response.data.data.map((student, index) => ({
-        id: (page - 1) * pagination.value.pageSize + (index + 1),
-        user_id: student.id,
-        account: student.username,
-        last_name: student.last_name,
-        first_name: student.first_name,
-        room: student.room || "",
-        ip: student.ip || "",
-        computer: student.computer || "",
-        exam: student.exam || "",
-        solved: student.pivot.solved,
-        tried: student.pivot.tried,
-        submitted: student.pivot.submitted || 0,
-      }));
-
-      pagination.value.total = response.data.total || 0;
-    }
+    const root = response.data || {};
+    const rows = parseStudentListPayload(root);
+    courseStudentsAll.value = rows.map(mapCourseStudent);
+    if (resetPage) pagination.value.current = 1;
+    applyCourseStudentPage();
   } catch (error) {
     console.error(error);
   }
 };
 
-const handleTableChange = (paginationData) => {
-  pagination.value.current = paginationData.current;
-  fetchStudentList(paginationData.current);
+/** Giữ luồng cũ nếu không phải trang lớp (hiện tại ít dùng) */
+const fetchStudentListContestLegacy = async () => {
+  try {
+    const response = await axiosInstance.get(
+      `/courses/${route.params.id}/student_list`
+    );
+    const root = response.data || {};
+    const rows = parseStudentListPayload(root);
+    courseStudentsAll.value = rows.map(mapCourseStudent);
+    pagination.value.current = 1;
+    applyCourseStudentPage();
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const handleTableChange = (pag, _filters, _sorter) => {
+  const p = pag && typeof pag === "object" ? pag : {};
+  const nextCurrent = typeof p.current === "number" ? p.current : pagination.value.current;
+  const nextPageSize = typeof p.pageSize === "number" ? p.pageSize : pagination.value.pageSize;
+  const pageSizeChanged = nextPageSize !== pagination.value.pageSize;
+  pagination.value.pageSize = nextPageSize;
+  pagination.value.current = pageSizeChanged ? 1 : nextCurrent;
+  if (isCourseStudentRoute.value) {
+    applyCourseStudentPage();
+  } else {
+    fetchStudentListContestLegacy();
+  }
 };
 
 // Xử lý các thao tác trong dropdown
@@ -250,7 +326,7 @@ const handleDeleteStudent = async (studentID) => {
     const response = await axiosInstance.get(`/courses/${route.params.id}/delete_student/${studentID}`);
     if (response.status === 200) {
       message.success("Xóa sinh viên thành công!");
-      await fetchStudentList();
+      await fetchStudentList({ resetPage: false });
     }
   } catch (error) {
     console.error(error);
