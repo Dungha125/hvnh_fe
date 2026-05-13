@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watchEffect, createVNode } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import axios from "@/configs/axios.js";
-import { message, Modal } from "ant-design-vue";
+import axiosInstance from "@/configs/axios.js";
+import axios from "axios";
+import { message } from "ant-design-vue";
 import { LoadingOutlined, ExclamationCircleOutlined, FieldTimeOutlined, UserOutlined } from "@ant-design/icons-vue";
 import HeaderContest from '@/components/HeaderContest.vue';
 import MonacoEditor from 'monaco-editor-vue3';
@@ -10,6 +11,7 @@ import dayjs from "dayjs";
 
 // --- STATE MANAGEMENT ---
 const isLoading = ref(true);
+const route = useRoute();
 const router = useRouter();
 const status = ref([]);
 const countdown = ref('');
@@ -19,6 +21,7 @@ let countdownInterval = null;
 const isOpenCodeEditor = ref(false);
 const currentSubmission = ref(null);
 const submittedCode = ref('');
+const isCmcHistory = ref(false);
 
 const editorOptions = {
   fontSize: 14,
@@ -28,34 +31,86 @@ const editorOptions = {
 };
 
 // --- DATA FETCHING ---
-onMounted(async () => {
+async function loadContestHistory() {
   const contest_id = sessionStorage.getItem('contest_id');
   const contest_start_time = sessionStorage.getItem('start_time');
+  isCmcHistory.value = Number(sessionStorage.getItem('submit_type')) === 2;
 
   try {
-    const response = await axios.get(`solutions?username=${currentUser.username}&contest_id=${contest_id}`);
-    if (response.status === 200 && response.data?.code === 200) {
-      const filteredStatusResponse = response.data.data.filter(sts => 
-        new Date(sts.created_at) >= new Date(contest_start_time)
-      );
+    if (isCmcHistory.value) {
+      const token = localStorage.getItem('access_token');
+      const questionFromQuery =
+        typeof route.query.question === "string" && route.query.question.trim()
+          ? route.query.question.trim()
+          : null;
+      const questionFromSession = sessionStorage.getItem("contest_question_code");
+      const question =
+        questionFromQuery || questionFromSession || undefined;
 
-      status.value = filteredStatusResponse.map(sts => {
-        let runTime = sts.run_time ? `${sts.run_time.toFixed(2)}s` : '';
-        let createdDate = dayjs(sts.created_at).format('DD/MM/YYYY HH:mm:ss');
-        let username = `${sts.user.first_name} ${sts.user.last_name} (${sts.user.username})`;
-        
-        return {
-          id: sts.id,
-          date: createdDate,
-          account: username,
-          result: sts.result,
-          problem: `${sts.question.code} - ${sts.question.name}`,
-          time: runTime,
-          memory: sts.memory ? `${sts.memory}Kb` : '',
-          compiler: sts.compiler.code,
-          code: sts.question.code,
-        };
+      const params = {
+        contest_id,
+        username: currentUser.username,
+      };
+      if (question) {
+        params.question = question;
+      }
+
+      const res = await axios.get('https://cmc.tiennv.com/api/submissions', {
+        params,
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Accept: 'application/json',
+        },
       });
+      const rows = Array.isArray(res.data?.data) ? res.data.data : [];
+      const filtered = rows.filter(
+        (row) => new Date(row.created_at) >= new Date(contest_start_time)
+      );
+      status.value = filtered.map((row, i) => ({
+        id: row.id,
+        displayIndex: i + 1,
+        date: dayjs(row.created_at).format('DD/MM/YYYY HH:mm:ss'),
+        account: `${row.user.first_name} ${row.user.last_name} (${row.user.username})`,
+        result: row.result,
+        problem: `${row.question.code} - ${row.question.name}`,
+        time: '',
+        memory: '',
+        compiler: '—',
+        fileName: row.file_name || '—',
+        cmcStatus: row.status,
+        questionCode: row.question.code,
+        questionName: row.question.name,
+        created_at_raw: row.created_at,
+        code: row.question.code,
+      }));
+    } else {
+      const response = await axiosInstance.get(
+        `solutions?username=${currentUser.username}&contest_id=${contest_id}`
+      );
+      if (response.status === 200 && response.data?.code === 200) {
+        const filteredStatusResponse = response.data.data.filter(
+          (sts) => new Date(sts.created_at) >= new Date(contest_start_time)
+        );
+
+        status.value = filteredStatusResponse.map((sts, i) => {
+          let runTime = sts.run_time ? `${sts.run_time.toFixed(2)}s` : '';
+          let createdDate = dayjs(sts.created_at).format('DD/MM/YYYY HH:mm:ss');
+          let username = `${sts.user.first_name} ${sts.user.last_name} (${sts.user.username})`;
+
+          return {
+            id: sts.id,
+            displayIndex: i + 1,
+            date: createdDate,
+            account: username,
+            result: sts.result,
+            problem: `${sts.question.code} - ${sts.question.name}`,
+            time: runTime,
+            memory: sts.memory ? `${sts.memory}Kb` : '',
+            compiler: sts.compiler.code,
+            code: sts.question.code,
+          };
+        });
+      }
     }
   } catch (error) {
     message.error('Lỗi khi tải lịch sử nộp bài!');
@@ -63,6 +118,10 @@ onMounted(async () => {
   } finally {
     isLoading.value = false;
   }
+}
+
+onMounted(async () => {
+  await loadContestHistory();
 
   // Start countdown
   updateCountdown();
@@ -101,14 +160,30 @@ const navigateToProblem = code => {
   router.push(`/contest/problems/${code}`);
 };
 
-const showEditor = async (submissionId) => {
-  if (!submissionId) {
+const showEditor = async (record) => {
+  if (!record?.id) {
     message.error('Không thể mở bài làm này!');
+    return;
+  }
+  if (isCmcHistory.value) {
+    currentSubmission.value = {
+      question: {
+        code: record.questionCode,
+        name: record.questionName,
+      },
+      created_at: record.created_at_raw,
+      compiler: { name: record.fileName || '—' },
+      result: record.result,
+      cmcStatus: record.cmcStatus,
+    };
+    submittedCode.value =
+      '// Bài nộp dạng file .zip trên hệ thống CMC — không hiển thị mã nguồn tại đây.';
+    isOpenCodeEditor.value = true;
     return;
   }
   isLoading.value = true;
   try {
-    const response = await axios.get(`contest/${submissionId}/history`);
+    const response = await axiosInstance.get(`contest/${record.id}/history`);
     if (response.status === 200 && response.data?.code === 200) {
       submittedCode.value = response.data.data.source_code;
       currentSubmission.value = response.data.data;
@@ -148,20 +223,20 @@ const showEditor = async (submissionId) => {
             <div class="card-style problem-container">
               <div class="table-container">
                 <a-table
-                  :row-key="genUuid"
+                  :row-key="(row) => row.id"
                   :data-source="status"
                   :pagination="{ pageSize: 10, size: 'small' }"
                   :scroll="{ x: 'max-content' }"
                 >
-                  <a-table-column title="ID" data-index="id" :width="100">
-                     <template #default="{ text }">
-                       <a class="table-link" @click="showEditor(text)">{{ text }}</a>
+                  <a-table-column title="STT" :width="72">
+                     <template #default="{ record }">
+                       <a class="table-link" @click="showEditor(record)">{{ record.displayIndex }}</a>
                      </template>
                   </a-table-column>
                   <a-table-column title="Thời gian" data-index="date" :width="180" />
                   <a-table-column title="Kết quả" data-index="result" :width="100">
                      <template #default="{ record }">
-                       <a @click="showEditor(record.id)" style="cursor:pointer">
+                       <a @click="showEditor(record)" style="cursor:pointer">
                          <a-tag v-if="record.result === 'AC'" color="green">AC</a-tag>
                          <a-tag v-else-if="record.result === 'WA'" color="red">WA</a-tag>
                          <a-tag v-else-if="record.result === 'TLE'" color="orange">TLE</a-tag>
@@ -181,9 +256,10 @@ const showEditor = async (submissionId) => {
                        </a>
                     </template>
                   </a-table-column>
-                  <a-table-column title="Thời gian chạy" data-index="time" :width="120" />
-                  <a-table-column title="Bộ nhớ" data-index="memory" :width="100" />
-                  <a-table-column title="Ngôn ngữ" data-index="compiler" :width="120" />
+                  <a-table-column v-if="!isCmcHistory" title="Thời gian chạy" data-index="time" :width="120" />
+                  <a-table-column v-if="!isCmcHistory" title="Bộ nhớ" data-index="memory" :width="100" />
+                  <a-table-column v-if="!isCmcHistory" title="Ngôn ngữ" data-index="compiler" :width="120" />
+                  <a-table-column v-if="isCmcHistory" title="Tệp nộp" data-index="fileName" :width="220" />
                 </a-table>
               </div>
             </div>
@@ -210,12 +286,13 @@ const showEditor = async (submissionId) => {
     <a-modal class="code-modal" :open="isOpenCodeEditor" @update:open="isOpenCodeEditor = $event" width="80vw" :footer="null" centered>
         <template #title>
             <div class="modal-title">
-                <span>{{ currentSubmission?.question?.code }} - {{ currentSubmission?.question?.name.toUpperCase() }}</span>
+                <span>{{ currentSubmission?.question?.code }} - {{ (currentSubmission?.question?.name || '').toUpperCase() }}</span>
             </div>
         </template>
         <div v-if="currentSubmission" class="submission-details">
             <p><b>Thời gian nộp bài:</b> {{ dayjs(currentSubmission?.created_at).format('DD/MM/YYYY HH:mm:ss') }}</p>
-            <p><b>Ngôn ngữ:</b> {{ currentSubmission?.compiler.name }}</p>
+            <p v-if="currentSubmission?.cmcStatus != null"><b>Trạng thái (CMC):</b> {{ currentSubmission.cmcStatus }}</p>
+            <p><b>{{ isCmcHistory ? 'Tệp nộp' : 'Ngôn ngữ' }}:</b> {{ currentSubmission?.compiler?.name }}</p>
             <p><b>Kết quả:</b>
                 <span v-if="currentSubmission?.result === 'AC'" style="color: #52c41a; font-weight: bold;">{{ currentSubmission?.result }}</span>
                 <span v-else-if="['WA', 'TLE', 'MLE', 'OLE', 'RTE', 'IR', 'CE'].includes(currentSubmission?.result)" style="color: #d9363e; font-weight: bold;">{{ currentSubmission?.result }}</span>

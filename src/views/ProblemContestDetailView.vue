@@ -102,6 +102,12 @@ const fetchQuestionDetails = async (questionId, contestId) => {
     if (response.data.code !== 200) throw new Error("Không tìm thấy câu hỏi");
 
     questionDetail.value = response.data.data;
+    if (questionDetail.value.code) {
+      sessionStorage.setItem(
+        "contest_question_code",
+        String(questionDetail.value.code)
+      );
+    }
     compilers.value = questionDetail.value.allow_compilers.map(c => ({
       label: c.code,
       value: c.id.toString()
@@ -126,6 +132,44 @@ const fetchUserSubmissions = async (contestId) => {
   isHistoryLoading.value = true;
   try {
     const contest_start_time = sessionStorage.getItem('start_time');
+
+    if (Number(contestSubmitType.value) === 2) {
+      const token = localStorage.getItem("access_token");
+      const question = String(questionDetail.value.code || "").trim();
+      if (!question) {
+        currentUserSubmissions.value = [];
+        return;
+      }
+      const res = await axios.get("https://cmc.tiennv.com/api/submissions", {
+        params: {
+          contest_id: contestId,
+          username: currentUser.username,
+          question,
+        },
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Accept: "application/json",
+        },
+      });
+      const rows = Array.isArray(res.data?.data) ? res.data.data : [];
+      currentUserSubmissions.value = rows
+        .filter(
+          (row) => new Date(row.created_at) >= new Date(contest_start_time)
+        )
+        .map((row) => ({
+          id: row.id,
+          created_at: row.created_at,
+          result: row.result,
+          isCmc: true,
+          file_name: row.file_name,
+          cmcStatus: row.status,
+          question: {
+            name: row.file_name || row.question?.name || question,
+          },
+        }));
+      return;
+    }
+
     const response = await axiosInstance.get(`solutions?question_code=${questionDetail.value.code}&username=${currentUser.username}&contest_id=${contestId}`);
     if (response.data.code === 200) {
       currentUserSubmissions.value = response.data.data.filter(submission =>
@@ -270,22 +314,17 @@ const handleUpload = async () => {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
             Accept: "application/json",
           },
+          validateStatus: (s) => s === 200,
         }
       );
 
-      const submissionId =
-        response.data?.solution_id ??
-        response.data?.data?.id ??
-        response.data?.data?.solution_id ??
-        response.data?.id;
-
-      if (submissionId) {
-        message.success("Nộp bài thành công, đang chờ chấm...");
-        pollForResult(submissionId);
-      } else {
+      if (response.status === 200) {
         uploading.value = false;
         message.success("Nộp bài thành công");
-        await fetchUserSubmissions(String(contestIdNum));
+        await router.push({
+          path: "/contest/history",
+          query: { question: questionDetail.value.code },
+        });
       }
       return;
     }
@@ -399,11 +438,23 @@ const handleRemove = () => {
   fileList.value = [];
 };
 
-const showEditor = async (submissionId) => {
-  if (!submissionId) return;
+const showEditor = async (submission) => {
+  if (!submission?.id) return;
+  if (submission.isCmc) {
+    submittedCode.value =
+      "// Bài nộp dạng file .zip trên hệ thống CMC — không hiển thị mã nguồn tại đây.";
+    selectedSubmission.value = {
+      id: submission.id,
+      result: submission.result,
+      compiler: { name: submission.file_name || "—" },
+      question: { name: submission.question?.name },
+    };
+    isOpenCodeEditor.value = true;
+    return;
+  }
   isLoading.value = true;
   try {
-    const response = await axiosInstance.get(`solutions/${submissionId}`);
+    const response = await axiosInstance.get(`solutions/${submission.id}`);
     if (response.data.code === 200) {
       submittedCode.value = response.data.data.source_code;
       selectedSubmission.value = response.data.data;
@@ -527,7 +578,7 @@ const getResultTag = (resultCode) => {
                     <p class="submission-title">{{ submission.question?.name }}</p>
                     <p class="submission-time">{{ new Date(submission.created_at).toLocaleString('vi-VN') }}</p>
                   </div>
-                  <a @click="showEditor(submission.id)">
+                  <a @click="showEditor(submission)">
                     <a-tag :color="getResultTag(submission.result).color">
                       {{ getResultTag(submission.result).text.split(' (')[0] }}
                     </a-tag>
