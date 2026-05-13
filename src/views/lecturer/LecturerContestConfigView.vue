@@ -6,6 +6,7 @@ import {ExclamationCircleOutlined, EllipsisOutlined} from "@ant-design/icons-vue
 import {useRoute, useRouter} from "vue-router";
 import axiosInstance from "@/configs/axios.js";
 import dayjs from "dayjs";
+import { SS_KEYS, restorePick } from "@/utils/selectionPersistence.js";
 
 const subjects = ref([]);
 const courses = ref([]);
@@ -48,11 +49,14 @@ onBeforeMount(async () => {
       // console.log(subjects.value);
       // console.log(semesters.value);
 
-      // Chọn mặc định giá trị đầu tiên nếu có dữ liệu
       if (subjects.value.length > 0) {
-        selectedCourse.value = subjects.value[0].value;
-        createContestDTO.value.subject = subjects.value[0].value;
+        const saved = sessionStorage.getItem(SS_KEYS.lecturerContestConfigCourse);
+        const picked = restorePick(saved, subjects.value);
+        selectedCourse.value = picked ?? subjects.value[0].value;
         persistCurrentCourseFromSelection(selectedCourse.value);
+        const [sid, cid] = String(selectedCourse.value).split("_");
+        createContestDTO.value.subject = sid;
+        createContestDTO.value.course = cid;
       }
     } else {
       message.error("Không tìm thấy dữ liệu môn học từ API");
@@ -106,6 +110,15 @@ const fetchContests = async (subjectID, course_id) => {
     message.error("Lỗi khi tải danh sách bài thực hành");
     console.error(error);
   }
+};
+
+const reloadContestTable = async () => {
+  const sc = selectedCourse.value || subjects.value[0]?.value;
+  if (!sc) return;
+  const parts = String(sc).split("_");
+  const courseId = parts[parts.length - 1];
+  const subjectId = parts[0];
+  await fetchContests(subjectId, courseId);
 };
 
 const fetchDetailsContest = async (contestID) => {
@@ -168,6 +181,7 @@ const persistCurrentCourseFromSelection = (compositeValue) => {
 
 watch(selectedCourse, async (newValue) => {
   if (newValue) {
+    sessionStorage.setItem(SS_KEYS.lecturerContestConfigCourse, String(newValue));
     const [subject_id, course_id] = newValue.split("_");
     createContestDTO.value.subject = subject_id;
     createContestDTO.value.course = course_id;
@@ -243,7 +257,7 @@ const handleCreateContest = async () => {
 
     if (res.data.code === 200) {
       message.success("Tạo kỳ thi thành công");
-      await fetchContests(subjects.value[0]?.value);
+      await reloadContestTable();
     } else {
       message.error("Tạo kỳ thi thất bại");
       console.log(res.data);
@@ -333,7 +347,7 @@ const handleUpdateContest = async (contestID) => {
   try {
     const payload = {
       name: contestDetails.value.name,
-      subject: Number(selectedCourse.value),
+      subject: Number(contestDetails.value.subject ?? createContestDTO.value.subject),
       course: contestDetails.value.course,
       address: contestDetails.value.address,
       ordinal: contestDetails.value.ordinal,
@@ -364,7 +378,7 @@ const handleUpdateContest = async (contestID) => {
     const res = await axios.put(`contests/${contestID}`, payload);
     if (res.data.code === 200) {
       message.success("Cập nhật bài thực hành thành công");
-      await fetchContests(subjects.value[0]?.value);
+      await reloadContestTable();
     } else {
       message.error("Cập nhật bài thực hành thất bại");
     }
@@ -409,7 +423,7 @@ const handleDeleteContest = async (contestID) => {
     const res = await axios.delete(`contests/${contestID}`);
     if (res.data.code === 200) {
       message.success("Xóa bài thực hành thành công");
-      await fetchContests(subjects.value[0]?.value);
+      await reloadContestTable();
     } else {
       message.error("Xóa bài thực hành thất bại");
     }

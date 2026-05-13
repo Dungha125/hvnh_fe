@@ -100,9 +100,10 @@
 
 <script setup>
 import axiosInstance from "@/configs/axios";
-import {onBeforeMount, ref} from "vue";
+import {onBeforeMount, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import { EllipsisOutlined } from '@ant-design/icons-vue';
+import { SS_KEYS, restorePick } from "@/utils/selectionPersistence.js";
 
 const classList = ref([]);
 const pagination = ref({
@@ -243,10 +244,12 @@ const fetchAllClass = async (page = 1) => {
       // console.log(subjects.value);
       // console.log(semesters.value);
 
-      // Chọn mặc định giá trị đầu tiên nếu có dữ liệu
-      if (subjects.value.length > 0) {
-        selectedCourse.value = subjects.value[0].value;
-      }
+      // Chọn lớp/môn: giữ lựa chọn trước đó (session) khi quay lại màn hình
+      const prev = selectedCourse.value;
+      const saved = sessionStorage.getItem(SS_KEYS.lecturerClassConfigCourse);
+      const fromSaved = restorePick(saved, subjects.value);
+      const keepPrev = prev && subjects.value.some((s) => s.value === prev);
+      selectedCourse.value = keepPrev ? prev : (fromSaved ?? subjects.value[0]?.value);
     }
     pagination.value.total = response.data.total || 0;
   } catch (error) {
@@ -274,6 +277,12 @@ const fetchClassDetail = async (id) => {
 }
 onBeforeMount(async () => {
   await fetchAllClass();
+});
+
+watch(selectedCourse, (v) => {
+  if (v != null && v !== "") {
+    sessionStorage.setItem(SS_KEYS.lecturerClassConfigCourse, String(v));
+  }
 });
 
 const handleAction = (key, record) => {

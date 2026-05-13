@@ -376,11 +376,7 @@ onBeforeMount(async () => {
       }));
       console.log(courses.value);
 
-      // console.log(subjects.value);
-      // console.log(semesters.value);
-      if (courses.value.length > 0) {
-        course_id.value = courses.value[0].value;
-      }
+      // course_id đồng bộ sau khi chọn lớp từ currentCourse (xem khối listStudyingCourses bên dưới)
     } else {
       message.error("Không tìm thấy dữ liệu môn học từ API");
     }
@@ -416,13 +412,17 @@ onBeforeMount(async () => {
       if (savedCourse) {
         currentCourse.value = savedCourse;
         current_course.value = savedCourse.id;
+        course_id.value = String(savedCourse.id);
+        localStorage.setItem("course_id", String(savedCourse.id));
       } else {
         currentCourse.value = listStudyingCourses.value[0];
         current_course.value = currentCourse.value.id;
+        course_id.value = String(currentCourse.value.id);
         localStorage.setItem(
           "currentCourse",
           JSON.stringify(currentCourse.value)
         );
+        localStorage.setItem("course_id", String(currentCourse.value.id));
       }
     } else {
       message.error("Bạn chưa tham gia vào nhóm học nào!");
@@ -535,10 +535,6 @@ onBeforeMount(async () => {
         status: comment.status,
         created_at: comment.created_at,
       }));
-
-      if (subjects.value.length > 0) {
-        current_course.value = courses.value[0].value;
-      }
     }
   } catch (error) {
     message.error("Lỗi khi lấy danh sách bình luận");
@@ -558,9 +554,6 @@ onBeforeMount(async () => {
         status: approval.status,
         created_at: approval.created_at,
       }));
-      if (subjects.value.length > 0) {
-        current_course.value = courses.value[0].value;
-      }
     }
   } catch (error) {
     message.error("Lỗi khi lấy danh sách bài tập");

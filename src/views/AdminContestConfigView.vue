@@ -4,6 +4,7 @@ import axios from "@/configs/axios.js";
 import {message, Modal} from "ant-design-vue";
 import {ExclamationCircleOutlined, PlusOutlined} from "@ant-design/icons-vue";
 import dayjs from "dayjs";
+import { SS_KEYS, restorePick } from "@/utils/selectionPersistence.js";
 
 const subjects = ref([]);
 const courses = ref({});
@@ -26,8 +27,10 @@ onBeforeMount(async () => {
       }));
 
       if (subjects.value.length > 0) {
-        selectedCourse.value = subjects.value[0].value; // Mặc định chọn môn đầu tiên
-        createContestDTO.value.subject = subjects.value[0].value; // Gán mặc định cho form
+        const saved = sessionStorage.getItem(SS_KEYS.adminContestConfigSubject);
+        const picked = restorePick(saved, subjects.value);
+        selectedCourse.value = picked ?? subjects.value[0].value;
+        createContestDTO.value.subject = selectedCourse.value;
       }
     }
   } catch (error) {
@@ -66,6 +69,9 @@ onBeforeMount(async () => {
 
 
 watch(selectedCourse, (newValue) => {
+  if (newValue != null && newValue !== "") {
+    sessionStorage.setItem(SS_KEYS.adminContestConfigSubject, String(newValue));
+  }
   createContestDTO.value.subject = newValue;
 });
 const filteredGroups = computed(() => {

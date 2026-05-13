@@ -10,6 +10,7 @@ import axios from "@/configs/axios.js";
 import {message, Modal} from "ant-design-vue";
 import {Ckeditor, useCKEditorCloud} from "@ckeditor/ckeditor5-vue";
 import {buildProblemRichTextEditorConfig} from "@/configs/problemRichTextEditor.js";
+import { SS_KEYS, restorePick } from "@/utils/selectionPersistence.js";
 
 const router = useRouter();
 const currentTab = ref(["problems"]);
@@ -285,7 +286,9 @@ onBeforeMount(async () => {
       }));
 
       if (subjects.value.length > 0) {
-        current_subject.value = subjects.value[0].value;
+        const saved = sessionStorage.getItem(SS_KEYS.adminProblemsSubject);
+        const pick = restorePick(saved, subjects.value);
+        current_subject.value = pick ?? subjects.value[0].value;
       }
     }
   } catch (error) {
@@ -370,6 +373,9 @@ const fetchProblems = async (subjectId, page = 1, pageSize = 50, search = '') =>
 watch(
     () => current_subject.value,
     async (newSubject) => {
+      if (newSubject != null && newSubject !== "") {
+        sessionStorage.setItem(SS_KEYS.adminProblemsSubject, String(newSubject));
+      }
       if (newSubject) {
         await fetchProblems(newSubject, pagination.current, pagination.pageSize, searchQuery.value);
       }

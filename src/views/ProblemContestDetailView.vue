@@ -4,6 +4,10 @@ import { useRoute, useRouter } from 'vue-router';
 import axios from "@/configs/axios.js";
 import { message } from "ant-design-vue";
 import {
+  parseContestsAvailableList,
+  persistContestCourseFromRecord,
+} from "@/utils/contestCourseContext.js";
+import {
   UploadOutlined,
   LoadingOutlined,
   FieldTimeOutlined, UserOutlined,
@@ -133,6 +137,43 @@ function getCourseIdNumber() {
   return null;
 }
 
+/**
+ * Khi thiếu course_id trong storage: gọi contests/available, tìm đúng contest theo session,
+ * persist course_id. Tối đa 3 lần gọi API; không toast từng bước.
+ */
+async function resolveCourseIdWithRetries() {
+  const existing = getCourseIdNumber();
+  if (existing != null) return existing;
+
+  const contestRaw = sessionStorage.getItem("contest_id");
+  const contestIdNum =
+    contestRaw != null && contestRaw !== ""
+      ? Number.parseInt(String(contestRaw).trim(), 10)
+      : NaN;
+  if (!Number.isFinite(contestIdNum) || contestIdNum <= 0) {
+    return null;
+  }
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await axios.get("contests/available");
+      const list = parseContestsAvailableList(res.data);
+      const row = list.find(
+        (c) =>
+          Number(c?.id) === contestIdNum || String(c?.id) === String(contestRaw)
+      );
+      if (row) {
+        persistContestCourseFromRecord(row);
+      }
+      const resolved = getCourseIdNumber();
+      if (resolved != null) return resolved;
+    } catch {
+      /* thử lần sau */
+    }
+  }
+  return null;
+}
+
 /** Chuẩn bị nội dung file theo API JSON: text → source_code, zip/rar → submission_file (base64) */
 async function buildFilePayloadFields(file) {
   const code_file = file.name || "";
@@ -181,15 +222,6 @@ const handleUpload = async () => {
   result.value = null; // Reset kết quả
 
   try {
-    const courseIdNum = getCourseIdNumber();
-    if (courseIdNum == null) {
-      uploading.value = false;
-      message.error(
-        "Thiếu course_id (lớp học). Vào trang chủ / chọn lớp để hệ thống lưu lớp, rồi thử nộp lại."
-      );
-      return;
-    }
-
     const contestRaw = sessionStorage.getItem("contest_id");
     const contestIdNum =
       contestRaw != null && contestRaw !== ""
@@ -198,6 +230,13 @@ const handleUpload = async () => {
     if (!Number.isFinite(contestIdNum) || contestIdNum <= 0) {
       uploading.value = false;
       message.error("Không tìm thấy contest_id. Vào lại từ danh sách thực hành.");
+      return;
+    }
+
+    const courseIdNum = await resolveCourseIdWithRetries();
+    if (courseIdNum == null) {
+      uploading.value = false;
+      message.error("Contest chưa ở lớp học nào");
       return;
     }
 

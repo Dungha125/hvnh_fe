@@ -4,6 +4,7 @@ import axios from '@/configs/axios.js'
 import { message } from 'ant-design-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { PlusOutlined, EditOutlined, DeleteOutlined, EllipsisOutlined } from '@ant-design/icons-vue'
+import { SS_KEYS, restorePick } from '@/utils/selectionPersistence.js'
 
 const classes = ref([])
 const loading = ref(false)
@@ -166,15 +167,28 @@ const findAndSetDefaultFilters = async () => {
 // --- LIFECYCLE & WATCHERS ---
 onBeforeMount(async () => {
   // 1. Tải danh sách cho bộ lọc
-  await Promise.all([fetchSubjects(), fetchSemesters()]);
-  
-  // 2. Tìm và đặt bộ lọc mặc định (logic mới)
-  // Watcher sẽ tự động gọi fetchAllClasses khi filter thay đổi
-  await findAndSetDefaultFilters();
+  await Promise.all([fetchSubjects(), fetchSemesters()])
+
+  const sSub = sessionStorage.getItem(SS_KEYS.adminClassFilterSubject)
+  const sSem = sessionStorage.getItem(SS_KEYS.adminClassFilterSemester)
+  const pSub = restorePick(sSub, subjects.value)
+  const pSem = restorePick(sSem, semesters.value)
+  if (pSub != null && pSem != null) {
+    filterSubject.value = pSub
+    filterSemester.value = pSem
+  } else {
+    await findAndSetDefaultFilters()
+  }
 })
 
 // Watch for filter changes
 watch([filterSubject, filterSemester], () => {
+  if (filterSubject.value != null && filterSubject.value !== '') {
+    sessionStorage.setItem(SS_KEYS.adminClassFilterSubject, String(filterSubject.value))
+  }
+  if (filterSemester.value != null && filterSemester.value !== '') {
+    sessionStorage.setItem(SS_KEYS.adminClassFilterSemester, String(filterSemester.value))
+  }
   pagination.value.current = 1
   fetchAllClasses(1)
 })

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, reactive, onBeforeMount, computed } from 'vue';
+import { restorePick } from "@/utils/selectionPersistence.js";
 import axios from "@/configs/axios.js";
 import axiosInstance from "@/configs/axios.js";
 import {
@@ -152,7 +153,11 @@ onBeforeMount(async () => {
       // console.log(subjects.value);
       // console.log(semesters.value);
       if (courses.value.length > 0) {
-        current_course.value = courses.value[0].value;
+        const fromLs =
+          currentCourse.value?.id != null
+            ? restorePick(String(currentCourse.value.id), courses.value)
+            : null;
+        current_course.value = fromLs ?? courses.value[0].value;
       }
 
     } else {

@@ -7,6 +7,7 @@ import {usePagination} from "vue-request";
 import {useRouter} from "vue-router";
 import {message} from "ant-design-vue";
 import AdminHeader from "@/components/AdminHeader.vue";
+import { SS_KEYS, restorePick } from "@/utils/selectionPersistence.js";
 
 const isLoading = ref(true);
 const router = useRouter();
@@ -35,11 +36,6 @@ onBeforeMount(async () =>
                 label: subject.code + " - " + subject.name,
             });
         });
-
-        if (subjects.value.length > 0)
-        {
-            currentSubject.value = subjects.value[0].value;
-        }
     }).catch(error =>
     {
         message.error('Lỗi khi lấy dữ liệu');
@@ -54,15 +50,23 @@ onBeforeMount(async () =>
                 label: semester.name,
             });
         });
-
-        if (semesters.value.length > 0)
-        {
-            currentSemester.value = semesters.value[0].value;
-        }
     }).catch(error =>
     {
         message.error('Lỗi khi lấy dữ liệu');
     });
+
+    const sSub = sessionStorage.getItem(SS_KEYS.adminRankingSubject);
+    const sSem = sessionStorage.getItem(SS_KEYS.adminRankingSemester);
+    const pickedSub = restorePick(sSub, subjects.value);
+    const pickedSem = restorePick(sSem, semesters.value);
+    if (subjects.value.length > 0)
+    {
+        currentSubject.value = pickedSub ?? subjects.value[0].value;
+    }
+    if (semesters.value.length > 0)
+    {
+        currentSemester.value = pickedSem ?? semesters.value[0].value;
+    }
 
     isLoading.value = false;
 });
@@ -115,8 +119,20 @@ const fetchRanking = async () =>
     });
 }
 
+watch(currentSubject, () =>
+{
+    if (currentSubject.value != null && currentSubject.value !== "")
+    {
+        sessionStorage.setItem(SS_KEYS.adminRankingSubject, String(currentSubject.value));
+    }
+});
+
 watch(currentSemester, async () =>
 {
+    if (currentSemester.value != null && currentSemester.value !== "")
+    {
+        sessionStorage.setItem(SS_KEYS.adminRankingSemester, String(currentSemester.value));
+    }
     await fetchRanking();
     run();
 });
