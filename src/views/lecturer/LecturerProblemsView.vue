@@ -56,8 +56,8 @@ const problemDetailEdit = ref({
   md_content: "",
   sample: "",
   type: "",
-  groups: [],
-  sub_groups: [],
+  groups: {},
+  sub_groups: {},
   level: "",
   time_limit: "",
   memory_limit: "",
@@ -200,13 +200,13 @@ const handleAddProblems = async () => {
     content: newProblems.value.content,
     md_content: newProblems.value.md_content,
     sample: newProblems.value.sample,
-    type: newProblems.value.type,
+    type: Number(newProblems.value.type),
     groups: Object.values(selectedGroups),
     sub_groups: Object.values(selectedSubGroups),
-    level: newProblems.value.level,
-    time_limit: newProblems.value.time_limit,
-    memory_limit: newProblems.value.memory_limit,
-    status: newProblems.value.status,
+    level: Number(newProblems.value.level),
+    time_limit: Number(newProblems.value.time_limit),
+    memory_limit: Number(newProblems.value.memory_limit),
+    status: Number(newProblems.value.status),
     banned_keyword: newProblems.value.banned_keyword,
     subjects: Array.isArray(newProblems.value.subjects)
       ? newProblems.value.subjects
@@ -269,6 +269,85 @@ const deleteConfirm = (questionID) => {
   });
 };
 
+const fetchProblems = async (courseId) => {
+  if (courseId == null || courseId === "") {
+    return;
+  }
+  isLoading.value = true;
+  problemListLoading.value = true;
+  problemsList.splice(0, problemsList.length);
+
+  try {
+    const resProblem = await axios.get("/questions", {
+      params: {
+        page: 1,
+        per_page: 500,
+        order: "asc",
+        by: "code",
+        course_id: courseId,
+      },
+    });
+
+    const root = resProblem.data;
+    const raw = root?.data;
+    const list = Array.isArray(raw)
+      ? raw
+      : raw && Array.isArray(raw.data)
+        ? raw.data
+        : [];
+
+    if (!Array.isArray(list)) {
+      console.warn("Unexpected /questions response shape", root);
+    }
+
+    const rows = Array.isArray(list) ? list : [];
+
+    const mapped = rows.map((question) => {
+      const typeId =
+        question.question_type_id ??
+        question.question_type?.id ??
+        (typeof question.type === "object" && question.type !== null
+          ? question.type?.id
+          : question.type);
+      const statusVal =
+        question.status !== undefined && question.status !== null
+          ? Number(question.status)
+          : 0;
+      const subName =
+        question.sub_group?.name ??
+        (Array.isArray(question.sub_groups)
+          ? question.sub_groups.map((sg) => sg.name).filter(Boolean).join(", ")
+          : "");
+
+      return {
+        id: question.id,
+        code: question.code ?? "",
+        title: question.name ?? "Không có tiêu đề",
+        group_name: question.group?.name ?? "Không có nhóm",
+        subTopic: subName || "—",
+        difficulty:
+          question.question_level?.name ??
+          question.level?.name ??
+          question.level ??
+          "Không xác định",
+        type:
+          typeId != null && typeId !== "" && !Number.isNaN(Number(typeId))
+            ? Number(typeId)
+            : null,
+        status: Number.isNaN(statusVal) ? 0 : statusVal,
+      };
+    });
+
+    problemsList.push(...mapped);
+  } catch (error) {
+    message.error("Lỗi khi lấy danh sách bài tập");
+    console.error("Lỗi:", error.response?.data || error.message);
+  } finally {
+    isLoading.value = false;
+    problemListLoading.value = false;
+  }
+};
+
 onBeforeMount(async () => {
   if (!localStorage.getItem("access_token")) router.push("/login");
 
@@ -300,8 +379,7 @@ onBeforeMount(async () => {
       // console.log(subjects.value);
       // console.log(semesters.value);
       if (courses.value.length > 0) {
-        current_course.value = courses.value[0].value;
-        course_id.value = current_course.value;
+        course_id.value = courses.value[0].value;
       }
     } else {
       message.error("Không tìm thấy dữ liệu môn học từ API");
@@ -316,10 +394,31 @@ onBeforeMount(async () => {
     listStudyingCourses.value = response.data.data;
 
     if (listStudyingCourses.value.length > 0) {
-      if (localStorage.getItem("currentCourse")) {
-        currentCourse.value = JSON.parse(localStorage.getItem("currentCourse"));
+      const matchSaved = (raw) => {
+        try {
+          const parsed = JSON.parse(raw);
+          const sid = parsed?.id;
+          if (
+            sid != null &&
+            listStudyingCourses.value.some((c) => c.id === sid)
+          ) {
+            return parsed;
+          }
+        } catch {
+          /* ignore */
+        }
+        return null;
+      };
+
+      const saved = localStorage.getItem("currentCourse");
+      const savedCourse = saved ? matchSaved(saved) : null;
+
+      if (savedCourse) {
+        currentCourse.value = savedCourse;
+        current_course.value = savedCourse.id;
       } else {
         currentCourse.value = listStudyingCourses.value[0];
+        current_course.value = currentCourse.value.id;
         localStorage.setItem(
           "currentCourse",
           JSON.stringify(currentCourse.value)
@@ -333,43 +432,15 @@ onBeforeMount(async () => {
     console.log(error);
   }
 
-  const fetchProblems = async (course_id) => {
-    isLoading.value = true;
-    problemListLoading.value = true;
-    problemsList.value = []; // Xóa danh sách hiện tại
-    
-    console.log(course_id);
-    try {
-      const resProblem = await axios.get(
-        `/questions?page=1&per_page=500&order=asc&by=code&course_id=${course_id}`
-      );
-
-      if (resProblem.data?.data) {
-        problemsList.value = resProblem.data.data.map((question) => ({
-          id: question.id,
-          code: question.code ?? "",
-          title: question.name ?? "Không có tiêu đề",
-          group_name: question.group?.name ?? "Không có nhóm",
-          subTopic: question.sub_group?.name ?? [],
-          difficulty: question.level ?? "Không xác định",
-          type: question.type ?? "Không xác định",
-          status: question.status ?? "Chưa có trạng thái",
-        }));
-        console.log(problemsList.value);
-      }
-    } catch (error) {
-      message.error("Lỗi khi lấy danh sách bài tập");
-      console.error("Lỗi:", error.response?.data || error.message);
-    } finally {
-      isLoading.value = false;
-      problemListLoading.value = false;
-    }
-  };
-
   watch(
     () => current_course.value,
     async (newCourse) => {
       if (newCourse) {
+        const full = listStudyingCourses.value.find((c) => c.id === newCourse);
+        if (full) {
+          currentCourse.value = full;
+          localStorage.setItem("currentCourse", JSON.stringify(full));
+        }
         await fetchProblems(newCourse);
       }
     },
@@ -645,10 +716,6 @@ const handleEditProblem = async (problemAfterEdit, questionID) => {
     message.error("Vui lòng nhập lại code.");
     return;
   }
-  if (!problemDetailEdit.value.code) {
-    message.error("Vui lòng nhập mã bài tập.");
-    return;
-  }
   if (!problemDetailEdit.value.name) {
     message.error("Vui lòng nhập tên.");
     return;
@@ -669,8 +736,9 @@ const handleEditProblem = async (problemAfterEdit, questionID) => {
     message.error("Vui lòng nhập bộ nhớ giới hạn.");
     return;
   }
-  if (!problemDetailEdit.value.status) {
-    message.error("Vui lòng nhập trạng thái.");
+  const st = problemDetailEdit.value.status;
+  if (st !== 0 && st !== 1 && st !== "0" && st !== "1") {
+    message.error("Vui lòng chọn trạng thái (công khai / riêng tư).");
     return;
   }
   if (
@@ -700,25 +768,24 @@ const handleEditProblem = async (problemAfterEdit, questionID) => {
   }
 
   const payload = {
-    code: problemAfterEdit.code,
     name: problemAfterEdit.name,
     content: problemAfterEdit.content,
     md_content: problemAfterEdit.md_content,
     sample: problemAfterEdit.sample,
-    type: problemAfterEdit.type,
+    type: Number(problemAfterEdit.type),
 
     // ✅ Lọc ra danh sách ID hợp lệ
-    groups: Object.values(problemAfterEdit.groups).filter(
+    groups: Object.values(problemAfterEdit.groups ?? {}).filter(
       (id) => id !== null && id !== undefined
     ),
-    sub_groups: Object.values(problemAfterEdit.sub_groups).filter(
+    sub_groups: Object.values(problemAfterEdit.sub_groups ?? {}).filter(
       (id) => id !== null && id !== undefined
     ),
 
-    level: problemAfterEdit.level,
-    time_limit: problemAfterEdit.time_limit,
-    memory_limit: problemAfterEdit.memory_limit,
-    status: problemAfterEdit.status,
+    level: Number(problemAfterEdit.level),
+    time_limit: Number(problemAfterEdit.time_limit),
+    memory_limit: Number(problemAfterEdit.memory_limit),
+    status: Number(problemAfterEdit.status),
     banned_keyword: problemAfterEdit.banned_keyword,
 
     subjects: Array.isArray(problemAfterEdit.subjects)
@@ -825,29 +892,48 @@ const openEditModal = async (problem) => {
     );
     console.log(response);
 
-    if (response.data?.data) {
+    const data = response.data?.data;
+    if (data) {
+      const subjectIds = (data.subjects ?? []).map((s) => s.id);
+      const groupsMap = {};
+      const subGroupsMap = {};
+      (data.subjects ?? []).forEach((sub) => {
+        groupsMap[sub.id] = sub.group?.id ?? null;
+        subGroupsMap[sub.id] = sub.sub_group?.id ?? null;
+      });
+
       problemDetailEdit.value = {
-        id: response.data.data.id,
-        code: response.data.data.code || "",
-        name: response.data.data.name || "",
-        content: response.data.data.content || "",
-        md_content: response.data.data.md_content || "",
-        sample: response.data.data.sample || "",
-        type: response.data.data.type || "",
-        groups: [response.data.data.group_name] || [],
-        sub_groups: Array.isArray(response.data.data.sub_groups)
-          ? response.data.data.sub_groups.map(Number) // Đảm bảo tất cả phần tử là số
-          : [],
-        level: response.data.data.level
-          ? String(response.data.data.level)
-          : "default_value",
-        time_limit: response.data.data.time_limit || "",
-        memory_limit: response.data.data.memory_limit || "",
-        status: response.data.data.status || "",
-        banned_keyword: response.data.data.banned_keyword || "",
-        subjects: response.data.data.subjects || [],
-        main_functions: response.data.data.main_functions || [],
-        compilers: response.data.data.compilers || [],
+        id: data.id,
+        code: data.code || "",
+        name: data.name || "",
+        content: data.content || "",
+        md_content: data.md_content || "",
+        sample: data.sample || "",
+        type:
+          data.question_type_id ??
+          data.question_type?.id ??
+          data.type ??
+          "",
+        groups: groupsMap,
+        sub_groups: subGroupsMap,
+        level:
+          data.question_level_id != null
+            ? String(data.question_level_id)
+            : data.level != null
+              ? String(data.level)
+              : "",
+        time_limit: data.time_limit ?? "",
+        memory_limit: data.memory_limit ?? "",
+        status:
+          data.status !== undefined && data.status !== null
+            ? String(data.status)
+            : "0",
+        banned_keyword: data.banned_keyword || "",
+        subjects: subjectIds,
+        main_functions: (data.compilers ?? []).map(
+          (c) => c.pivot?.main_function ?? ""
+        ),
+        compilers: (data.compilers ?? []).map((c) => c.id),
       };
 
       isEditModalVisible.value = true;
@@ -876,8 +962,13 @@ const changeDetailProblem = (questionID) => {
 };
 
 const handleCourseChange = (value) => {
-  localStorage.setItem('course_id', value);
-  course_id.value = localStorage.getItem('course_id');
+  localStorage.setItem("course_id", String(value));
+  course_id.value = localStorage.getItem("course_id");
+  const full = listStudyingCourses.value.find((c) => c.id === value);
+  if (full) {
+    currentCourse.value = full;
+    localStorage.setItem("currentCourse", JSON.stringify(full));
+  }
 };
 
 </script>
@@ -968,7 +1059,7 @@ const handleCourseChange = (value) => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="item in problemsList.value" :key="item.id">
+                      <tr v-for="item in filteredProblems" :key="item.id">
                         <td
                           style="cursor: pointer"
                           @click="changeDetailProblem(item.code)"
@@ -984,11 +1075,16 @@ const handleCourseChange = (value) => {
                         <td>{{ item?.group_name }}</td>
                         <td>{{ item.subTopic }}</td>
                         <td v-if="item.type === 1">Luyện tập</td>
-                        <td v-if="item.type === 2">Thực hành</td>
-                        <td v-if="item.type === 3">Thi</td>
+                        <td v-else-if="item.type === 2">Thực hành</td>
+                        <td v-else-if="item.type === 3">Thi</td>
+                        <td v-else>—</td>
                         <td>{{ item.difficulty }}</td>
                         <td>
-                          {{ item.status === 0 ? "Riêng tư" : "Công khai" }}
+                          {{
+                            item.status === 0 || item.status === "0"
+                              ? "Riêng tư"
+                              : "Công khai"
+                          }}
                         </td>
 
                         <a-dropdown placement="bottomRight">
@@ -1478,7 +1574,7 @@ const handleCourseChange = (value) => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(item, index) in problemsList.value" :key="item.id">
+                    <tr v-for="(item, index) in filteredProblems" :key="item.id">
                       <td>{{ index + 1 }}</td>
                       <td style="cursor: pointer" @click="changeDetailProblem(item.code)">{{ item.code }}</td>
                       <td style="cursor: pointer" @click="changeDetailProblem(item.code)">{{ item?.title }}</td>

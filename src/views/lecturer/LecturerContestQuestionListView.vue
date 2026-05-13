@@ -1,14 +1,13 @@
 <script setup>
 import LecturerHeader from "@/components/LecturerHeader.vue";
-import { useRoute, useRouter } from "vue-router";
-import { onBeforeMount, ref, reactive } from "vue";
+import { useRoute } from "vue-router";
+import { onBeforeMount, ref } from "vue";
 import axiosInstance from "@/configs/axios.js";
 import { message } from "ant-design-vue";
 import { EditOutlined } from "@ant-design/icons-vue";
 
 // Route và biến cơ bản
 const route = useRoute();
-const router = useRouter();
 const questionList = ref([]);
 const problems = ref([]); 
 const pagination = ref({
@@ -21,8 +20,26 @@ const pagination = ref({
 const editModalVisible = ref(false);
 const selectedRowKeys = ref([]);
 const isLoading = ref(false);
-const currentCourse = JSON.parse(localStorage.getItem('currentCourse') || '{}');
-const listStudyingCourses = ref([]);
+
+/** Luôn đọc lại từ localStorage khi mở modal / fetch — tránh dùng course_id cũ từ lần import module trước. */
+const getActiveCourseId = () => {
+  try {
+    const raw = localStorage.getItem("currentCourse");
+    if (raw) {
+      const obj = JSON.parse(raw);
+      const id = obj?.id;
+      if (id != null && id !== "") return id;
+    }
+  } catch {
+    /* ignore */
+  }
+  const legacy = localStorage.getItem("course_id");
+  if (legacy != null && legacy !== "") {
+    const n = Number(legacy);
+    if (!Number.isNaN(n)) return n;
+  }
+  return null;
+};
 
 // Lấy danh sách khóa học đang học
 onBeforeMount(async () => {
@@ -58,13 +75,29 @@ const fetchProblems = async () => {
   isLoading.value = true;
   problems.value = []; // ✅ Clear trước khi set lại
 
+  const courseId = getActiveCourseId();
+  if (!courseId) {
+    message.warning(
+      "Chưa xác định lớp học. Vào mục Bài tập, chọn đúng môn/lớp (dropdown Môn học) rồi thử lại."
+    );
+    isLoading.value = false;
+    return;
+  }
+
   try {
     const res = await axiosInstance.get(
-      `/questions?page=1&per_page=500&order=asc&by=code&course_id=${currentCourse.id}`
+      `/questions?page=1&per_page=500&order=asc&by=code&course_id=${courseId}`
     );
 
-    if (res.data?.data) {
-      problems.value = res.data.data.map((q) => ({
+    const raw = res.data?.data;
+    const rows = Array.isArray(raw)
+      ? raw
+      : raw && Array.isArray(raw.data)
+        ? raw.data
+        : [];
+
+    if (rows.length) {
+      problems.value = rows.map((q) => ({
         id: q.id,
         code: q.code ?? "",
         title: q.name ?? "Không có tiêu đề",

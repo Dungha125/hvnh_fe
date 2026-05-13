@@ -1,8 +1,6 @@
 <script setup>
 
-import {computed, reactive, ref, watch, watchEffect} from 'vue';
-import {usePagination} from 'vue-request';
-import {onBeforeMount} from "vue";
+import {computed, reactive, ref, watch, onUnmounted, onBeforeMount} from 'vue';
 import {useRouter} from 'vue-router';
 import axios from "@/configs/axios.js";
 import {CheckCircleTwoTone, CloseCircleTwoTone} from '@ant-design/icons-vue';
@@ -73,8 +71,10 @@ onBeforeMount(async () =>
 
 const fetchProblems = async () =>
 {
-	if (listStudyingCourses.value.length === 0)
+	if (!contestId) {
+		message.error('Không tìm thấy thông tin contest!');
 		return;
+	}
 
 	isLoading.value = true;
 	problems.splice(0, problems.length);
@@ -85,7 +85,24 @@ const fetchProblems = async () =>
 	try
 	{
 		const response = await axios.get(`contests/${contestId}/question`);
-		const listProblems = response.data.data.questions;
+		const root = response.data;
+		const payload = root?.data;
+		const listProblems = Array.isArray(payload?.questions)
+			? payload.questions
+			: Array.isArray(payload)
+				? payload
+				: Array.isArray(payload?.data)
+					? payload.data
+					: [];
+
+		const explicitFail = root?.code != null && root.code !== 200;
+		if (explicitFail && !listProblems.length) {
+			message.error(
+				root?.message || 'Không tải được danh sách bài trong contest.'
+			);
+		} else if (!listProblems.length) {
+			message.warning('Contest chưa có bài tập.');
+		} else {
 		let subGroup = new Set();
 
 		listProblems.forEach((problem, index) =>
@@ -135,17 +152,20 @@ const fetchProblems = async () =>
 		checkboxListState2.indeterminate = false;
 		checkboxListState2.checkAll = true;
 
-		problems.sort((a, b) =>
-		{
-			return a.index.localeCompare(b.index);
-		});
+		problems.sort((a, b) => Number(a.index) - Number(b.index));
+
+		run();
+		}
 	}
 	catch (error)
 	{
 		console.log(error);
+		message.error('Lỗi khi tải danh sách bài contest.');
 	}
-
-	isLoading.value = false;
+	finally
+	{
+		isLoading.value = false;
+	}
 };
 
 const checkboxListState1 = reactive({
@@ -336,10 +356,15 @@ const getCountdown = () => {
     .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
 
-watchEffect(() => {
-	setInterval(() => {
-  countdown.value = getCountdown();
-	}, 1000);
+let countdownIntervalId = null;
+countdownIntervalId = setInterval(() => {
+	countdown.value = getCountdown();
+}, 1000);
+
+onUnmounted(() => {
+	if (countdownIntervalId) {
+		clearInterval(countdownIntervalId);
+	}
 });
 
 
@@ -362,7 +387,7 @@ watchEffect(() => {
 					<div class="problem-container">
 						<div class="table-container">
 							<a-table
-								:row-key="genUuid()"
+								:row-key="(record) => record.id"
 								:data-source="dataSource"
 								:pagination="pagination"
 								:loading="loading"

@@ -14,6 +14,8 @@ const semesters = ref({});
 const listContests = ref([]);
 const selectedCourse = ref(null);
 const selectedGroup = ref(null);
+/** Danh sách lớp đang dạy (raw API) — dùng để ghi localStorage.currentCourse đúng cấu trúc */
+const listStudyingCourses = ref([]);
 const router = useRouter();
 const route = useRoute();
 const contestDetails = ref({});
@@ -23,6 +25,8 @@ onBeforeMount(async () => {
     const response = await axiosInstance.get("courses/studying");
 
     if (response.data.code === 200 && Array.isArray(response.data.data)) {
+      listStudyingCourses.value = response.data.data;
+
       // Lấy danh sách subjects (môn học) từ API
       subjects.value = response.data.data.map((item) => ({
         label: `${item.subject.code} - ${item.subject.name} - ${item.name}`,
@@ -48,6 +52,7 @@ onBeforeMount(async () => {
       if (subjects.value.length > 0) {
         selectedCourse.value = subjects.value[0].value;
         createContestDTO.value.subject = subjects.value[0].value;
+        persistCurrentCourseFromSelection(selectedCourse.value);
       }
     } else {
       message.error("Không tìm thấy dữ liệu môn học từ API");
@@ -148,11 +153,27 @@ const fetchDetailsContest = async (contestID) => {
     message.error("Lỗi khi tải dữ liệu bài thực hành.");
   }
 };
+const persistCurrentCourseFromSelection = (compositeValue) => {
+  if (!compositeValue || !listStudyingCourses.value.length) return;
+  const parts = compositeValue.split("_");
+  const course_id = parts[parts.length - 1];
+  const full = listStudyingCourses.value.find(
+    (c) => String(c.id) === String(course_id)
+  );
+  if (full) {
+    localStorage.setItem("currentCourse", JSON.stringify(full));
+    localStorage.setItem("course_id", String(full.id));
+  }
+};
+
 watch(selectedCourse, async (newValue) => {
   if (newValue) {
     const [subject_id, course_id] = newValue.split("_");
     createContestDTO.value.subject = subject_id;
     createContestDTO.value.course = course_id;
+
+    persistCurrentCourseFromSelection(newValue);
+
     await fetchContests(subject_id, course_id);
   }
 });

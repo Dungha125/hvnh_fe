@@ -259,6 +259,11 @@ const router = createRouter({
             component: ProblemContestViewStudent
         },
         {
+            path: '/lecturer/contest/student/problems/:id',
+            name: 'lecturer-contest-view-student-problem-detail',
+            component: ProblemContestDetailView
+        },
+        {
             path: '/lecturer/contest/student/history',
             name: 'lecturer-contest-view-student-history',
             component: HistoryContestViewStudent
