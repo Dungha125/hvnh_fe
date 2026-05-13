@@ -214,7 +214,7 @@ const getAvatarName = (name) => {
 
 .header-content { /* Original Structure */
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
   padding: 10px 50px;
 }
@@ -231,10 +231,12 @@ const getAvatarName = (name) => {
 
 .navigation { /* Original Structure */
   display: flex;
-  justify-content: space-evenly;
-  width: 100vw;
-  margin-left: 5%;
-  margin-right: 10%;
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+  gap: 28px;
+  width: auto;
+  margin: 0 40px;
 }
 
 .nav-item { /* Original Structure: First .nav-item block */
@@ -274,7 +276,8 @@ const getAvatarName = (name) => {
 .user-actions { /* Original Structure */
   display: flex;
   align-items: center;
-  width: 15vw;
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .user-actions img { /* Original Structure, applies to both action icons */
