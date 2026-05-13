@@ -156,7 +156,10 @@ const fetchDetailsContest = async (contestID) => {
         ranking_stop_time: data.ranking_stop_time
             ? dayjs(data.ranking_stop_time, "YYYY-MM-DD HH:mm:ss")
             : null,
-        submit_type: String(data.submit_type) ?? "1",
+        submit_type:
+          data.submit_type != null && data.submit_type !== ""
+            ? String(data.submit_type)
+            : "2",
         file: data.file || "",
       };
     }
@@ -222,7 +225,7 @@ const createContestDTO = ref({
   start_time: null,
   end_time: null,
   ranking_stop_time: null,
-  submit_type: "1",
+  submit_type: "2",
   file: "",
 });
 
@@ -240,7 +243,7 @@ const handleCreateContest = async () => {
   penalty_time: Number(createContestDTO.value.penalty_time ?? 20),
   frozen_time: Number(createContestDTO.value.frozen_time ?? 30),
   status: String(createContestDTO.value.status ?? "1"),
-  submit_type: String(createContestDTO.value.submit_type ?? "1"),
+  submit_type: String(createContestDTO.value.submit_type ?? "2"),
   start_time: createContestDTO.value.start_time
     ? createContestDTO.value.start_time.format("YYYY-MM-DD HH:mm:ss")
     : null,
@@ -714,14 +717,6 @@ const antDesignTheme = {
                               :min="30"
                           />
                         </a-form-item>
-                        <a-form-item label="Loại nộp bài">
-                          <a-radio-group
-                              v-model:value="contestDetails.submit_type"
-                          >
-                            <a-radio value="1">Tải lên</a-radio>
-                            <a-radio value="2">Chấm thủ công</a-radio>
-                          </a-radio-group>
-                        </a-form-item>
                       </div>
                     </div>
                   </a-modal>
@@ -864,12 +859,6 @@ const antDesignTheme = {
               v-model:value="createContestDTO.frozen_time"
               :min="30"
           />
-        </a-form-item>
-        <a-form-item label="Loại nộp bài">
-          <a-radio-group v-model:value="createContestDTO.submit_type">
-            <a-radio value="1">Tải lên</a-radio>
-            <a-radio value="2">Chấm thủ công</a-radio>
-          </a-radio-group>
         </a-form-item>
       </div>
     </div>

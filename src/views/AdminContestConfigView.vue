@@ -98,7 +98,7 @@ const createContestDTO = ref({
   "start_time": null,
   "end_time": null,
   "ranking_stop_time": null,
-  "submit_type": "1",
+  "submit_type": "2",
   "file": ""
 })
 
@@ -230,13 +230,6 @@ const showConfirm = () => {
             <a-radio-group v-model:value="createContestDTO.status" class="status-group">
               <a-radio value="1">Hoạt động</a-radio>
               <a-radio value="0">Không hoạt động</a-radio>
-            </a-radio-group>
-          </a-form-item>
-
-          <a-form-item label="Loại nộp bài">
-            <a-radio-group v-model:value="createContestDTO.submit_type" class="submit-type-group">
-              <a-radio value="1">Tải lên</a-radio>
-              <a-radio value="2">Chấm thủ công</a-radio>
             </a-radio-group>
           </a-form-item>
 
@@ -416,8 +409,7 @@ const showConfirm = () => {
   gap: 16px;
 }
 
-.status-group,
-.submit-type-group {
+.status-group {
   display: flex;
   gap: 24px;
 }
