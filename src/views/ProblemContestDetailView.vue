@@ -114,18 +114,23 @@ const fetchUserSubmissions = async (contestId) => {
   }
 };
 
-function getCourseIdForSubmission() {
+function getCourseIdNumber() {
   try {
     const raw = localStorage.getItem("currentCourse");
     if (raw) {
       const o = JSON.parse(raw);
-      if (o?.id != null && o.id !== "") return String(o.id);
+      const n = Number(o?.id);
+      if (Number.isFinite(n) && n > 0) return n;
     }
   } catch {
     /* ignore */
   }
   const legacy = localStorage.getItem("course_id");
-  return legacy != null && legacy !== "" ? String(legacy) : "";
+  if (legacy != null && legacy !== "") {
+    const n = Number.parseInt(String(legacy).trim(), 10);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
 }
 
 /** Chuẩn bị nội dung file theo API JSON: text → source_code, zip/rar → submission_file (base64) */
@@ -176,10 +181,30 @@ const handleUpload = async () => {
   result.value = null; // Reset kết quả
 
   try {
+    const courseIdNum = getCourseIdNumber();
+    if (courseIdNum == null) {
+      uploading.value = false;
+      message.error(
+        "Thiếu course_id (lớp học). Vào trang chủ / chọn lớp để hệ thống lưu lớp, rồi thử nộp lại."
+      );
+      return;
+    }
+
+    const contestRaw = sessionStorage.getItem("contest_id");
+    const contestIdNum =
+      contestRaw != null && contestRaw !== ""
+        ? Number.parseInt(String(contestRaw).trim(), 10)
+        : NaN;
+    if (!Number.isFinite(contestIdNum) || contestIdNum <= 0) {
+      uploading.value = false;
+      message.error("Không tìm thấy contest_id. Vào lại từ danh sách thực hành.");
+      return;
+    }
+
     const { source_code, code_file, submission_file } = await buildFilePayloadFields(file);
     const payload = {
-      course_id: getCourseIdForSubmission(),
-      contest_id: String(sessionStorage.getItem("contest_id") || ""),
+      course_id: courseIdNum,
+      contest_id: contestIdNum,
       question: questionDetail.value.code,
       compiler: String(chosenCompiler.value ?? ""),
       source_code,
@@ -203,11 +228,18 @@ const handleUpload = async () => {
     }
   } catch (error) {
     uploading.value = false;
-    const msg =
-      error?.response?.data?.message ||
+    const errBody = error?.response?.data;
+    let msg =
+      errBody?.message ||
       error?.response?.data?.error ||
       error?.message ||
       "Nộp bài thất bại";
+    if (errBody?.errors && typeof errBody.errors === "object") {
+      const lines = Object.entries(errBody.errors).flatMap(([k, v]) =>
+        (Array.isArray(v) ? v : [String(v)]).map((t) => `${k}: ${t}`)
+      );
+      if (lines.length) msg = lines.join(" ");
+    }
     message.error(msg);
   }
 };
