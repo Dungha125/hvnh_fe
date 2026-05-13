@@ -53,7 +53,20 @@ const columns = [
     className: "lecturer-contest-activity-col-info",
     ellipsis: false,
     customRender: ({ text }) =>
-      h("span", { class: "lecturer-contest-activity-info-inner" }, String(text ?? "")),
+      h(
+        "span",
+        {
+          class: "lecturer-contest-activity-info-inner",
+          style: {
+            whiteSpace: "pre-line",
+            wordBreak: "break-word",
+            overflowWrap: "anywhere",
+            display: "block",
+            maxWidth: "100%",
+          },
+        },
+        String(text ?? "")
+      ),
   },
   { title: "Tài khoản", dataIndex: "account", key: "account", width: 140 },
   { title: "Địa chỉ IP", dataIndex: "ip", key: "ip", width: 140 },
@@ -198,6 +211,7 @@ watch(
       </a-space>
     </template>
     <a-table
+      class="lecturer-contest-activity-table"
       :columns="columns"
       :data-source="rows"
       :row-key="(r) => r.key"
