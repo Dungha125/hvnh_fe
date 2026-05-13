@@ -8,9 +8,8 @@ import dayjs from "dayjs";
 
 const route = useRoute();
 
-/** Đổi path nếu backend dùng tên khác, ví dụ: `/contests/${id}/activities` */
 const activityListUrl = (contestId) =>
-  `/contests/${contestId}/activity_logs`;
+  `/contests/${contestId}/activity`;
 
 const loading = ref(false);
 const searchText = ref("");
