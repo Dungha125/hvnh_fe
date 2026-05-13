@@ -16,6 +16,7 @@ import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "@/configs/axios.js";
 import { message } from "ant-design-vue";
+import { parseContestsAvailableList, persistContestCourseFromRecord } from "@/utils/contestCourseContext.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -74,8 +75,9 @@ async function redirectByRole(user) {
   if (role === "student") {
     try {
       const contestResponse = await axios.get("contests/available");
-      const list = contestResponse.data?.data?.data;
-      if (Array.isArray(list) && list.length > 0) {
+      const list = parseContestsAvailableList(contestResponse.data);
+      if (list.length > 0) {
+        persistContestCourseFromRecord(list[0]);
         sessionStorage.setItem("contest", "true");
         router.replace("/contest");
         return;

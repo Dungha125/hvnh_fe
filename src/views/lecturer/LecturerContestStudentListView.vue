@@ -116,6 +116,7 @@ import { useRoute, useRouter } from "vue-router";
 import { message } from "ant-design-vue";
 import axiosInstance from "@/configs/axios.js";
 import LecturerHeader from "@/components/LecturerHeader.vue";
+import { parseContestsAvailableList, persistContestCourseFromRecord } from "@/utils/contestCourseContext.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -357,7 +358,9 @@ const handleLoginStudent = async (studentID) => {
       if (user.role === "student") {
         try {
           const contestResponse = await axiosInstance.get("/contests/available");
-          if (contestResponse.data?.data?.data?.length > 0) {
+          const list = parseContestsAvailableList(contestResponse.data);
+          if (list.length > 0) {
+            persistContestCourseFromRecord(list[0]);
             sessionStorage.setItem("contest", "true");
             router.push("/contest");
           } else {

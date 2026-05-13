@@ -2,6 +2,8 @@
 import { onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from "@/configs/axios.js"
+import { message } from "ant-design-vue"
+import { parseContestsAvailableList, persistContestCourseFromRecord } from "@/utils/contestCourseContext.js"
 
 const router = useRouter()
 const route = useRoute()
@@ -35,7 +37,9 @@ onMounted(async () => {
 
     if (response.data.user.role === 'student'){
       const contestResponse = await axios.get('contests/available');
-        if (contestResponse.data.data && contestResponse.data.data.data.length > 0) {
+      const list = parseContestsAvailableList(contestResponse.data);
+        if (list.length > 0) {
+          persistContestCourseFromRecord(list[0]);
           sessionStorage.setItem('contest', "true");
           router.push('/contest');
         } 

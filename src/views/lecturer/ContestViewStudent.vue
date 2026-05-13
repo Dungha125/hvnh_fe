@@ -2,6 +2,7 @@
 import { ref, onMounted, h } from 'vue';
 import axios from '@/configs/axios.js';
 import { useRouter } from 'vue-router';
+import { persistContestCourseFromRecord } from '@/utils/contestCourseContext.js';
 import { message, Button } from 'ant-design-vue';
 import HeaderContestLecturer from '@/components/HeaderContestLecturer.vue';
 
@@ -22,10 +23,12 @@ const fetchContests = async () => {
   }
 };
 
-const goToContest = (contestId, startTime,endTime) => {
-  sessionStorage.setItem('contest_id', contestId);
-  sessionStorage.setItem('start_time', startTime);
-  sessionStorage.setItem('finish_time', endTime);
+const goToContest = (record) => {
+  if (!record?.id) return;
+  persistContestCourseFromRecord(record);
+  sessionStorage.setItem('contest_id', record.id);
+  sessionStorage.setItem('start_time', record.start_time);
+  sessionStorage.setItem('finish_time', record.end_time);
   router.push('/lecturer/contest/student/problems');
 };
 
@@ -54,7 +57,7 @@ const columns = [
     key: 'action',
     customRender: ({ record }) => {
       return getCountdown(record.start_time) === 'Vào'
-        ? h(Button, { type: 'primary', onClick: () => goToContest(record.id, record.start_time, record.end_time) }, () => 'Tiếp tục')
+        ? h(Button, { type: 'primary', onClick: () => goToContest(record) }, () => 'Tiếp tục')
         : getCountdown(record.start_time);
     },
   },

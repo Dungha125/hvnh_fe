@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, h, computed } from 'vue';
 import axios from '@/configs/axios.js';
 import { useRouter } from 'vue-router';
+import { persistContestCourseFromRecord } from '@/utils/contestCourseContext.js';
 import { message, Button } from 'ant-design-vue';
 import HeaderContest from '../components/HeaderContest.vue';
 
@@ -63,13 +64,15 @@ const getCountdown = (startTime) => {
   };
 };
 
-const goToContest = (contestId, startTime, endTime, publicRanking, icpc, ioi) => {
-  sessionStorage.setItem('contest_id', contestId);
-  sessionStorage.setItem('start_time', startTime);
-  sessionStorage.setItem('finish_time', endTime);
-  sessionStorage.setItem('public_ranking', publicRanking);
-  sessionStorage.setItem('contest_icpc', icpc);
-  sessionStorage.setItem('contest_ioi', ioi);
+const goToContest = (record) => {
+  if (!record?.id) return;
+  persistContestCourseFromRecord(record);
+  sessionStorage.setItem('contest_id', record.id);
+  sessionStorage.setItem('start_time', record.start_time);
+  sessionStorage.setItem('finish_time', record.end_time);
+  sessionStorage.setItem('public_ranking', record.public_ranking);
+  sessionStorage.setItem('contest_icpc', record.icpc);
+  sessionStorage.setItem('contest_ioi', record.ioi);
   router.push('/contest/problems');
 };
 
@@ -91,7 +94,7 @@ const columns = computed(() => [
       } else {
         return h(Button, {
           type: 'primary',
-          onClick: () => goToContest(record.id, record.start_time, record.end_time, record.public_ranking, record.icpc, record.ioi)
+          onClick: () => goToContest(record)
         }, () => 'Tiếp tục');
       }
     },
