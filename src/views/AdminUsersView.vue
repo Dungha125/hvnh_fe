@@ -12,6 +12,11 @@ import {
 } from "@ant-design/icons-vue";
 import axios from "@/configs/axios.js";
 import {message} from "ant-design-vue";
+import { normalizeActivityInfo } from "@/utils/activityDescriptionFormat.js";
+import {
+  renderActivityInfoRich,
+  renderActivityAccountRich,
+} from "@/utils/activityLogRichDisplay.js";
 
 const router = useRouter();
 const currentTab = ref(['users']);
@@ -440,18 +445,26 @@ const activityPagination = ref({
 });
 
 const activityColumns = [
-  { title: 'STT', dataIndex: 'stt', key: 'stt', width: 64 },
+  { title: 'STT', dataIndex: 'stt', key: 'stt', width: 64, align: 'center' },
   {
     title: 'Thông tin',
     dataIndex: 'info',
     key: 'info',
     className: 'admin-users-activity-col-info',
     ellipsis: false,
-    customRender: ({ text }) =>
-      h('span', { class: 'admin-users-activity-info-inner' }, String(text ?? '')),
+    customRender: ({ text }) => renderActivityInfoRich(text),
   },
-  { title: 'Tài khoản', dataIndex: 'account', key: 'account', width: 140 },
-  { title: 'Địa chỉ IP', dataIndex: 'ip', key: 'ip', width: 130 },
+  {
+    title: 'Tài khoản',
+    dataIndex: 'account',
+    key: 'account',
+    width: 140,
+    align: 'center',
+    className: 'admin-users-activity-col-account',
+    ellipsis: false,
+    customRender: ({ text }) => renderActivityAccountRich(text),
+  },
+  { title: 'Địa chỉ IP', dataIndex: 'ip', key: 'ip', width: 130, align: 'center' },
   {
     title: 'Trình duyệt',
     dataIndex: 'browser',
@@ -459,10 +472,11 @@ const activityColumns = [
     className: 'admin-users-activity-col-ua',
     ellipsis: false,
     width: 320,
+    align: 'center',
     customRender: ({ text }) =>
       h('span', { class: 'admin-users-activity-ua-inner' }, String(text ?? '')),
   },
-  { title: 'Thời gian', dataIndex: 'time', key: 'time', width: 170 },
+  { title: 'Thời gian', dataIndex: 'time', key: 'time', width: 170, align: 'center' },
 ];
 
 /** created_at API dạng UTC (…Z); hiển thị theo Asia/Ho_Chi_Minh */
@@ -500,14 +514,15 @@ const mapActivityItem = (raw, index, page, pageSize) => {
   return {
     key: raw.id ?? `act-${page}-${index}`,
     stt: (page - 1) * pageSize + index + 1,
-    info:
+    info: normalizeActivityInfo(
       raw.description ??
-      raw.message ??
-      raw.info ??
-      raw.action ??
-      raw.content ??
-      raw.detail ??
-      '',
+        raw.message ??
+        raw.info ??
+        raw.action ??
+        raw.content ??
+        raw.detail ??
+        '',
+    ),
     account:
       raw.causer?.username ??
       raw.username ??
@@ -1076,9 +1091,16 @@ a-button {
   max-width: 100%;
 }
 
-.admin-users-activity-table :deep(.admin-users-activity-info-inner) {
-  display: block;
-  max-width: 100%;
+.admin-users-activity-table :deep(.activity-log-info-rich) {
+  margin: 0;
+}
+
+.admin-users-activity-table :deep(.activity-log-line + .activity-log-line) {
+  margin-top: 4px;
+}
+
+.admin-users-activity-table :deep(.admin-users-activity-col-account) {
+  vertical-align: middle;
 }
 
 </style>

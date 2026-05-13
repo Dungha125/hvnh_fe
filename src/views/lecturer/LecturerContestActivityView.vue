@@ -5,7 +5,11 @@ import axiosInstance from "@/configs/axios.js";
 import LecturerHeader from "@/components/LecturerHeader.vue";
 import { message } from "ant-design-vue";
 import dayjs from "dayjs";
-import { h } from "vue";
+import { normalizeActivityInfo } from "@/utils/activityDescriptionFormat.js";
+import {
+  renderActivityInfoRich,
+  renderActivityAccountRich,
+} from "@/utils/activityLogRichDisplay.js";
 
 const route = useRoute();
 
@@ -21,57 +25,29 @@ const pagination = ref({
   total: 0,
 });
 
-const normalizeActivityInfo = (rawInfo) => {
-  const s = String(rawInfo ?? "").trim();
-  if (!s) return "";
-
-  // Split "YYYY-MM-DD HH:mm:ss ..." repeated blocks into separate lines.
-  // Example:
-  // 2026-05-13 12:01:29 A 2026-05-13 12:01:30 B -> two lines.
-  const re = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/g;
-  const parts = s.split(re).filter(Boolean);
-
-  // If no timestamp pattern, keep original.
-  if (parts.length <= 1) return s;
-
-  const lines = [];
-  for (let i = 0; i < parts.length; i++) {
-    const p = parts[i];
-    if (!/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}$/.test(p)) continue;
-    const msg = String(parts[i + 1] ?? "").trim();
-    lines.push(msg ? `${p} ${msg}` : p);
-  }
-  return lines.length ? lines.join("\n") : s;
-};
-
 const columns = [
-  { title: "STT", dataIndex: "stt", key: "stt", width: 72 },
+  { title: "STT", dataIndex: "stt", key: "stt", width: 72, align: "center" },
   {
     title: "Thông tin",
     dataIndex: "info",
     key: "info",
     className: "lecturer-contest-activity-col-info",
     ellipsis: false,
-    customRender: ({ text }) =>
-      h(
-        "span",
-        {
-          class: "lecturer-contest-activity-info-inner",
-          style: {
-            whiteSpace: "pre-line",
-            wordBreak: "break-word",
-            overflowWrap: "anywhere",
-            display: "block",
-            maxWidth: "100%",
-          },
-        },
-        String(text ?? "")
-      ),
+    customRender: ({ text }) => renderActivityInfoRich(text),
   },
-  { title: "Tài khoản", dataIndex: "account", key: "account", width: 140 },
-  { title: "Địa chỉ IP", dataIndex: "ip", key: "ip", width: 140 },
-  { title: "Trình duyệt", dataIndex: "browser", key: "browser", ellipsis: true },
-  { title: "Thời gian", dataIndex: "time", key: "time", width: 180 },
+  {
+    title: "Tài khoản",
+    dataIndex: "account",
+    key: "account",
+    width: 140,
+    align: "center",
+    className: "lecturer-contest-activity-col-account",
+    ellipsis: false,
+    customRender: ({ text }) => renderActivityAccountRich(text),
+  },
+  { title: "Địa chỉ IP", dataIndex: "ip", key: "ip", width: 140, align: "center" },
+  { title: "Trình duyệt", dataIndex: "browser", key: "browser", ellipsis: true, align: "center" },
+  { title: "Thời gian", dataIndex: "time", key: "time", width: 180, align: "center" },
 ];
 
 const mapActivityRow = (raw, index, page, pageSize) => {
@@ -85,10 +61,10 @@ const mapActivityRow = (raw, index, page, pageSize) => {
     key: raw.id ?? `${page}-${index}`,
     stt: (page - 1) * pageSize + index + 1,
     info: normalizeActivityInfo(
-      raw.message ??
+      raw.description ??
+        raw.message ??
         raw.info ??
         raw.action ??
-        raw.description ??
         raw.content ??
         raw.detail ??
         ""
@@ -237,9 +213,15 @@ watch(
   line-height: 1.45;
 }
 
-.lecturer-contest-activity-table :deep(.lecturer-contest-activity-info-inner) {
-  display: block;
-  max-width: 100%;
-  white-space: pre-line;
+.lecturer-contest-activity-table :deep(.activity-log-info-rich) {
+  margin: 0;
+}
+
+.lecturer-contest-activity-table :deep(.activity-log-line + .activity-log-line) {
+  margin-top: 4px;
+}
+
+.lecturer-contest-activity-table :deep(.lecturer-contest-activity-col-account) {
+  vertical-align: middle;
 }
 </style>
