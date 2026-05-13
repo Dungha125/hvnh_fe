@@ -15,7 +15,7 @@ import { usePagination } from "vue-request";
 import MonacoEditor from 'monaco-editor-vue3';
 import LecturerHeader from "@/components/LecturerHeader.vue";
 import { Ckeditor, useCKEditorCloud } from "@ckeditor/ckeditor5-vue";
-import { getCkEditorClassicFullConfig } from "@/configs/ckeditorClassicFullConfig.js";
+import { buildProblemRichTextEditorConfig } from "@/configs/problemRichTextEditor.js";
 
 const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 const route = useRoute();
@@ -688,6 +688,7 @@ const handleEditProblem = async (problemAfterEdit, questionID) => {
 const cloud = useCKEditorCloud({
   version: "44.2.0",
   premium: true,
+  translations: ["vi"],
 });
 
 const data = ref("");
@@ -699,12 +700,11 @@ const editor = computed(() => {
   return cloud.data.value.CKEditor.ClassicEditor;
 });
 
+const CKEDITOR_LICENSE =
+  "eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NDIzNDIzOTksImp0aSI6ImE1MjcxYmY2LTBjNTktNDViZS04NDZhLTllN2NmNDliOWUzMyIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6ImIyNzVmODAzIn0.OTYN1JB-xwnGdnCgZz2JE0GcV9lkutzKrmzKTzkaYayXnWWkcQcJcRcBC5YIKNmQ76YmPldmXNE-2YFvuSAftA";
+
 const config = computed(() =>
-  getCkEditorClassicFullConfig({
-    cloudData: cloud.data.value,
-    licenseKey:
-      "eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NDIzNDIzOTksImp0aSI6ImE1MjcxYmY2LTBjNTktNDViZS04NDZhLTllN2NmNDliOWUzMyIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6ImIyNzVmODAzIn0.OTYN1JB-xwnGdnCgZz2JE0GcV9lkutzKrmzKTzkaYayXnWWkcQcJcRcBC5YIKNmQ76YmPldmXNE-2YFvuSAftA",
-  }),
+  buildProblemRichTextEditorConfig(cloud.data.value, CKEDITOR_LICENSE),
 );
 
 const handleSubjectChange = () => {
@@ -1016,7 +1016,7 @@ const editForm = ref();
               <!-- Cột phải -->
               <div class="form-group">
                 <a-form-item label="Nội dung" required>
-                  <ckeditor v-if="editor" v-model="problemDetailEdit.content" :editor="editor" :config="config" :rules="[
+                  <ckeditor v-if="editor && config" v-model="problemDetailEdit.content" :editor="editor" :config="config" :rules="[
                     {
                       required: true,
                       message: 'Vui lòng nhập nội dung',

@@ -1,13 +1,11 @@
 import axios from '@/configs/axios.js';
 
-/**
- * Gắn adapter cho CKEditor FileRepository (Image upload).
- * - Nếu có VITE_CKEDITOR_UPLOAD_URL: POST multipart, field mặc định "upload" (đổi bằng VITE_CKEDITOR_UPLOAD_FIELD).
- * - Nếu không: nhúng ảnh dạng data URL (base64) — không cần backend, HTML có thể nặng.
- */
-export function ckeditorFileRepositoryUploadAdapterPlugin(editor) {
-  editor.plugins.get('FileRepository').createUploadAdapter = (loader) =>
-    new HybridUploadAdapter(loader);
+function toAbsoluteImageUrl(url) {
+  if (typeof url !== 'string') return url;
+  if (/^https?:\/\//i.test(url)) return url;
+  const base = String(import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '');
+  if (!base) return url.startsWith('/') ? url : `/${url}`;
+  return `${base}/${url.replace(/^\//, '')}`;
 }
 
 class HybridUploadAdapter {
@@ -57,10 +55,8 @@ class HybridUploadAdapter {
   }
 }
 
-function toAbsoluteImageUrl(url) {
-  if (typeof url !== 'string') return url;
-  if (/^https?:\/\//i.test(url)) return url;
-  const base = String(import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '');
-  if (!base) return url.startsWith('/') ? url : `/${url}`;
-  return `${base}/${url.replace(/^\//, '')}`;
+/** Gắn FileRepository để CK5 upload ảnh (API hoặc base64). */
+export function ckeditorFileRepositoryUploadAdapterPlugin(editor) {
+  editor.plugins.get('FileRepository').createUploadAdapter = (loader) =>
+    new HybridUploadAdapter(loader);
 }

@@ -16,7 +16,7 @@ import { usePagination } from "vue-request";
 import axios from "@/configs/axios.js";
 import { message, Modal } from "ant-design-vue";
 import { Ckeditor, useCKEditorCloud } from "@ckeditor/ckeditor5-vue";
-import { getCkEditorClassicFullConfig } from "@/configs/ckeditorClassicFullConfig.js";
+import { buildProblemRichTextEditorConfig } from "@/configs/problemRichTextEditor.js";
 import LecturerHeader from "@/components/LecturerHeader.vue";
 import axiosInstance from "@/configs/axios.js";
 import { MoreOutlined } from "@ant-design/icons-vue";
@@ -559,6 +559,7 @@ const handleTableChange = (pag, filters, sorter) => {
 const cloud = useCKEditorCloud({
   version: "44.2.0",
   premium: true,
+  translations: ["vi"],
 });
 
 const data = ref("");
@@ -570,12 +571,11 @@ const editor = computed(() => {
   return cloud.data.value.CKEditor.ClassicEditor;
 });
 
+const CKEDITOR_LICENSE =
+  "eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3Nzk5MjYzOTksImp0aSI6IjZiNzgzMzRjLThkOWYtNDZiMy1hNzVjLWFhNTcyMjQzNTJjNyIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6IjE2MGU1NjUyIn0.iQvcG996xDdwx8811YglKdS5qZ-fmufO3Ke7AYlTazDU8iQKwqrHnD9rdJKY2u8CG64Tk9lEeOVz0aX58c6QZA";
+
 const config = computed(() =>
-  getCkEditorClassicFullConfig({
-    cloudData: cloud.data.value,
-    licenseKey:
-      "eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NDU2MjU1OTksImp0aSI6IjYxNWUxM2I1LTg4ZWYtNDM0Yy1iYmM3LThhNjlmZjA2MzczZCIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6IjMwMTA2ZDRiIn0.1bibXbc35EIDVZaNqkwQ9Z1Vxo9zekREnrzDbSsnoWjKStfY8TkYIIoIabPKnkjTXcoUQhtxy5s-YaNXGegzAQ",
-  }),
+  buildProblemRichTextEditorConfig(cloud.data.value, CKEDITOR_LICENSE),
 );
 
 // const handleContentChange = () => {
@@ -1135,7 +1135,7 @@ const handleCourseChange = (value) => {
                             <!-- Nội dung -->
                             <a-form-item label="Nội dung">
                               <ckeditor
-                                v-show="editor"
+                                v-if="editor && config"
                                 v-model="problemDetailEdit.content"
                                 :editor="editor"
                                 :config="config"
@@ -1311,7 +1311,7 @@ const handleCourseChange = (value) => {
                     <div class="form-group">
                       <a-form-item label="Nội dung" required>
                         <ckeditor
-                          v-if="editor"
+                          v-if="editor && config"
                           v-model="newProblems.content"
                           :editor="editor"
                           :config="config"

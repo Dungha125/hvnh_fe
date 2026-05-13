@@ -9,7 +9,7 @@ import {EllipsisOutlined, ExclamationCircleOutlined, EyeOutlined,
 import axios from "@/configs/axios.js";
 import {message, Modal} from "ant-design-vue";
 import {Ckeditor, useCKEditorCloud} from "@ckeditor/ckeditor5-vue";
-import {getCkEditorClassicFullConfig} from "@/configs/ckeditorClassicFullConfig.js";
+import {buildProblemRichTextEditorConfig} from "@/configs/problemRichTextEditor.js";
 
 const router = useRouter();
 const currentTab = ref(["problems"]);
@@ -397,6 +397,7 @@ const handleTableChange = (pag, filters, sorter) => {
 const cloud = useCKEditorCloud({
   version: "44.2.0",
   premium: true,
+  translations: ["vi"],
 });
 
 const data = ref("");
@@ -409,12 +410,11 @@ const editor = computed(() => {
   return cloud.data.value.CKEditor.ClassicEditor;
 });
 
+const CKEDITOR_LICENSE =
+  "eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3Nzk5MjYzOTksImp0aSI6IjZiNzgzMzRjLThkOWYtNDZiMy1hNzVjLWFhNTcyMjQzNTJjNyIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6IjE2MGU1NjUyIn0.iQvcG996xDdwx8811YglKdS5qZ-fmufO3Ke7AYlTazDU8iQKwqrHnD9rdJKY2u8CG64Tk9lEeOVz0aX58c6QZA";
+
 const config = computed(() =>
-  getCkEditorClassicFullConfig({
-    cloudData: cloud.data.value,
-    licenseKey:
-      "eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3Nzk5MjYzOTksImp0aSI6IjZiNzgzMzRjLThkOWYtNDZiMy1hNzVjLWFhNTcyMjQzNTJjNyIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6IjE2MGU1NjUyIn0.iQvcG996xDdwx8811YglKdS5qZ-fmufO3Ke7AYlTazDU8iQKwqrHnD9rdJKY2u8CG64Tk9lEeOVz0aX58c6QZA",
-  }),
+  buildProblemRichTextEditorConfig(cloud.data.value, CKEDITOR_LICENSE),
 );
 // const handleContentChange = () => {
 //   if (newProblems.value.content) {
@@ -1192,7 +1192,7 @@ const navigateToProblem = (questionCode) => {
                                     <div class="form-group">
                                       <a-form-item label="Nội dung" required>
                                         <ckeditor
-                                            v-if="editor"
+                                            v-if="editor && config"
                                             v-model="problemDetail.content"
                                             :editor="editor"
                                             :config="config"
@@ -1386,7 +1386,7 @@ const navigateToProblem = (questionCode) => {
                     <div class="form-group">
                       <a-form-item label="Nội dung" required>
                         <ckeditor
-                            v-if="editor"
+                            v-if="editor && config"
                             v-model="newProblems.content"
                             :editor="editor"
                             :config="config"
