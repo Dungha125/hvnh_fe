@@ -39,20 +39,23 @@ async function loadContestHistory() {
   try {
     if (isCmcHistory.value) {
       const token = localStorage.getItem('access_token');
-      const questionFromQuery =
-        typeof route.query.question === "string" && route.query.question.trim()
-          ? route.query.question.trim()
-          : null;
+      const qcFromQuery =
+        typeof route.query.question_code === "string" &&
+        route.query.question_code.trim()
+          ? route.query.question_code.trim()
+          : typeof route.query.question === "string" && route.query.question.trim()
+            ? route.query.question.trim()
+            : null;
       const questionFromSession = sessionStorage.getItem("contest_question_code");
-      const question =
-        questionFromQuery || questionFromSession || undefined;
+      const question_code =
+        qcFromQuery || questionFromSession || undefined;
 
       const params = {
         contest_id,
         username: currentUser.username,
       };
-      if (question) {
-        params.question = question;
+      if (question_code) {
+        params.question_code = question_code;
       }
 
       const res = await axios.get('https://cmc.tiennv.com/api/submissions', {

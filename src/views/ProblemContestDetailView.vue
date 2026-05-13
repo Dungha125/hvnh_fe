@@ -135,8 +135,8 @@ const fetchUserSubmissions = async (contestId) => {
 
     if (Number(contestSubmitType.value) === 2) {
       const token = localStorage.getItem("access_token");
-      const question = String(questionDetail.value.code || "").trim();
-      if (!question) {
+      const question_code = String(questionDetail.value.code || "").trim();
+      if (!question_code) {
         currentUserSubmissions.value = [];
         return;
       }
@@ -144,7 +144,7 @@ const fetchUserSubmissions = async (contestId) => {
         params: {
           contest_id: contestId,
           username: currentUser.username,
-          question,
+          question_code,
         },
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -164,7 +164,7 @@ const fetchUserSubmissions = async (contestId) => {
           file_name: row.file_name,
           cmcStatus: row.status,
           question: {
-            name: row.file_name || row.question?.name || question,
+            name: row.file_name || row.question?.name || question_code,
           },
         }));
       return;
@@ -323,7 +323,7 @@ const handleUpload = async () => {
         message.success("Nộp bài thành công");
         await router.push({
           path: "/contest/history",
-          query: { question: questionDetail.value.code },
+          query: { question_code: String(questionDetail.value.code || "") },
         });
       }
       return;
