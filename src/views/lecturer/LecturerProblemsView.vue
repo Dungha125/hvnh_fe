@@ -16,6 +16,7 @@ import { usePagination } from "vue-request";
 import axios from "@/configs/axios.js";
 import { message, Modal } from "ant-design-vue";
 import { Ckeditor, useCKEditorCloud } from "@ckeditor/ckeditor5-vue";
+import { getCkEditorClassicFullConfig } from "@/configs/ckeditorClassicFullConfig.js";
 import LecturerHeader from "@/components/LecturerHeader.vue";
 import axiosInstance from "@/configs/axios.js";
 import { MoreOutlined } from "@ant-design/icons-vue";
@@ -569,137 +570,13 @@ const editor = computed(() => {
   return cloud.data.value.CKEditor.ClassicEditor;
 });
 
-const config = computed(() => {
-  if (!cloud.data.value) {
-    return null;
-  }
-
-  const {
-    Essentials,
-    Paragraph,
-    Bold,
-    Italic,
-    Underline,
-    Strikethrough,
-    BlockQuote,
-    Alignment,
-    Font,
-    FontSize,
-    FontColor,
-    FontBackgroundColor,
-    Link,
-    List,
-    Table,
-    TableToolbar,
-    TableProperties,
-    TableCellProperties,
-    Image,
-    ImageUpload,
-    ImageResize,
-    ImageToolbar,
-    MediaEmbed,
-    SpecialCharacters,
-    SpecialCharactersEssentials,
-    Highlight,
-    Clipboard,
-    Typing,
-    Heading,
-    SourceEditing,
-    Autoformat,
-    FindAndReplace,
-    WordCount,
-  } = cloud.data.value.CKEditor;
-  const { FormatPainter } = cloud.data.value.CKEditorPremiumFeatures;
-
-  return {
+const config = computed(() =>
+  getCkEditorClassicFullConfig({
+    cloudData: cloud.data.value,
     licenseKey:
       "eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NDU2MjU1OTksImp0aSI6IjYxNWUxM2I1LTg4ZWYtNDM0Yy1iYmM3LThhNjlmZjA2MzczZCIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6IjMwMTA2ZDRiIn0.1bibXbc35EIDVZaNqkwQ9Z1Vxo9zekREnrzDbSsnoWjKStfY8TkYIIoIabPKnkjTXcoUQhtxy5s-YaNXGegzAQ",
-    plugins: [
-      Essentials,
-      Paragraph,
-      Bold,
-      Italic,
-      Underline,
-      Strikethrough,
-      BlockQuote,
-      Alignment,
-      Font,
-      FontSize,
-      FontColor,
-      FontBackgroundColor,
-      Link,
-      List,
-      Table,
-      TableToolbar,
-      TableProperties,
-      TableCellProperties,
-      Image,
-      ImageUpload,
-      ImageResize,
-      ImageToolbar,
-      MediaEmbed,
-      SpecialCharacters,
-      SpecialCharactersEssentials,
-      Highlight,
-      Clipboard,
-      Typing,
-      Heading,
-      SourceEditing,
-      Autoformat,
-      FindAndReplace,
-      WordCount,
-    ],
-    toolbar: [
-      "sourceEditing",
-      "|",
-      "undo",
-      "redo",
-      "|",
-      "bold",
-      "italic",
-      "underline",
-      "strikethrough",
-      "|",
-      "heading",
-      "fontSize",
-      "fontColor",
-      "fontBackgroundColor",
-      "|",
-      "alignment",
-      "outdent",
-      "indent",
-      "|",
-      "bulletedList",
-      "numberedList",
-      "|",
-      "link",
-      "blockQuote",
-      "specialCharacters",
-      "highlight",
-      "|",
-      "insertTable",
-      "tableColumn",
-      "tableRow",
-      "mergeTableCells",
-      "tableProperties",
-      "tableCellProperties",
-      "|",
-      "imageUpload",
-      "mediaEmbed",
-      "|",
-      "mathType",
-      "|",
-      "findAndReplace",
-      "wordCount",
-      "autoSave",
-      "|",
-      "formatPainter",
-    ],
-    typing: {
-      enable: true,
-    },
-  };
-});
+  }),
+);
 
 // const handleContentChange = () => {
 //   if (newProblems.value.content) {

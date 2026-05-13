@@ -9,7 +9,7 @@ import {EllipsisOutlined, ExclamationCircleOutlined, EyeOutlined,
 import axios from "@/configs/axios.js";
 import {message, Modal} from "ant-design-vue";
 import {Ckeditor, useCKEditorCloud} from "@ckeditor/ckeditor5-vue";
-
+import {getCkEditorClassicFullConfig} from "@/configs/ckeditorClassicFullConfig.js";
 
 const router = useRouter();
 const currentTab = ref(["problems"]);
@@ -409,137 +409,13 @@ const editor = computed(() => {
   return cloud.data.value.CKEditor.ClassicEditor;
 });
 
-const config = computed(() => {
-  if (!cloud.data.value) {
-    return null;
-  }
-
-  const {
-    Essentials,
-    Paragraph,
-    Bold,
-    Italic,
-    Underline,
-    Strikethrough,
-    BlockQuote,
-    Alignment,
-    Font,
-    FontSize,
-    FontColor,
-    FontBackgroundColor,
-    Link,
-    List,
-    Table,
-    TableToolbar,
-    TableProperties,
-    TableCellProperties,
-    Image,
-    ImageUpload,
-    ImageResize,
-    ImageToolbar,
-    MediaEmbed,
-    SpecialCharacters,
-    SpecialCharactersEssentials,
-    Highlight,
-    Clipboard,
-    Typing,
-    Heading,
-    SourceEditing,
-    Autoformat,
-    FindAndReplace,
-    WordCount,
-  } = cloud.data.value.CKEditor;
-  const {FormatPainter} = cloud.data.value.CKEditorPremiumFeatures;
-
-  return {
+const config = computed(() =>
+  getCkEditorClassicFullConfig({
+    cloudData: cloud.data.value,
     licenseKey:
-        "eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3Nzk5MjYzOTksImp0aSI6IjZiNzgzMzRjLThkOWYtNDZiMy1hNzVjLWFhNTcyMjQzNTJjNyIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6IjE2MGU1NjUyIn0.iQvcG996xDdwx8811YglKdS5qZ-fmufO3Ke7AYlTazDU8iQKwqrHnD9rdJKY2u8CG64Tk9lEeOVz0aX58c6QZA",
-    plugins: [
-      Essentials,
-      Paragraph,
-      Bold,
-      Italic,
-      Underline,
-      Strikethrough,
-      BlockQuote,
-      Alignment,
-      Font,
-      FontSize,
-      FontColor,
-      FontBackgroundColor,
-      Link,
-      List,
-      Table,
-      TableToolbar,
-      TableProperties,
-      TableCellProperties,
-      Image,
-      ImageUpload,
-      ImageResize,
-      ImageToolbar,
-      MediaEmbed,
-      SpecialCharacters,
-      SpecialCharactersEssentials,
-      Highlight,
-      Clipboard,
-      Typing,
-      Heading,
-      SourceEditing,
-      Autoformat,
-      FindAndReplace,
-      WordCount,
-    ],
-    toolbar: [
-      "sourceEditing",
-      "|",
-      "undo",
-      "redo",
-      "|",
-      "bold",
-      "italic",
-      "underline",
-      "strikethrough",
-      "|",
-      "heading",
-      "fontSize",
-      "fontColor",
-      "fontBackgroundColor",
-      "|",
-      "alignment",
-      "outdent",
-      "indent",
-      "|",
-      "bulletedList",
-      "numberedList",
-      "|",
-      "link",
-      "blockQuote",
-      "specialCharacters",
-      "highlight",
-      "|",
-      "insertTable",
-      "tableColumn",
-      "tableRow",
-      "mergeTableCells",
-      "tableProperties",
-      "tableCellProperties",
-      "|",
-      "imageUpload",
-      "mediaEmbed",
-      "|",
-      "mathType",
-      "|",
-      "findAndReplace",
-      "wordCount",
-      "autoSave",
-      "|",
-      "formatPainter",
-    ],
-    typing: {
-      enable: true,
-    },
-  };
-});
+      "eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3Nzk5MjYzOTksImp0aSI6IjZiNzgzMzRjLThkOWYtNDZiMy1hNzVjLWFhNTcyMjQzNTJjNyIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6IjE2MGU1NjUyIn0.iQvcG996xDdwx8811YglKdS5qZ-fmufO3Ke7AYlTazDU8iQKwqrHnD9rdJKY2u8CG64Tk9lEeOVz0aX58c6QZA",
+  }),
+);
 // const handleContentChange = () => {
 //   if (newProblems.value.content) {
 //     console.log("✅ Nội dung đã nhận:", newProblems.value.content);

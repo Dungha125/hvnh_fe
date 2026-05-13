@@ -15,6 +15,7 @@ import { usePagination } from "vue-request";
 import MonacoEditor from 'monaco-editor-vue3';
 import LecturerHeader from "@/components/LecturerHeader.vue";
 import { Ckeditor, useCKEditorCloud } from "@ckeditor/ckeditor5-vue";
+import { getCkEditorClassicFullConfig } from "@/configs/ckeditorClassicFullConfig.js";
 
 const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 const route = useRoute();
@@ -698,137 +699,13 @@ const editor = computed(() => {
   return cloud.data.value.CKEditor.ClassicEditor;
 });
 
-const config = computed(() => {
-  if (!cloud.data.value) {
-    return null;
-  }
-
-  const {
-    Essentials,
-    Paragraph,
-    Bold,
-    Italic,
-    Underline,
-    Strikethrough,
-    BlockQuote,
-    Alignment,
-    Font,
-    FontSize,
-    FontColor,
-    FontBackgroundColor,
-    Link,
-    List,
-    Table,
-    TableToolbar,
-    TableProperties,
-    TableCellProperties,
-    Image,
-    ImageUpload,
-    ImageResize,
-    ImageToolbar,
-    MediaEmbed,
-    SpecialCharacters,
-    SpecialCharactersEssentials,
-    Highlight,
-    Clipboard,
-    Typing,
-    Heading,
-    SourceEditing,
-    Autoformat,
-    FindAndReplace,
-    WordCount,
-  } = cloud.data.value.CKEditor;
-  const { FormatPainter } = cloud.data.value.CKEditorPremiumFeatures;
-
-  return {
+const config = computed(() =>
+  getCkEditorClassicFullConfig({
+    cloudData: cloud.data.value,
     licenseKey:
       "eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NDIzNDIzOTksImp0aSI6ImE1MjcxYmY2LTBjNTktNDViZS04NDZhLTllN2NmNDliOWUzMyIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6ImIyNzVmODAzIn0.OTYN1JB-xwnGdnCgZz2JE0GcV9lkutzKrmzKTzkaYayXnWWkcQcJcRcBC5YIKNmQ76YmPldmXNE-2YFvuSAftA",
-    plugins: [
-      Essentials,
-      Paragraph,
-      Bold,
-      Italic,
-      Underline,
-      Strikethrough,
-      BlockQuote,
-      Alignment,
-      Font,
-      FontSize,
-      FontColor,
-      FontBackgroundColor,
-      Link,
-      List,
-      Table,
-      TableToolbar,
-      TableProperties,
-      TableCellProperties,
-      Image,
-      ImageUpload,
-      ImageResize,
-      ImageToolbar,
-      MediaEmbed,
-      SpecialCharacters,
-      SpecialCharactersEssentials,
-      Highlight,
-      Clipboard,
-      Typing,
-      Heading,
-      SourceEditing,
-      Autoformat,
-      FindAndReplace,
-      WordCount,
-    ],
-    toolbar: [
-      "sourceEditing",
-      "|",
-      "undo",
-      "redo",
-      "|",
-      "bold",
-      "italic",
-      "underline",
-      "strikethrough",
-      "|",
-      "heading",
-      "fontSize",
-      "fontColor",
-      "fontBackgroundColor",
-      "|",
-      "alignment",
-      "outdent",
-      "indent",
-      "|",
-      "bulletedList",
-      "numberedList",
-      "|",
-      "link",
-      "blockQuote",
-      "specialCharacters",
-      "highlight",
-      "|",
-      "insertTable",
-      "tableColumn",
-      "tableRow",
-      "mergeTableCells",
-      "tableProperties",
-      "tableCellProperties",
-      "|",
-      "imageUpload",
-      "mediaEmbed",
-      "|",
-      "mathType",
-      "|",
-      "findAndReplace",
-      "wordCount",
-      "autoSave",
-      "|",
-      "formatPainter",
-    ],
-    typing: {
-      enable: true,
-    },
-  };
-});
+  }),
+);
 
 const handleSubjectChange = () => {
   selectedSubjects.value.forEach((subject) => {
