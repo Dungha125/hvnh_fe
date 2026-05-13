@@ -14,6 +14,7 @@ import AdminStatusView from "@/views/AdminStatusView.vue";
 import AdminRankingView from "@/views/AdminRankingView.vue";
 import GuideView from "@/views/GuideView.vue";
 import CallbackView from '@/views/CallbackView.vue';
+import JwtSsoView from "@/views/JwtSsoView.vue";
 import AdminConfigView from "@/views/AdminConfigView.vue";
 import LecturerProblemsView from "@/views/lecturer/LecturerProblemsView.vue";
 import LecturerStatusView from '@/views/lecturer/LecturerStatusView.vue';
@@ -279,9 +280,9 @@ const router = createRouter({
             component: GuideView
         },
         {
-            path: '/:pathMatch(.*)*',
-            name: 'not-found',
-            component: NotFoundView
+            path: '/jwt',
+            name: 'jwt-sso',
+            component: JwtSsoView
         },
         {
             path: '/auth/o365',
@@ -292,6 +293,11 @@ const router = createRouter({
             path: '/admin/system',
             name: 'AdminSystemConfig',
             component: AdminSystemConfigView
+        },
+        {
+            path: '/:pathMatch(.*)*',
+            name: 'not-found',
+            component: NotFoundView
         },
     ],
     scrollBehavior(to, from, savedPosition) {
