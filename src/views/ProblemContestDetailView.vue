@@ -1,7 +1,8 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from "@/configs/axios.js";
+import axiosInstance from "@/configs/axios.js";
+import axios from "axios";
 import { message } from "ant-design-vue";
 import {
   parseContestsAvailableList,
@@ -25,6 +26,7 @@ const isLoading = ref(true);
 const countdown = ref('');
 const questionDetail = ref(null);
 const compilers = ref([]);
+const contestSubmitType = ref(null);
 
 //--- Submission & Polling State ---//
 const fileList = ref([]);
@@ -64,6 +66,7 @@ onMounted(async () => {
     countdown.value = getCountdown();
   }, 1000);
 
+  await fetchContestSubmitType(contestId);
   await fetchQuestionDetails(route.params.id, contestId);
 });
 
@@ -74,10 +77,20 @@ onUnmounted(() => {
 });
 
 //--- API & Data Fetching ---//
+const fetchContestSubmitType = async (contestId) => {
+  try {
+    const res = await axiosInstance.get(`contests/${contestId}`);
+    const st = res?.data?.data?.submit_type;
+    contestSubmitType.value = st != null ? Number(st) : null;
+  } catch {
+    contestSubmitType.value = null;
+  }
+};
+
 const fetchQuestionDetails = async (questionId, contestId) => {
   isLoading.value = true;
   try {
-    const response = await axios.get(`questions/${questionId}?contest_id=${contestId}`);
+    const response = await axiosInstance.get(`questions/${questionId}?contest_id=${contestId}`);
     if (response.data.code !== 200) throw new Error("Không tìm thấy câu hỏi");
 
     questionDetail.value = response.data.data;
@@ -105,7 +118,7 @@ const fetchUserSubmissions = async (contestId) => {
   isHistoryLoading.value = true;
   try {
     const contest_start_time = sessionStorage.getItem('start_time');
-    const response = await axios.get(`solutions?question_code=${questionDetail.value.code}&username=${currentUser.username}&contest_id=${contestId}`);
+    const response = await axiosInstance.get(`solutions?question_code=${questionDetail.value.code}&username=${currentUser.username}&contest_id=${contestId}`);
     if (response.data.code === 200) {
       currentUserSubmissions.value = response.data.data.filter(submission =>
         new Date(submission.created_at) >= new Date(contest_start_time)
@@ -156,7 +169,7 @@ async function resolveCourseIdWithRetries() {
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const res = await axios.get("contests/available");
+      const res = await axiosInstance.get("contests/available");
       const list = parseContestsAvailableList(res.data);
       const row = list.find(
         (c) =>
@@ -204,24 +217,37 @@ async function buildFilePayloadFields(file) {
 }
 
 const handleUpload = async () => {
-  const file = fileList.value[0];
-  const allowedExtensions = ['py', 'c', 'cpp', 'java', 'zip', 'rar', 'cs'];
-  
-  if (!file) {
-    message.error('Vui lòng chọn file!');
-    return;
-  }
-  
-  const fileExtension = file.name.split('.').pop().toLowerCase();
-  if (!allowedExtensions.includes(fileExtension)) {
-    message.error('Định dạng file không được hỗ trợ!');
-    return;
-  }
-
   uploading.value = true;
   result.value = null; // Reset kết quả
 
   try {
+    if (Number(contestSubmitType.value) === 2) {
+      await axios.post(
+        "https://cmc.tiennv.com/api/submission_report",
+        {},
+        { headers: { "Content-Type": "application/json" } }
+      );
+      uploading.value = false;
+      message.success("Gửi báo cáo thành công");
+      return;
+    }
+
+    const file = fileList.value[0];
+    const allowedExtensions = ['py', 'c', 'cpp', 'java', 'zip', 'rar', 'cs'];
+
+    if (!file) {
+      uploading.value = false;
+      message.error('Vui lòng chọn file!');
+      return;
+    }
+
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    if (!allowedExtensions.includes(fileExtension)) {
+      uploading.value = false;
+      message.error('Định dạng file không được hỗ trợ!');
+      return;
+    }
+
     const contestRaw = sessionStorage.getItem("contest_id");
     const contestIdNum =
       contestRaw != null && contestRaw !== ""
@@ -251,7 +277,7 @@ const handleUpload = async () => {
       submission_file,
     };
 
-    const response = await axios.post("solutions", payload, {
+    const response = await axiosInstance.post("solutions", payload, {
       headers: { "Content-Type": "application/json" },
     });
     const submissionId =
@@ -287,7 +313,7 @@ const pollForResult = async (submissionId) => {
   if (pollTimeoutId) clearTimeout(pollTimeoutId);
 
   try {
-    const response = await axios.get(`solutions/${submissionId}`);
+    const response = await axiosInstance.get(`solutions/${submissionId}`);
     const submissionData = response.data.data;
 
     if (submissionData && submissionData.result) {
@@ -319,7 +345,7 @@ const showEditor = async (submissionId) => {
   if (!submissionId) return;
   isLoading.value = true;
   try {
-    const response = await axios.get(`solutions/${submissionId}`);
+    const response = await axiosInstance.get(`solutions/${submissionId}`);
     if (response.data.code === 200) {
       submittedCode.value = response.data.data.source_code;
       selectedSubmission.value = response.data.data;
@@ -417,7 +443,7 @@ const getResultTag = (resultCode) => {
                   <a-tag v-if="result" :color="getResultTag(result).color">{{ getResultTag(result).text.split(' (')[0] }}</a-tag>
                   <span v-else>Chưa nộp</span>
                 </p>
-                <a-button type="primary" :loading="uploading" @click="handleUpload" :disabled="fileList.length === 0">
+                <a-button type="primary" :loading="uploading" @click="handleUpload" :disabled="Number(contestSubmitType.value) !== 2 && fileList.length === 0">
                   Nộp bài
                 </a-button>
               </div>
