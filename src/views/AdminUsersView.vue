@@ -441,7 +441,15 @@ const activityPagination = ref({
 
 const activityColumns = [
   { title: 'STT', dataIndex: 'stt', key: 'stt', width: 64 },
-  { title: 'Thông tin', dataIndex: 'info', key: 'info', ellipsis: true },
+  {
+    title: 'Thông tin',
+    dataIndex: 'info',
+    key: 'info',
+    className: 'admin-users-activity-col-info',
+    ellipsis: false,
+    customRender: ({ text }) =>
+      h('span', { class: 'admin-users-activity-info-inner' }, String(text ?? '')),
+  },
   { title: 'Tài khoản', dataIndex: 'account', key: 'account', width: 140 },
   { title: 'Địa chỉ IP', dataIndex: 'ip', key: 'ip', width: 130 },
   {
@@ -1055,7 +1063,20 @@ a-button {
   line-height: 1.45;
 }
 
+.admin-users-activity-table :deep(.admin-users-activity-col-info) {
+  white-space: normal !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+  line-height: 1.45;
+}
+
 .admin-users-activity-table :deep(.admin-users-activity-ua-inner) {
+  display: block;
+  max-width: 100%;
+}
+
+.admin-users-activity-table :deep(.admin-users-activity-info-inner) {
   display: block;
   max-width: 100%;
 }

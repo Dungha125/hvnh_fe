@@ -8,11 +8,11 @@ import dayjs from "dayjs";
 
 const route = useRoute();
 
-const activityListUrl = (contestId) =>
-  `/contests/${contestId}/activity`;
+const activityListUrl = () => `/users/activity`;
 
 const loading = ref(false);
 const searchText = ref("");
+const contestIdQuery = ref("");
 const rows = ref([]);
 const pagination = ref({
   current: 1,
@@ -66,15 +66,15 @@ const parseList = (root) => {
 };
 
 const fetchActivities = async (page = 1) => {
-  const id = route.params.id;
-  if (!id) return;
+  const qContestId = String(contestIdQuery.value ?? "").trim();
   loading.value = true;
   try {
-    const response = await axiosInstance.get(activityListUrl(id), {
+    const response = await axiosInstance.get(activityListUrl(), {
       params: {
         page,
         per_page: pagination.value.pageSize,
         s: searchText.value?.trim() || undefined,
+        contest_id: qContestId || undefined,
       },
     });
     const root = response.data || {};
@@ -124,12 +124,15 @@ const onSearch = () => {
 };
 
 onBeforeMount(() => {
+  // Mặc định lấy contestId từ route nếu có (để back/forward vẫn giữ đúng contest đang xem)
+  contestIdQuery.value = String(route.params.id ?? "").trim();
   fetchActivities(1);
 });
 
 watch(
   () => route.params.id,
-  () => {
+  (next) => {
+    contestIdQuery.value = String(next ?? "").trim();
     pagination.value.current = 1;
     fetchActivities(1);
   }
@@ -143,14 +146,23 @@ watch(
     style="width: 100%; max-width: 1400px; margin: 70px auto 0; padding-top: 8px"
   >
     <template #extra>
-      <a-input-search
-        v-model:value="searchText"
-        allow-clear
-        placeholder="Tìm theo hoạt động, ..."
-        style="width: 280px"
-        enter-button
-        @search="onSearch"
-      />
+      <a-space :size="10">
+        <a-input
+          v-model:value="contestIdQuery"
+          allow-clear
+          placeholder="Contest ID (tuỳ chọn)"
+          style="width: 170px"
+          @pressEnter="onSearch"
+        />
+        <a-input-search
+          v-model:value="searchText"
+          allow-clear
+          placeholder="Tìm theo hoạt động, ..."
+          style="width: 280px"
+          enter-button
+          @search="onSearch"
+        />
+      </a-space>
     </template>
     <a-table
       :columns="columns"
