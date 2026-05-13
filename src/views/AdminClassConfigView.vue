@@ -189,8 +189,8 @@ const showModalAdd = () => {
   editingId = null
   tempClass.value = { 
     name: '',
-    subject_id: subjects.value.length > 0 ? subjects.value[0].value : null,
-    semester_id: semesters.value.length > 0 ? semesters.value[0].value : null,
+    subject: subjects.value.length > 0 ? subjects.value[0].value : null,
+    semester: semesters.value.length > 0 ? semesters.value[0].value : null,
     status: 'Hoạt động',
     notice: '',
     about: ''
@@ -214,8 +214,8 @@ const onSubmit = async () => {
     // Make sure subject_id and semester_id are properly set as numbers
     const payload = {
       name: tempClass.value.name,
-      subject_id: Number(tempClass.value.subject_id),
-      semester_id: Number(tempClass.value.semester_id),
+      subject_id: tempClass.value.subject_id || '',
+      semester_id: tempClass.value.semester_id || '',
       status: tempClass.value.status === 'Hoạt động' ? 1 : 0,
       notice: tempClass.value.notice || '',
       about: tempClass.value.about || ''
