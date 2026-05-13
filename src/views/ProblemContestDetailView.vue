@@ -114,6 +114,49 @@ const fetchUserSubmissions = async (contestId) => {
   }
 };
 
+function getCourseIdForSubmission() {
+  try {
+    const raw = localStorage.getItem("currentCourse");
+    if (raw) {
+      const o = JSON.parse(raw);
+      if (o?.id != null && o.id !== "") return String(o.id);
+    }
+  } catch {
+    /* ignore */
+  }
+  const legacy = localStorage.getItem("course_id");
+  return legacy != null && legacy !== "" ? String(legacy) : "";
+}
+
+/** Chuẩn bị nội dung file theo API JSON: text → source_code, zip/rar → submission_file (base64) */
+async function buildFilePayloadFields(file) {
+  const code_file = file.name || "";
+  const ext = (file.name.split(".").pop() || "").toLowerCase();
+  const binary = ext === "zip" || ext === "rar";
+
+  if (binary) {
+    const submission_file = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => {
+        const s = String(r.result || "");
+        const i = s.indexOf(",");
+        resolve(i >= 0 ? s.slice(i + 1) : s);
+      };
+      r.onerror = () => reject(new Error("Không đọc được file"));
+      r.readAsDataURL(file);
+    });
+    return { source_code: "", submission_file, code_file };
+  }
+
+  const source_code = await new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(typeof r.result === "string" ? r.result : "");
+    r.onerror = () => reject(new Error("Không đọc được file"));
+    r.readAsText(file, "UTF-8");
+  });
+  return { source_code, submission_file: "", code_file };
+}
+
 const handleUpload = async () => {
   const file = fileList.value[0];
   const allowedExtensions = ['py', 'c', 'cpp', 'java', 'zip', 'rar', 'cs'];
@@ -129,28 +172,43 @@ const handleUpload = async () => {
     return;
   }
 
-  const formData = new FormData();
-  formData.append('contest_id', sessionStorage.getItem('contest_id'));
-  formData.append('question', questionDetail.value.code);
-  formData.append('compiler', chosenCompiler.value);
-  formData.append('code_file', file);
-
   uploading.value = true;
   result.value = null; // Reset kết quả
 
   try {
-    const response = await axios.post('solutions', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+    const { source_code, code_file, submission_file } = await buildFilePayloadFields(file);
+    const payload = {
+      course_id: getCourseIdForSubmission(),
+      contest_id: String(sessionStorage.getItem("contest_id") || ""),
+      question: questionDetail.value.code,
+      compiler: String(chosenCompiler.value ?? ""),
+      source_code,
+      code_file,
+      submission_file,
+    };
+
+    const response = await axios.post("solutions", payload, {
+      headers: { "Content-Type": "application/json" },
     });
-    if (response.data.solution_id) {
+    const submissionId =
+      response.data?.solution_id ??
+      response.data?.data?.id ??
+      response.data?.data?.solution_id;
+
+    if (submissionId) {
       message.success('Nộp bài thành công, đang chờ chấm...');
-      pollForResult(response.data.solution_id);
+      pollForResult(submissionId);
     } else {
-      throw new Error(response.data.message || "Nộp bài thất bại");
+      throw new Error(response.data?.message || "Nộp bài thất bại");
     }
   } catch (error) {
     uploading.value = false;
-    message.error(error.message || 'Nộp bài thất bại');
+    const msg =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      "Nộp bài thất bại";
+    message.error(msg);
   }
 };
 
