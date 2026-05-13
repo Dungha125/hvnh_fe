@@ -75,20 +75,13 @@ let editingId = null
 
 // Fetch all classes
 const fetchAllClasses = async (page = 1) => {
-  if (filterSubject.value == null || filterSemester.value == null) {
-    classes.value = []
-    pagination.value.total = 0
-    return
-  }
-
   loading.value = true
 
-  // API GET /courses expects `subject` and `semester` (not subject_id / semester_id)
   const params = {
     page: pagination.value.current,
     per_page: pagination.value.pageSize,
-    subject: filterSubject.value,
-    semester: filterSemester.value
+    subject_id: filterSubject.value,
+    semester_id: filterSemester.value
   }
 
   try {
@@ -142,8 +135,8 @@ const findAndSetDefaultFilters = async () => {
         // Gọi API để kiểm tra xem cặp filter này có dữ liệu không
         const { data } = await axios.get('/courses', { 
           params: { 
-            subject: subject.value, 
-            semester: semester.value,
+            subject_id: subject.value, 
+            semester_id: semester.value,
             per_page: 1 // Chỉ cần 1 bản ghi để xác nhận
           } 
         });
