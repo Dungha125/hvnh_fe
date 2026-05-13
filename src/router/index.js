@@ -313,6 +313,13 @@ const router = createRouter({
 })
 
 router.beforeEach(async(to, from, next) => {
+    // File tĩnh trong public/file/* — không để SPA bắt vào catch-all not-found; ép tải đúng URL
+    if (to.path.startsWith('/file/')) {
+        const baseHref = new URL(import.meta.env.BASE_URL || '/', window.location.origin).href;
+        window.location.href = new URL(to.path.replace(/^\//, ''), baseHref).href;
+        return false;
+    }
+
     if (to.path === '/') {
         try {
             const user = JSON.parse(localStorage.getItem('user') || 'null');

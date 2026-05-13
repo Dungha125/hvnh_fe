@@ -230,13 +230,63 @@ const handleUpload = async () => {
 
   try {
     if (Number(contestSubmitType.value) === 2) {
-      await axios.post(
-        "https://cmc.tiennv.com/api/submission_report",
-        {},
-        { headers: { "Content-Type": "application/json" } }
+      const file = fileList.value[0];
+      if (!file) {
+        uploading.value = false;
+        message.error("Vui lòng chọn file!");
+        return;
+      }
+      const ext = (file.name.split(".").pop() || "").toLowerCase();
+      if (ext !== "zip") {
+        uploading.value = false;
+        message.error("Loại nộp này chỉ hỗ trợ file .zip");
+        return;
+      }
+
+      const contestRaw = sessionStorage.getItem("contest_id");
+      const contestIdNum =
+        contestRaw != null && contestRaw !== ""
+          ? Number.parseInt(String(contestRaw).trim(), 10)
+          : NaN;
+      if (!Number.isFinite(contestIdNum) || contestIdNum <= 0) {
+        uploading.value = false;
+        message.error(
+          "Không tìm thấy contest_id. Vào lại từ danh sách thực hành."
+        );
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("submission_file", file);
+      formData.append("contest_id", String(contestIdNum));
+      formData.append("question", questionDetail.value.code);
+
+      const token = localStorage.getItem("access_token");
+      const response = await axios.post(
+        "https://cmc.tiennv.com/api/solutions",
+        formData,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            Accept: "application/json",
+          },
+        }
       );
-      uploading.value = false;
-      message.success("Gửi báo cáo thành công");
+
+      const submissionId =
+        response.data?.solution_id ??
+        response.data?.data?.id ??
+        response.data?.data?.solution_id ??
+        response.data?.id;
+
+      if (submissionId) {
+        message.success("Nộp bài thành công, đang chờ chấm...");
+        pollForResult(submissionId);
+      } else {
+        uploading.value = false;
+        message.success("Nộp bài thành công");
+        await fetchUserSubmissions(String(contestIdNum));
+      }
       return;
     }
 
@@ -433,13 +483,19 @@ const getResultTag = (resultCode) => {
           </div>
 
           <div class="tools-container">
-            <div class="compiler-container">
+            <div v-if="Number(contestSubmitType) !== 2" class="compiler-container">
               <h3>Ngôn ngữ:</h3>
               <a-select v-model:value="chosenCompiler" style="width: 150px" :options="compilers" />
             </div>
 
             <div class="submit-container">
-              <a-upload :file-list="fileList" :before-upload="beforeUpload" @remove="handleRemove" :max-count="1">
+              <a-upload
+                :file-list="fileList"
+                :before-upload="beforeUpload"
+                @remove="handleRemove"
+                :max-count="1"
+                :accept="Number(contestSubmitType) === 2 ? '.zip' : undefined"
+              >
                 <a-button>
                   <UploadOutlined />
                   Chọn File
@@ -451,7 +507,7 @@ const getResultTag = (resultCode) => {
                   <a-tag v-if="result" :color="getResultTag(result).color">{{ getResultTag(result).text.split(' (')[0] }}</a-tag>
                   <span v-else>Chưa nộp</span>
                 </p>
-                <a-button type="primary" :loading="uploading" @click="handleUpload" :disabled="Number(contestSubmitType.value) !== 2 && fileList.length === 0">
+                <a-button type="primary" :loading="uploading" @click="handleUpload" :disabled="fileList.length === 0">
                   Nộp bài
                 </a-button>
               </div>
