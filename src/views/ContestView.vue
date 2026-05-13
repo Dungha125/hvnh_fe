@@ -73,6 +73,7 @@ const goToContest = (record) => {
   sessionStorage.setItem('public_ranking', record.public_ranking);
   sessionStorage.setItem('contest_icpc', record.icpc);
   sessionStorage.setItem('contest_ioi', record.ioi);
+  sessionStorage.setItem('submit_type', record.submit_type);
   router.push('/contest/problems');
 };
 

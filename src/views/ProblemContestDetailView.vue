@@ -61,12 +61,20 @@ onMounted(async () => {
     return;
   }
 
+  const stRaw = sessionStorage.getItem("submit_type");
+  contestSubmitType.value =
+    stRaw != null && stRaw !== "" && Number.isFinite(Number(stRaw))
+      ? Number(stRaw)
+      : null;
+
   // Bắt đầu đồng hồ đếm ngược
   countdownIntervalId = setInterval(() => {
     countdown.value = getCountdown();
   }, 1000);
 
-  await fetchContestSubmitType(contestId);
+  if (contestSubmitType.value == null) {
+    await fetchContestSubmitType(contestId);
+  }
   await fetchQuestionDetails(route.params.id, contestId);
 });
 

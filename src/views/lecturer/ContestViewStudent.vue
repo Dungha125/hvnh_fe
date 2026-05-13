@@ -29,6 +29,7 @@ const goToContest = (record) => {
   sessionStorage.setItem('contest_id', record.id);
   sessionStorage.setItem('start_time', record.start_time);
   sessionStorage.setItem('finish_time', record.end_time);
+  sessionStorage.setItem('submit_type', record.submit_type);
   router.push('/lecturer/contest/student/problems');
 };
 
