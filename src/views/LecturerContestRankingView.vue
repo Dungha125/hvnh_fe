@@ -1,8 +1,9 @@
 <script setup>
-import HeaderContest from "../components/HeaderContest.vue";
+import LecturerHeader from "@/components/LecturerHeader.vue";
 import { computed, onBeforeMount, reactive, ref, watch } from "vue";
-import { UserOutlined } from "@ant-design/icons-vue";
+import { UserOutlined, DownloadOutlined } from "@ant-design/icons-vue";
 import axios from "@/configs/axios.js";
+import axiosCmc from "axios";
 import { usePagination } from "vue-request";
 import { useRouter, useRoute } from "vue-router";
 import { message } from "ant-design-vue";
@@ -14,6 +15,7 @@ const currentCourse = ref(
 );
 const route = useRoute();
 const contestId = route.params.id;
+const exporting = ref(false);
 const top3 = reactive([]);
 const leaderboard = reactive([]);
 const listStudyingCourses = ref([]);
@@ -85,7 +87,7 @@ const onClick = ({ key }) => {
 };
 
 watch(currentCourse, async () => {
-  await fetchRanking();
+  await fetchRankingData(contestId);
   run();
 });
 
@@ -116,9 +118,7 @@ const pagination = computed(() => ({
   size: 'small',
 }));
 
-const genUuid = () => {
-  return Math.random().toString(36).substring(7);
-};
+const rowKey = (row) => `${row.id}-${row.stt}`;
 
 const handleTableChange = (pag, filters, sorter) => {
   run({
@@ -129,39 +129,115 @@ const handleTableChange = (pag, filters, sorter) => {
     ...filters,
   });
 };
+
+async function exportContestPractice() {
+  const id = route.params.id;
+  if (id == null || id === "") {
+    message.error("Không xác định được bài thực hành.");
+    return;
+  }
+  exporting.value = true;
+  try {
+    const token = localStorage.getItem("access_token");
+    const res = await axiosCmc.get(
+      `https://cmc.tiennv.com/api/contests/${id}/export`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "Content-Type": "application/json",
+          Accept: "*/*",
+        },
+        responseType: "blob",
+      }
+    );
+    const blob = res.data;
+    const ct = (res.headers["content-type"] || "").toLowerCase();
+    if (ct.includes("application/json")) {
+      const text = await blob.text();
+      const j = JSON.parse(text);
+      throw new Error(j?.message || "Xuất thất bại");
+    }
+    let filename = `contest_${id}_export`;
+    const cd = res.headers["content-disposition"];
+    if (cd) {
+      const m = cd.match(/filename\*=UTF-8''([^;\s]+)|filename="?([^";\n]+)"?/i);
+      const raw = m?.[1] || m?.[2];
+      if (raw) {
+        try {
+          filename = decodeURIComponent(raw.replace(/\+/g, " "));
+        } catch {
+          filename = raw;
+        }
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    message.success("Đã tải xuống bài thực hành.");
+  } catch (e) {
+    let msg = e?.message || "Xuất bài thực hành thất bại.";
+    const data = e?.response?.data;
+    if (data instanceof Blob) {
+      try {
+        const t = await data.text();
+        const j = JSON.parse(t);
+        msg = j?.message || msg;
+      } catch {
+        /* ignore */
+      }
+    } else if (e?.response?.data?.message) {
+      msg = e.response.data.message;
+    }
+    message.error(msg);
+  } finally {
+    exporting.value = false;
+  }
+}
 </script>
 
 <template>
-  <a-spin :spinning="isLoading">
-    <div
-      style="
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-        flex-direction: column;
-        align-items: center;
-      "
+  <div class="ranking-page">
+    <LecturerHeader />
+    <a-config-provider
+      :theme="{
+        token: {
+          colorPrimary: '#007ACC',
+          colorLink: '#007ACC',
+        },
+      }"
     >
-      <div style="width: 93%; margin-bottom: 20px; color: black">
-        <h2>Bảng xếp hạng</h2>
-        <div class="underline"></div>
-      </div>
-      <div class="ranking">
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          "
-        >
-          <div v-if="currentCourse">
-            <h2 style="color: #a7453c">
-              {{ currentCourse?.subject?.name }} - Nhóm
-              {{ currentCourse?.name }}
-            </h2>
+      <a-spin :spinning="isLoading" class="content-spin">
+        <div class="page-wrapper">
+          <div class="ranking-page-header">
+            <div class="header-titles">
+              <h1 class="page-title">Bảng xếp hạng</h1>
+              <div class="title-underline" />
+            </div>
+            <a-button
+              type="primary"
+              class="export-btn"
+              :loading="exporting"
+              @click="exportContestPractice"
+            >
+              <template #icon><DownloadOutlined /></template>
+              Xuất bài thực hành
+            </a-button>
           </div>
-        </div>
-        <div class="top-3">
+
+          <div class="ranking content-card">
+            <div v-if="currentCourse?.subject" class="course-title-row">
+              <h2 class="course-title">
+                {{ currentCourse.subject.name }} — Nhóm {{ currentCourse.name }}
+              </h2>
+            </div>
+
+            <div class="top-3">
           <a-card
             class="card-top-3"
             hoverable
@@ -322,7 +398,7 @@ const handleTableChange = (pag, filters, sorter) => {
 
         <div class="table-container">
           <a-table
-            :row-key="genUuid()"
+            :row-key="rowKey"
             :data-source="dataSource"
             :pagination="pagination"
             :loading="isLoading"
@@ -370,37 +446,89 @@ const handleTableChange = (pag, filters, sorter) => {
               </template>
             </a-table-column>
           </a-table>
-          <a-config-provider
-            :theme="{
-              token: {
-                colorPrimary: '#A7453C',
-                colorTextHeading: '#000000',
-                colorText: '#A7453C',
-                colorBorderSecondary: 'rgba(186,151,147,0.45)',
-              },
-            }"
-          />
         </div>
-      </div>
-    </div>
-  </a-spin>
+          </div>
+        </div>
+      </a-spin>
+    </a-config-provider>
+  </div>
 </template>
 
 <style scoped>
-template {
-  height: 100vh;
+.ranking-page {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
 }
 
-.ranking {
+.content-spin {
+  display: block;
+  min-height: calc(100vh - 70px);
+}
+
+.page-wrapper {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 24px;
+  padding-top: 90px;
+}
+
+.ranking-page-header {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  width: 93%;
-  background-color: rgba(255, 255, 255, 0.35);
-  border-radius: 10px;
-  box-shadow: 2px 10px 20px rgba(0, 0, 0, 0.2);
-  padding: 30px;
-  margin-bottom: 5%;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.header-titles {
+  flex: 1;
+  min-width: 200px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #007acc;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.title-underline {
+  width: 100%;
+  max-width: 320px;
+  height: 3px;
+  margin-top: 8px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #00afff, #b3e5fc);
+}
+
+.export-btn {
+  font-weight: 600;
+}
+
+.content-card.ranking {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #d9e2ec;
+  box-shadow: 0 4px 15px rgba(0, 90, 170, 0.08);
+  padding: 28px 24px 32px;
+  margin-bottom: 48px;
+}
+
+.course-title-row {
+  margin-bottom: 20px;
+}
+
+.course-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #33475b;
 }
 
 .top-3 {
@@ -429,55 +557,65 @@ template {
   margin: 0 16px;
 }
 
+.table-container {
+  margin-top: 28px;
+}
+
+.table-container :deep(.ant-table) {
+  border: 1px solid #e8eff5;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-container :deep(.ant-table-thead > tr > th) {
+  background-color: #f0f5fa !important;
+  color: #007acc !important;
+  font-weight: 600;
+  text-align: center;
+}
+
+.table-container :deep(.ant-table-tbody > tr > td) {
+  color: #33475b;
+}
+
+.table-container :deep(.ant-table-tbody > tr:hover > td) {
+  background: rgba(0, 175, 255, 0.06) !important;
+}
+
 .group-icon-container {
   display: flex;
   align-items: center;
 }
 
-.table-container {
-  margin-top: 30px;
-}
-
-.underline {
-  width: 100%;
-  height: 1px;
-  margin-top: 5px;
-  background-color: #cacaca;
-}
-
-h2 {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: black;
-}
-
-.table-container {
-  margin-top: 20px;
-  flex: 1;
-}
-
 .group-icon {
-  color: rgb(115, 115, 116);
+  color: #5a738e;
   display: flex;
   align-items: center;
 }
 
 .group-icon:hover {
   cursor: pointer;
-  color: #a7453c;
+  color: #007acc;
 }
 
 .group-icon:hover p {
   cursor: pointer;
-  color: #a7453c;
+  color: #007acc;
 }
 
 .group-icon:hover img {
-  filter: invert(32%) sepia(64%) saturate(506%) hue-rotate(330deg)
-    brightness(70%) contrast(95%);
+  filter: invert(33%) sepia(83%) saturate(612%) hue-rotate(190deg) brightness(60%)
+    contrast(95%);
 }
 
 .group-icon-container p {
   margin-top: 12px;
+}
+
+@media (max-width: 992px) {
+  .page-wrapper {
+    padding: 16px;
+    padding-top: 80px;
+  }
 }
 </style>
