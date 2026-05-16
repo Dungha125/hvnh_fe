@@ -135,7 +135,7 @@ const navigateToProblem = (problemId) => {
             <main class="main-content">
                 <div class="content-card">
                   <div class="header-container">
-                    <h2>Danh sách bài tập</h2>
+                    <h2>Câu hỏi</h2>
                     <div class="underline"></div>
                   </div>
                   <a-table

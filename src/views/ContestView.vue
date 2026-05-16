@@ -79,7 +79,7 @@ const goToContest = (record) => {
 // --- TABLE COLUMNS ---
 const columns = computed(() => [
   { title: 'STT', dataIndex: 'index', key: 'index', width: '80px', align: 'center' },
-  { title: 'Thực hành', dataIndex: 'name', key: 'name' },
+  { title: 'Bài thi', dataIndex: 'name', key: 'name' },
   { title: 'Bắt đầu', dataIndex: 'start_time', key: 'start_time', width: '200px', align: 'center' },
   { title: 'Kết thúc', dataIndex: 'end_time', key: 'end_time', width: '200px', align: 'center' },
   {
@@ -109,7 +109,7 @@ const columns = computed(() => [
     <div class="body">
       <div class="part-left">
         <div class="body-header">
-          <h2>Thực hành</h2>
+          <h2>Bài thi</h2>
           <a-spin :spinning="isLoading">
             <a-table
               :columns="columns"

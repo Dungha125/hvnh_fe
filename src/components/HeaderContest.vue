@@ -104,7 +104,7 @@ const getAvatarName = (name) => {
              @mouseover="addHoverEvent(event, path='/contest')"
              @mouseout="removeHoverEvent(event, path='/contest')">
           <img src="../static/img/thuc_hanh.svg">
-          Thực hành
+          Bài thi
         </div>
 
         <div class="nav-item"
@@ -113,7 +113,7 @@ const getAvatarName = (name) => {
              @mouseover="addHoverEvent(event, path='/contest/problems')"
              @mouseout="removeHoverEvent(event, path='/contest/problems')">
           <img src="../static/img/problem.svg">
-          Bài tập
+          Câu hỏi
         </div>
 
         <div class="nav-item"
@@ -147,10 +147,6 @@ const getAvatarName = (name) => {
                     {{ currentUser.last_name + ' ' + currentUser.first_name }}
                   </p>
                   <p style="margin-bottom: 0; padding-bottom: 0">{{ currentUser.username }}</p>
-                </a-menu-item>
-                <a-menu-item @click="goTo('/profile')">
-                  <UserOutlined/>
-                  Hồ sơ
                 </a-menu-item>
                 <a-menu-item v-if="isTeacherLogin" @click="switchBackToTeacher">
                   <UserOutlined />
