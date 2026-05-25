@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref, onMounted, onUnmounted, computed, h } from 'vue';
 import { usePagination } from 'vue-request';
 import { useRouter } from 'vue-router';
@@ -6,6 +6,7 @@ import axios from "@/configs/axios.js";
 import { message } from "ant-design-vue";
 import { CheckCircleTwoTone, CloseCircleTwoTone, FieldTimeOutlined, UserOutlined, WarningOutlined } from "@ant-design/icons-vue";
 import HeaderContest from '@/components/HeaderContest.vue';
+import ContestExamSupportButton from '@/components/ContestExamSupportButton.vue';
 import dayjs from "dayjs";
 
 // --- STATE MANAGEMENT ---
@@ -14,11 +15,12 @@ const router = useRouter();
 const problems = ref([]);
 const countdown = ref('');
 const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+const activeContestId = ref(sessionStorage.getItem('contest_id') || '');
 let countdownInterval = null;
 
 // --- PAGINATION LOGIC ---
 const queryData = async () => {
-  // Trả về danh sách bài tập đã được lọc hoặc toàn bộ
+  // Trả về danh sách câu hỏi đã được lọc hoặc toàn bộ
   return problems.value;
 };
 
@@ -66,7 +68,7 @@ const fetchProblems = async () => {
 
     }
   } catch (error) {
-    message.error('Lỗi khi tải danh sách bài tập!');
+    message.error('Lỗi khi tải danh sách câu hỏi!');
   } finally {
     isLoading.value = false;
   }
@@ -125,9 +127,16 @@ const navigateToProblem = (problemId) => {
             <UserOutlined />
             <span>{{ currentUser.last_name }} {{ currentUser.first_name }} ({{ currentUser.username }})</span>
           </div>
-          <div class="timer">
-            <FieldTimeOutlined />
-            <span>{{ countdown }}</span>
+          <div class="countdown-actions">
+            <ContestExamSupportButton
+              v-if="activeContestId"
+              block
+              :contest-id="activeContestId"
+            />
+            <div class="timer">
+              <FieldTimeOutlined />
+              <span>{{ countdown }}</span>
+            </div>
           </div>
         </div>
         
@@ -162,6 +171,7 @@ const navigateToProblem = (problemId) => {
                             <li>Trên Desktop có folder Mã SV_XXXX. Sinh viên lưu mã nguồn tại thư mục này.</li>
                             <li>Thoát tất cả các phần mềm không hợp lệ.</li>
                             <li>Quá trình thi sẽ được ghi hình toàn bộ.</li>
+                            <li>Gặp sự cố: dùng nút <strong>Gửi yêu cầu hỗ trợ</strong> trên thanh thời gian (có thể tạm khóa tài khoản, ghi nhật ký hậu kiểm).</li>
                         </ul>
                         <h4>Các trường hợp vi phạm quy chế:</h4>
                         <ul>
@@ -182,7 +192,7 @@ const navigateToProblem = (problemId) => {
 
 <style scoped>
 /*
-  CSS cho trang Danh sách bài tập trong kỳ thi - Chủ đề Neo-Futuristic Sáng
+  CSS cho trang Danh sách câu hỏi trong kỳ thi - Chủ đề Neo-Futuristic Sáng
 */
 .page-container {
   background-color: #F5F7FA;
@@ -223,6 +233,12 @@ const navigateToProblem = (problemId) => {
   border-radius: 12px;
   margin-bottom: 24px;
   box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
+}
+.countdown-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 .user-info, .timer {
   display: flex;

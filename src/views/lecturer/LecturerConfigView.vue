@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="settings-page">
     <LecturerHeader/>
     <div class="page-wrapper">
@@ -61,7 +61,7 @@ const currentComponent = shallowRef(null);
 // Cấu hình menu
 const learningConfig = [
   { label: 'Lớp học', slug: 'lop-hoc', icon: lopHoc, component: LecturerClassConfigView },
-  { label: 'Thực hành', slug: 'thuc-hanh', icon: thucHanh, component: LecturerContestConfigView }
+  { label: 'Kiểm tra', slug: 'thuc-hanh', icon: thucHanh, component: LecturerContestConfigView }
 ];
 
 // Vue Router

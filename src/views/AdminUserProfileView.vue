@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import Header from '../components/Header.vue';
 import AdminHeader from "@/components/AdminHeader.vue";
 import {
@@ -514,7 +514,7 @@ const navigateToProblem = code => {
 
                     <a-table-column width="20%" data-index="problem">
                       <template #title>
-                        <span style="font-weight: bold">Bài tập</span>
+                        <span style="font-weight: bold">Câu hỏi</span>
                       </template>
 
                       <template #default="{ record }">

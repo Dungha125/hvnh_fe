@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import {computed, onBeforeMount, reactive, ref, watchEffect} from 'vue';
 import {usePagination} from 'vue-request';
 import axios from "@/configs/axios.js";
@@ -247,7 +247,7 @@ watchEffect(() => {
 
                                 <a-table-column width="20%" data-index="problem">
                                     <template #title>
-                                        <span style="font-weight: bold">Bài tập</span>
+                                        <span style="font-weight: bold">Câu hỏi</span>
                                     </template>
 
                                     <template #default="{ record }">

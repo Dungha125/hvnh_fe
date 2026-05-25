@@ -1,7 +1,7 @@
-<template>
+﻿<template>
     <div class="topic-container">
       <div class="header">
-        <h2>Chủ đề bài tập</h2>
+        <h2>Chủ đề câu hỏi</h2>
         <a-button type="primary" class="add-button" @click="openAddModal">Thêm mới</a-button>
       </div>
   
@@ -30,7 +30,7 @@
       </a-table>
   
       <!-- Modal Thêm/Sửa -->
-      <a-modal v-model:open="showModal" :title="isEditing ? 'Chỉnh sửa chủ đề bài tập' : 'Thêm chủ đề bài tập'" @ok="onSubmit" okText="Lưu" cancelText="Hủy">
+      <a-modal v-model:open="showModal" :title="isEditing ? 'Chỉnh sửa chủ đề câu hỏi' : 'Thêm chủ đề câu hỏi'" @ok="onSubmit" okText="Lưu" cancelText="Hủy">
         <a-form layout="vertical">
           <a-form-item label="Mã *" required>
             <a-input v-model:value="form.code" :disabled="isEditing" />
@@ -140,11 +140,11 @@ const fetchQuestionGroups = async () => {
         status: group.status === 1 ? 'Hoạt động' : 'Không hoạt động'
       }))
     } else {
-      message.error('Không thể tải danh sách chủ đề bài tập')
+      message.error('Không thể tải danh sách chủ đề câu hỏi')
     }
   } catch (error) {
     console.error('Error fetching question groups:', error)
-    message.error('Lỗi khi tải danh sách chủ đề bài tập')
+    message.error('Lỗi khi tải danh sách chủ đề câu hỏi')
   } finally {
     loading.value = false
   }
@@ -171,26 +171,26 @@ const onSubmit = async () => {
       // Update existing question group
       const response = await axios.put(`/question_groups/${editingId.value}`, payload)
       if (response.data.code === 200) {
-        message.success('Cập nhật chủ đề bài tập thành công!')
+        message.success('Cập nhật chủ đề câu hỏi thành công!')
         await fetchQuestionGroups()
       } else {
-        message.error('Lỗi khi cập nhật chủ đề bài tập')
+        message.error('Lỗi khi cập nhật chủ đề câu hỏi')
       }
     } else {
       // Create new question group
       const response = await axios.post('/question_groups', payload)
       if (response.data.code === 200) {
-        message.success('Thêm chủ đề bài tập thành công!')
+        message.success('Thêm chủ đề câu hỏi thành công!')
         await fetchQuestionGroups()
       } else {
-        message.error('Lỗi khi thêm chủ đề bài tập')
+        message.error('Lỗi khi thêm chủ đề câu hỏi')
       }
     }
     showModal.value = false
     resetForm()
   } catch (error) {
     console.error('Error submitting question group:', error)
-    message.error('Lỗi khi lưu chủ đề bài tập')
+    message.error('Lỗi khi lưu chủ đề câu hỏi')
   }
 }
 
@@ -199,14 +199,14 @@ const onDelete = async (id) => {
   try {
     const response = await axios.delete(`/question_groups/${id}`)
     if (response.data.code === 200) {
-      message.success('Xóa chủ đề bài tập thành công!')
+      message.success('Xóa chủ đề câu hỏi thành công!')
       await fetchQuestionGroups()
     } else {
-      message.error('Lỗi khi xóa chủ đề bài tập')
+      message.error('Lỗi khi xóa chủ đề câu hỏi')
     }
   } catch (error) {
     console.error('Error deleting question group:', error)
-    message.error('Lỗi khi xóa chủ đề bài tập')
+    message.error('Lỗi khi xóa chủ đề câu hỏi')
   }
 }
 

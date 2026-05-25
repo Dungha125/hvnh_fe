@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { useRoute } from "vue-router";
 import { useRouter } from "vue-router";
 import { ref } from "vue";
@@ -94,7 +94,7 @@ const getAvatarName = (name) => {
         </div>
         <div class="nav-item" :style="styleNavItem('/admin/problems')" @click="goTo('/admin/problems')">
           <ReadOutlined />
-          <span class="nav-text">Bài tập</span>
+          <span class="nav-text">Câu hỏi</span>
         </div>
         <div class="nav-item" :style="styleNavItem('/admin/settings')" @click="goTo('/admin/settings')">
           <SettingOutlined />
@@ -156,7 +156,7 @@ const getAvatarName = (name) => {
         </div>
         <div class="nav-item" :style="styleNavItem('/admin/problems')" @click="goTo('/admin/problems'); toggleMobileMenu();">
           <ReadOutlined />
-          <span class="nav-text">Bài tập</span>
+          <span class="nav-text">Câu hỏi</span>
         </div>
         <div class="nav-item" :style="styleNavItem('/admin/settings')" @click="goTo('/admin/settings'); toggleMobileMenu();">
           <SettingOutlined />

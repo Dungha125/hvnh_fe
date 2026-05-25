@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref, reactive, onUnmounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from "@/configs/axios.js";
@@ -109,7 +109,7 @@ const fetchQuestionDetails = async (questionId) => {
     await fetchUserSubmissions();
 
   } catch (error) {
-    message.error("Không thể tải chi tiết bài tập.");
+    message.error("Không thể tải chi tiết câu hỏi.");
     router.push('/not-found');
   } finally {
     isLoading.value = false;
@@ -426,17 +426,17 @@ const handleDeleteComment = async (commentId) => {
               </a-tab-pane>
 
               <a-tab-pane key="edit">
-                 <template #tab><EditOutlined /> Sửa bài tập</template>
+                 <template #tab><EditOutlined /> Sửa câu hỏi</template>
                  <div class="tab-content">
                     <a-form layout="vertical" :model="editForm" @finish="handleEditSubmit" class="form-layout">
                         <div class="form-grid">
                           <div class="form-column">
-                            <a-form-item label="Mã bài tập" required><a-input v-model:value="editForm.code" /></a-form-item>
+                            <a-form-item label="Mã câu hỏi" required><a-input v-model:value="editForm.code" /></a-form-item>
                             <a-form-item label="Tiêu đề" required><a-input v-model:value="editForm.name" /></a-form-item>
                           </div>
                           <div class="form-column">
                             <a-form-item label="Độ khó" required><a-select v-model:value="editForm.level" :options="difficulties" /></a-form-item>
-                            <a-form-item label="Loại bài tập" required><a-select v-model:value="editForm.type" :options="typeProblems"/></a-form-item>
+                            <a-form-item label="Loại câu hỏi" required><a-select v-model:value="editForm.type" :options="typeProblems"/></a-form-item>
                           </div>
                         </div>
                          <a-form-item label="Nội dung" required>
@@ -451,7 +451,7 @@ const handleDeleteComment = async (commentId) => {
                  <template #tab><ToolOutlined /> Thao tác khác</template>
                  <div class="tab-content">
                     <h4>Chấm lại bài</h4>
-                    <p>Hành động này sẽ đưa tất cả các bài đã nộp cho bài tập này vào hàng đợi để chấm lại từ đầu.</p>
+                    <p>Hành động này sẽ đưa tất cả các bài đã nộp cho câu hỏi này vào hàng đợi để chấm lại từ đầu.</p>
                     <a-button type="primary" danger @click="handleRejudge">Chấm lại toàn bộ</a-button>
                  </div>
               </a-tab-pane>

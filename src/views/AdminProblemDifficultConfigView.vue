@@ -1,7 +1,7 @@
-<template>
+﻿<template>
     <div class="level-container">
       <div class="header">
-        <h2>Độ khó bài tập</h2>
+        <h2>Độ khó câu hỏi</h2>
         <a-button type="primary" class="add-button" @click="showModal = true">Thêm mới</a-button>
       </div>
   
@@ -98,11 +98,11 @@
           status: level.status === 1 ? 'Hoạt động' : 'Không hoạt động'
         }))
       } else {
-        message.error('Không thể tải danh sách độ khó bài tập')
+        message.error('Không thể tải danh sách độ khó câu hỏi')
       }
     } catch (error) {
       console.error('Error fetching question levels:', error)
-      message.error('Lỗi khi tải danh sách độ khó bài tập')
+      message.error('Lỗi khi tải danh sách độ khó câu hỏi')
     } finally {
       loading.value = false
     }
@@ -128,26 +128,26 @@
         // Update existing question level
         const response = await axios.put(`/question_levels/${editingId.value}`, payload)
         if (response.data.code === 200) {
-          message.success('Cập nhật độ khó bài tập thành công!')
+          message.success('Cập nhật độ khó câu hỏi thành công!')
           await fetchQuestionLevels()
         } else {
-          message.error('Lỗi khi cập nhật độ khó bài tập')
+          message.error('Lỗi khi cập nhật độ khó câu hỏi')
         }
       } else {
         // Create new question level
         const response = await axios.post('/question_levels', payload)
         if (response.data.code === 200) {
-          message.success('Thêm độ khó bài tập thành công!')
+          message.success('Thêm độ khó câu hỏi thành công!')
           await fetchQuestionLevels()
         } else {
-          message.error('Lỗi khi thêm độ khó bài tập')
+          message.error('Lỗi khi thêm độ khó câu hỏi')
         }
       }
       showModal.value = false
       resetForm()
     } catch (error) {
       console.error('Error submitting question level:', error)
-      message.error('Lỗi khi lưu độ khó bài tập')
+      message.error('Lỗi khi lưu độ khó câu hỏi')
     }
   }
 
@@ -156,14 +156,14 @@
     try {
       const response = await axios.delete(`/question_levels/${id}`)
       if (response.data.code === 200) {
-        message.success('Xóa độ khó bài tập thành công!')
+        message.success('Xóa độ khó câu hỏi thành công!')
         await fetchQuestionLevels()
       } else {
-        message.error('Lỗi khi xóa độ khó bài tập')
+        message.error('Lỗi khi xóa độ khó câu hỏi')
       }
     } catch (error) {
       console.error('Error deleting question level:', error)
-      message.error('Lỗi khi xóa độ khó bài tập')
+      message.error('Lỗi khi xóa độ khó câu hỏi')
     }
   }
 

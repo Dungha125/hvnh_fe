@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import AdminHeader from "@/components/AdminHeader.vue";
 import Header from "@/components/Header.vue";
 </script>
@@ -16,19 +16,19 @@ import Header from "@/components/Header.vue";
         <h3>Hướng dẫn nộp bài</h3>
         <p>Sinh viên chọn bài trong danh sách đề bài, nhấn vào tên hoặc mã bài để xem chi tiết đề bài.</p>
         <img src="../static/img/problems.png" alt="problems" class="image">
-        <p class="caption">Hình 1. Danh sách các bài tập theo môn học.</p>
+        <p class="caption">Hình 1. Danh sách các câu hỏi theo môn học.</p>
       </div>
 
       <div class="section">
-        <p>Các bài nền màu xanh là đã giải bài đúng, các bài tập còn lại chưa làm hoặc giải sai...</p>
+        <p>Các bài nền màu xanh là đã giải bài đúng, các câu hỏi còn lại chưa làm hoặc giải sai...</p>
         <img src="../static/img/problem-detail.png" alt="problem-detail" class="image">
         <p class="caption">Hình 2. Chi tiết đề bài.</p>
       </div>
 
       <div class="section">
-        <p>Đối với các bài tập có yêu cầu sử dụng hàm main có sẵn để giải bài...</p>
+        <p>Đối với các câu hỏi có yêu cầu sử dụng hàm main có sẵn để giải bài...</p>
         <img src="../static/img/main-function.png" alt="main-function" class="image">
-        <p class="caption">Hình 3. Bài tập yêu cầu giải với hàm main có sẵn.</p>
+        <p class="caption">Hình 3. Câu hỏi yêu cầu giải với hàm main có sẵn.</p>
       </div>
 
       <div class="section">

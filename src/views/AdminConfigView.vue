@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="settings-page">
     <AdminHeader/>
     <div class="page-wrapper">
@@ -122,10 +122,10 @@ const routes = {
 // Danh sách menu với icon
 const generalConfig = [
   {label: 'Hệ thống', slug: 'he-thong', icon: heThong, component: AdminSystemConfigView},
-  {label: 'Loại bài tập', slug: 'loai-bai-tap', icon: loaiBT, component: AdminProblemTypeConfigView},
-  {label: 'Chủ đề bài tập', slug: 'chu-de-bai-tap', icon: chuDeBT, component: AdminProblemTopicConfigView},
-  {label: 'Chủ đề con bài tập', slug: 'chu-de-con-bai-tap', icon: chuDeCon, component: AdminProblemSubtopicConfigView},
-  {label: 'Độ khó bài tập', slug: 'do-kho-bai-tap', icon: doKho, component: AdminProblemDifficultConfigView},
+  {label: 'Loại câu hỏi', slug: 'loai-bai-tap', icon: loaiBT, component: AdminProblemTypeConfigView},
+  {label: 'Chủ đề câu hỏi', slug: 'chu-de-bai-tap', icon: chuDeBT, component: AdminProblemTopicConfigView},
+  {label: 'Chủ đề con câu hỏi', slug: 'chu-de-con-bai-tap', icon: chuDeCon, component: AdminProblemSubtopicConfigView},
+  {label: 'Độ khó câu hỏi', slug: 'do-kho-bai-tap', icon: doKho, component: AdminProblemDifficultConfigView},
   {label: 'Trình biên dịch', slug: 'trinh-bien-dich', icon: bienDich, component: AdnimCompilerConfigView},
   {label: 'Máy chấm', slug: 'may-cham', icon: mayCham, component: AdminJudgeConfigView}
 ];
@@ -134,7 +134,7 @@ const learningConfig = [
   {label: 'Học kỳ', slug: 'hoc-ky', icon: hocKy, component: AdminSemesterConfigView},
   {label: 'Môn học', slug: 'mon-hoc', icon: monHoc, component: AdminSubjectConfigView},
   {label: 'Lớp học', slug: 'lop-hoc', icon: lopHoc, component: AdminClassConfigView},
-  {label: 'Thực hành', slug: 'thuc-hanh', icon: thucHanh, component: AdminContestConfigView
+  {label: 'Kiểm tra', slug: 'thuc-hanh', icon: thucHanh, component: AdminContestConfigView
   }
 ];
 

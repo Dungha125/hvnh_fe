@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { useRoute } from 'vue-router';
 import { useRouter } from 'vue-router';
 import { ref } from "vue";
@@ -70,8 +70,8 @@ const getAvatarName = (name) => {
       <!-- Desktop Navigation -->
       <nav class="navigation desktop-nav">
         <div class="nav-item" :style="styleNavItem('/lecturer/questions')" @click="goTo('/lecturer/questions')">
-          <img src="../static/img/problem.svg" alt="Bài tập icon">
-          <span class="nav-text">Bài tập</span>
+          <img src="../static/img/problem.svg" alt="Câu hỏi icon">
+          <span class="nav-text">Câu hỏi</span>
         </div>
         <div class="nav-item" :style="styleNavItem('/lecturer/status')" @click="goTo('/lecturer/status')">
           <img src="../static/img/status_icon.svg" alt="Trạng thái icon">
@@ -128,8 +128,8 @@ const getAvatarName = (name) => {
       <nav class="navigation mobile-nav">
         <!-- Main Navigation -->
         <div class="nav-item" :style="styleNavItem('/lecturer/questions')" @click="goTo('/lecturer/questions'); toggleMobileMenu();">
-          <img src="../static/img/problem.svg" alt="Bài tập icon">
-          <span class="nav-text">Bài tập</span>
+          <img src="../static/img/problem.svg" alt="Câu hỏi icon">
+          <span class="nav-text">Câu hỏi</span>
         </div>
         <div class="nav-item" :style="styleNavItem('/lecturer/status')" @click="goTo('/lecturer/status'); toggleMobileMenu();">
           <img src="../static/img/status_icon.svg" alt="Trạng thái icon">

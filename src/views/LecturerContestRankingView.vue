@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import LecturerHeader from "@/components/LecturerHeader.vue";
 import { computed, onBeforeMount, reactive, ref, watch } from "vue";
 import { UserOutlined, DownloadOutlined } from "@ant-design/icons-vue";
@@ -133,7 +133,7 @@ const handleTableChange = (pag, filters, sorter) => {
 async function exportContestPractice() {
   const id = route.params.id;
   if (id == null || id === "") {
-    message.error("Không xác định được bài thực hành.");
+    message.error("Không xác định được kiểm tra.");
     return;
   }
   exporting.value = true;
@@ -179,9 +179,9 @@ async function exportContestPractice() {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    message.success("Đã tải xuống bài thực hành.");
+    message.success("Đã tải xuống kiểm tra.");
   } catch (e) {
-    let msg = e?.message || "Xuất bài thực hành thất bại.";
+    let msg = e?.message || "Xuất kiểm tra thất bại.";
     const data = e?.response?.data;
     if (data instanceof Blob) {
       try {
@@ -226,7 +226,7 @@ async function exportContestPractice() {
               @click="exportContestPractice"
             >
               <template #icon><DownloadOutlined /></template>
-              Xuất bài thực hành
+              Xuất kiểm tra
             </a-button>
           </div>
 

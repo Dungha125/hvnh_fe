@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import Header from '@/components/LecturerHeader.vue';
 
 import {computed, onBeforeMount, onBeforeUnmount, reactive, ref} from 'vue';
@@ -164,7 +164,7 @@ const activeKey = ref([1]);
                         <LoadingOutlined v-else-if="text === null" />
                       </template>
                     </a-table-column>
-                    <a-table-column title="Bài tập" data-index="problem" :min-width="200" />
+                    <a-table-column title="Câu hỏi" data-index="problem" :min-width="200" />
                     <a-table-column title="Thời gian chạy" data-index="time" :width="120" />
                     <a-table-column title="Bộ nhớ" data-index="memory" :width="100" />
                     <a-table-column title="Trình biên dịch" data-index="compiler" :width="150" />

@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref, onMounted, onUnmounted, h, computed } from 'vue';
 import axios from '@/configs/axios.js';
 import { useRouter } from 'vue-router';
@@ -20,7 +20,7 @@ const fetchContests = async () => {
       contestList.value = response.data.data.data;
     }
   } catch (error) {
-    message.error('Lỗi khi lấy danh sách thực hành!');
+    message.error('Lỗi khi lấy danh sách kiểm tra!');
   } finally {
     isLoading.value = false;
   }
@@ -79,7 +79,7 @@ const goToContest = (record) => {
 // --- TABLE COLUMNS ---
 const columns = computed(() => [
   { title: 'STT', dataIndex: 'index', key: 'index', width: '80px', align: 'center' },
-  { title: 'Bài thi', dataIndex: 'name', key: 'name' },
+  { title: 'Kiểm tra', dataIndex: 'name', key: 'name' },
   { title: 'Bắt đầu', dataIndex: 'start_time', key: 'start_time', width: '200px', align: 'center' },
   { title: 'Kết thúc', dataIndex: 'end_time', key: 'end_time', width: '200px', align: 'center' },
   {
@@ -109,7 +109,7 @@ const columns = computed(() => [
     <div class="body">
       <div class="part-left">
         <div class="body-header">
-          <h2>Bài thi</h2>
+          <h2>Kiểm tra</h2>
           <a-spin :spinning="isLoading">
             <a-table
               :columns="columns"

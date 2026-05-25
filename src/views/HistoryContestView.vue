@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axiosInstance from "@/configs/axios.js";
@@ -252,7 +252,7 @@ const showEditor = async (record) => {
                        </a>
                      </template>
                   </a-table-column>
-                  <a-table-column title="Bài tập" data-index="problem">
+                  <a-table-column title="Câu hỏi" data-index="problem">
                     <template #default="{ record }">
                        <a class="table-link" @click="navigateToProblem(record.code)">
                          {{ record.problem.toUpperCase() }}

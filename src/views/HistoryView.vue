@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import Header from '../components/Header.vue';
 
 import {computed, onBeforeMount, reactive, ref} from 'vue';
@@ -209,7 +209,7 @@ const showEditor = async (id) =>
                       </a>
                     </template>
                   </a-table-column>
-                  <a-table-column title="Bài tập" data-index="problem" width="25%">
+                  <a-table-column title="Câu hỏi" data-index="problem" width="25%">
                      <template #default="{ record }">
                        <a class="table-link" @click="navigateToProblem(record.code)">
                          {{ record.problem.toUpperCase() }}

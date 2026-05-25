@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import {
   onBeforeMount,
   ref,
@@ -90,13 +90,13 @@ const problemDetail = reactive({
 const tabs = ref([
   {
     key: "problems",
-    label: "Danh sách bài tập",
-    title: "Danh sách bài tập",
+    label: "Danh sách câu hỏi",
+    title: "Danh sách câu hỏi",
   },
   {
     key: "addProblem",
-    label: "Thêm bài tập",
-    title: "Thêm bài tập",
+    label: "Thêm câu hỏi",
+    title: "Thêm câu hỏi",
   },
   {
     key: "comments",
@@ -105,13 +105,13 @@ const tabs = ref([
   },
   {
     key: "confirm",
-    label: "Phê duyệt bài tập",
-    title: "Phê duyệt bài tập",
+    label: "Phê duyệt câu hỏi",
+    title: "Phê duyệt câu hỏi",
   },
   {
     key: "managementProblem",
-    label: "Quản lý bài tập",
-    title: "Quản lý bài tập",
+    label: "Quản lý câu hỏi",
+    title: "Quản lý câu hỏi",
   },
   {
     key: "multipleChoiceProblem",
@@ -219,16 +219,16 @@ const handleAddProblems = async () => {
     .post("questions", payload)
     .then(async (response) => {
       if (response.data.code === 200) {
-        message.success("Thêm bài tập thành công!");
+        message.success("Thêm câu hỏi thành công!");
         await fetchProblems(current_course.value);
       } else {
-        message.error("Lỗi khi thêm bài tập, vui lòng thử lại!");
+        message.error("Lỗi khi thêm câu hỏi, vui lòng thử lại!");
         console.log(response.data);
       }
     })
     .catch((error) => {
       console.error(error);
-      message.error("Lỗi khi thêm bài tập, vui lòng thử lại!");
+      message.error("Lỗi khi thêm câu hỏi, vui lòng thử lại!");
     });
 };
 
@@ -237,29 +237,29 @@ const handleDeleteProblem = async (questionID) => {
     .delete(`/questions/${questionID}`)
     .then(async (response) => {
       if (response.data.code === 200) {
-        message.success("Xóa bài tập thành công!");
+        message.success("Xóa câu hỏi thành công!");
         await fetchProblems(current_course.value);
       } else {
-        message.error("Lỗi khi xóa bài tập, vui lòng thử lại!");
+        message.error("Lỗi khi xóa câu hỏi, vui lòng thử lại!");
         console.log(response.data);
       }
     })
     .catch((error) => {
       console.error(error.response.data);
-      message.error("Lỗi khi xóa bài tập, vui lòng thử lại!");
+      message.error("Lỗi khi xóa câu hỏi, vui lòng thử lại!");
     });
 };
 
 const deleteConfirm = (questionID) => {
   Modal.confirm({
-    title: "Xác nhận xoá bài tập",
+    title: "Xác nhận xoá câu hỏi",
     icon: createVNode(ExclamationCircleOutlined),
     content: createVNode(
       "div",
       {
         style: "color:red;",
       },
-      "Bạn có chắc là muốn xoá bài tập này không?"
+      "Bạn có chắc là muốn xoá câu hỏi này không?"
     ),
     onOk() {
       handleDeleteProblem(questionID);
@@ -340,7 +340,7 @@ const fetchProblems = async (courseId) => {
 
     problemsList.push(...mapped);
   } catch (error) {
-    message.error("Lỗi khi lấy danh sách bài tập");
+    message.error("Lỗi khi lấy danh sách câu hỏi");
     console.error("Lỗi:", error.response?.data || error.message);
   } finally {
     isLoading.value = false;
@@ -473,7 +473,7 @@ onBeforeMount(async () => {
       }));
     }
   } catch (error) {
-    message.error("Lỗi khi lấy dữ liệu dạng bài tập");
+    message.error("Lỗi khi lấy dữ liệu dạng câu hỏi");
     console.error(error);
   }
 
@@ -556,7 +556,7 @@ onBeforeMount(async () => {
       }));
     }
   } catch (error) {
-    message.error("Lỗi khi lấy danh sách bài tập");
+    message.error("Lỗi khi lấy danh sách câu hỏi");
     console.log(error);
   } finally {
     isLoading.value = false;
@@ -672,14 +672,14 @@ const handleSubjectChange = () => {
 };
 const showConfirm = () => {
   Modal.confirm({
-    title: "Xác nhận thêm bài tập mới",
+    title: "Xác nhận thêm câu hỏi mới",
     icon: createVNode(ExclamationCircleOutlined),
     content: createVNode(
       "div",
       {
         style: "color:red;",
       },
-      "Hãy kiểm tra kỹ thông tin trước khi thêm bài tập mới!"
+      "Hãy kiểm tra kỹ thông tin trước khi thêm câu hỏi mới!"
     ),
     onOk() {
       handleAddProblems();
@@ -795,16 +795,16 @@ const handleEditProblem = async (problemAfterEdit, questionID) => {
     .put(`/questions/${questionID}`, payload)
     .then(async (response) => {
       if (response.data.code === 200) {
-        message.success("Cập nhật bài tập thành công!");
+        message.success("Cập nhật câu hỏi thành công!");
         await fetchProblems(current_course.value);
       } else {
-        message.error("Lỗi khi cập nhật bài tập, vui lòng thử lại!");
+        message.error("Lỗi khi cập nhật câu hỏi, vui lòng thử lại!");
         console.log(response.data);
       }
     })
     .catch((error) => {
       console.error(error.response.data);
-      message.error("Lỗi khi cập nhật bài tập, vui lòng thử lại!");
+      message.error("Lỗi khi cập nhật câu hỏi, vui lòng thử lại!");
     });
   closeEditModal();
 };
@@ -848,7 +848,7 @@ const fetchQuestionData = async (code) => {
       showModal();
     }
   } catch (error) {
-    message.error("Lỗi khi lấy dữ liệu bài tập");
+    message.error("Lỗi khi lấy dữ liệu câu hỏi");
     console.error(error);
   }
 };
@@ -875,7 +875,7 @@ const isEditModalVisible = ref(false);
 const openEditModal = async (problem) => {
   console.log(problem);
   if (!problem || Object.keys(problem).length === 0) {
-    console.error("Không có dữ liệu bài tập!", problem);
+    console.error("Không có dữ liệu câu hỏi!", problem);
     return;
   }
 
@@ -931,10 +931,10 @@ const openEditModal = async (problem) => {
 
       isEditModalVisible.value = true;
     } else {
-      console.error("Dữ liệu bài tập không hợp lệ!", response.data);
+      console.error("Dữ liệu câu hỏi không hợp lệ!", response.data);
     }
   } catch (error) {
-    console.error("Lỗi khi lấy dữ liệu bài tập:", error);
+    console.error("Lỗi khi lấy dữ liệu câu hỏi:", error);
   }
 };
 
@@ -973,7 +973,7 @@ const handleCourseChange = (value) => {
     <div class="body">
       <div class="part-left">
         <div class="body-header">
-          <h2>Bài tập</h2>
+          <h2>Câu hỏi</h2>
           <div class="underline"></div>
           <div class="part-right">
             <div class="content-container">
@@ -990,7 +990,7 @@ const handleCourseChange = (value) => {
                 class="problem-list-container"
               >
                 <p style="margin-top: 10px; font-size: 110%; font-weight: bold">
-                  Danh sách bài tập hiện có trên hệ thống:
+                  Danh sách câu hỏi hiện có trên hệ thống:
                 </p>
 
                 <div style="display: flex; align-items: center">
@@ -1033,7 +1033,7 @@ const handleCourseChange = (value) => {
                     <a-button
                       type="primary"
                       @click="currentTab[0] = 'addProblem'"
-                      >Thêm bài tập
+                      >Thêm câu hỏi
                     </a-button>
                   </div>
                 </div>
@@ -1068,7 +1068,7 @@ const handleCourseChange = (value) => {
                         <td>{{ item?.group_name }}</td>
                         <td>{{ item.subTopic }}</td>
                         <td v-if="item.type === 1">Luyện tập</td>
-                        <td v-else-if="item.type === 2">Thực hành</td>
+                        <td v-else-if="item.type === 2">Kiểm tra</td>
                         <td v-else-if="item.type === 3">Thi</td>
                         <td v-else>—</td>
                         <td>{{ item.difficulty }}</td>
@@ -1099,11 +1099,11 @@ const handleCourseChange = (value) => {
                           </a-button>
                         </a-dropdown>
 
-                        <!-- Popup cập nhật bài tập -->
+                        <!-- Popup cập nhật câu hỏi -->
                         <a-modal
                           style="width: 60%"
                           v-model:visible="isEditModalVisible"
-                          title="Cập nhật bài tập"
+                          title="Cập nhật câu hỏi"
                           @ok="
                             handleEditProblem(
                               problemDetailEdit,
@@ -1113,8 +1113,8 @@ const handleCourseChange = (value) => {
                           @cancel="closeEditModal"
                         >
                           <a-form layout="vertical">
-                            <!-- Mã bài tập -->
-                            <a-form-item label="Mã bài tập" required>
+                            <!-- Mã câu hỏi -->
+                            <a-form-item label="Mã câu hỏi" required>
                               <a-input v-model:value="problemDetailEdit.code" />
                             </a-form-item>
 
@@ -1214,7 +1214,7 @@ const handleCourseChange = (value) => {
                               </a-radio-group>
                             </a-form-item>
 
-                            <a-form-item label="*Loại bài tập" required>
+                            <a-form-item label="*Loại câu hỏi" required>
                               <a-select
                                 v-model:value="problemDetailEdit.type"
                                 :options="typeProblems"
@@ -1243,29 +1243,29 @@ const handleCourseChange = (value) => {
                 class="problem-list-container"
               >
                 <p style="margin-top: 10px; font-size: 110%; font-weight: bold">
-                  Thêm bài tập mới:
+                  Thêm câu hỏi mới:
                 </p>
                 <a-form layout="vertical">
                   <div class="form-container">
                     <!-- Cột trái -->
                     <div class="form-group">
-                      <a-form-item label="Mã bài tập" required>
+                      <a-form-item label="Mã câu hỏi" required>
                         <a-input
                           v-model:value="newProblems.code"
-                          placeholder="Nhập mã bài tập"
+                          placeholder="Nhập mã câu hỏi"
                           :rules="[
                             {
                               required: true,
-                              message: 'Vui lòng nhập mã bài tập',
+                              message: 'Vui lòng nhập mã câu hỏi',
                             },
                             {
                               pattern: /^[A-Za-z0-9_-]+$/u,
                               message:
-                                'Mã bài tập chỉ chứa chữ cái, số, dấu gạch dưới và dấu gạch ngang',
+                                'Mã câu hỏi chỉ chứa chữ cái, số, dấu gạch dưới và dấu gạch ngang',
                             },
                             {
                               max: 50,
-                              message: 'Mã bài tập không được quá 50 ký tự',
+                              message: 'Mã câu hỏi không được quá 50 ký tự',
                             },
                           ]"
                         />
@@ -1382,7 +1382,7 @@ const handleCourseChange = (value) => {
                           <a-radio value="0">Riêng tư</a-radio>
                         </a-radio-group>
                       </a-form-item>
-                      <a-form-item label="Loại bài tập" required>
+                      <a-form-item label="Loại câu hỏi" required>
                         <a-select
                           v-model:value="newProblems.type"
                           placeholder="Chọn độ khó"
@@ -1487,7 +1487,7 @@ const handleCourseChange = (value) => {
                     <tr>
                       <th>STT</th>
                       <th>Từ</th>
-                      <th>Bài tập</th>
+                      <th>Câu hỏi</th>
                       <th>Trạng thái</th>
                       <th>Thời gian</th>
                     </tr>
@@ -1510,7 +1510,7 @@ const handleCourseChange = (value) => {
                 class="problem-list-container"
               >
                 <p style="margin-top: 10px; font-size: 110%; font-weight: bold">
-                  Danh sách bài tập hiện có trên hệ thống:
+                  Danh sách câu hỏi hiện có trên hệ thống:
                 </p>
 
                 <div style="display: flex; align-items: center">

@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref, onMounted, onUnmounted, computed, h } from 'vue';
 import axios from '@/configs/axios.js';
 import { useRoute } from 'vue-router';
@@ -118,7 +118,7 @@ const rankedUsers = computed(() => {
     return usersWithScores.sort((a, b) => b.totalScore - a.totalScore);
 });
 
-// Lấy danh sách cột bài tập từ nguồn đáng tin cậy nhất là `contest.problems`
+// Lấy danh sách cột câu hỏi từ nguồn đáng tin cậy nhất là `contest.problems`
 const problemIds = computed(() => {
   if (!contest.value?.problems) return [];
   return contest.value.problems.map(p => p.short_name);

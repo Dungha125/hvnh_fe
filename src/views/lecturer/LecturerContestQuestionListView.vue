@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import LecturerHeader from "@/components/LecturerHeader.vue";
 import { useRoute } from "vue-router";
 import { onBeforeMount, ref } from "vue";
@@ -78,7 +78,7 @@ const fetchProblems = async () => {
   const courseId = getActiveCourseId();
   if (!courseId) {
     message.warning(
-      "Chưa xác định lớp học. Vào mục Bài tập, chọn đúng môn/lớp (dropdown Môn học) rồi thử lại."
+      "Chưa xác định lớp học. Vào mục Câu hỏi, chọn đúng môn/lớp (dropdown Môn học) rồi thử lại."
     );
     isLoading.value = false;
     return;
@@ -108,7 +108,7 @@ const fetchProblems = async () => {
       }));
     }
   } catch (error) {
-    message.error("Lỗi khi lấy danh sách bài tập");
+    message.error("Lỗi khi lấy danh sách câu hỏi");
     console.error("Lỗi:", error.response?.data || error.message);
   } finally {
     isLoading.value = false;
@@ -126,7 +126,7 @@ const showEditModal = async () => {
 const handleUpdate = async () => {
   try {
     if (selectedRowKeys.value.length === 0) {
-      message.warning("Vui lòng chọn ít nhất một bài tập!");
+      message.warning("Vui lòng chọn ít nhất một câu hỏi!");
       return;
     }
     const payload = {
@@ -164,7 +164,7 @@ const columns = [
 
 <template>
   <LecturerHeader />
-  <a-card title="Danh Sách Bài Tập" style="width: 100%; margin: auto; padding-top: 70px">
+  <a-card title="Danh Sách Câu hỏi" style="width: 100%; margin: auto; padding-top: 70px">
     <div class="cta" style="display: flex; justify-content: flex-end; gap: 10px; padding-bottom: 20px">
       <a-button @click="showEditModal" style="background-color: #a7453c; color: white">Sửa</a-button>
     </div>

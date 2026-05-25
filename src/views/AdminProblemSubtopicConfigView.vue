@@ -1,7 +1,7 @@
-<template>
+﻿<template>
     <div class="sub-topic-container">
       <div class="header">
-        <h2>Chủ đề con bài tập</h2>
+        <h2>Chủ đề con câu hỏi</h2>
         <a-button type="primary" class="add-button" @click="openAddModal">Thêm mới</a-button>
       </div>
   
@@ -140,11 +140,11 @@ const fetchQuestionSubGroups = async () => {
         status: subGroup.status === 1 ? 'Hoạt động' : 'Không hoạt động'
       }))
     } else {
-      message.error('Không thể tải danh sách chủ đề con bài tập')
+      message.error('Không thể tải danh sách chủ đề con câu hỏi')
     }
   } catch (error) {
     console.error('Error fetching question sub-groups:', error)
-    message.error('Lỗi khi tải danh sách chủ đề con bài tập')
+    message.error('Lỗi khi tải danh sách chủ đề con câu hỏi')
   } finally {
     loading.value = false
   }
@@ -171,26 +171,26 @@ const onSubmit = async () => {
       // Update existing question sub-group
       const response = await axios.put(`/question_sub_groups/${editingId.value}`, payload)
       if (response.data.code === 200) {
-        message.success('Cập nhật chủ đề con bài tập thành công!')
+        message.success('Cập nhật chủ đề con câu hỏi thành công!')
         await fetchQuestionSubGroups()
       } else {
-        message.error('Lỗi khi cập nhật chủ đề con bài tập')
+        message.error('Lỗi khi cập nhật chủ đề con câu hỏi')
       }
     } else {
       // Create new question sub-group
       const response = await axios.post('/question_sub_groups', payload)
       if (response.data.code === 200) {
-        message.success('Thêm chủ đề con bài tập thành công!')
+        message.success('Thêm chủ đề con câu hỏi thành công!')
         await fetchQuestionSubGroups()
       } else {
-        message.error('Lỗi khi thêm chủ đề con bài tập')
+        message.error('Lỗi khi thêm chủ đề con câu hỏi')
       }
     }
     showModal.value = false
     resetForm()
   } catch (error) {
     console.error('Error submitting question sub-group:', error)
-    message.error('Lỗi khi lưu chủ đề con bài tập')
+    message.error('Lỗi khi lưu chủ đề con câu hỏi')
   }
 }
 
@@ -199,14 +199,14 @@ const onDelete = async (id) => {
   try {
     const response = await axios.delete(`/question_sub_groups/${id}`)
     if (response.data.code === 200) {
-      message.success('Xóa chủ đề con bài tập thành công!')
+      message.success('Xóa chủ đề con câu hỏi thành công!')
       await fetchQuestionSubGroups()
     } else {
-      message.error('Lỗi khi xóa chủ đề con bài tập')
+      message.error('Lỗi khi xóa chủ đề con câu hỏi')
     }
   } catch (error) {
     console.error('Error deleting question sub-group:', error)
-    message.error('Lỗi khi xóa chủ đề con bài tập')
+    message.error('Lỗi khi xóa chủ đề con câu hỏi')
   }
 }
 

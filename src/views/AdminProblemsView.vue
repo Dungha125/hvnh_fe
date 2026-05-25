@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import AdminHeader from "@/components/AdminHeader.vue";
 import {onBeforeMount, ref, computed, reactive, watch, createVNode} from "vue";
 import {useRouter} from "vue-router";
@@ -67,13 +67,13 @@ const problemDetail = reactive({
 const tabs = ref([
   {
     key: "problems",
-    label: "Danh sách bài tập",
-    title: "Danh sách bài tập",
+    label: "Danh sách câu hỏi",
+    title: "Danh sách câu hỏi",
   },
   {
     key: "addProblem",
-    label: "Thêm bài tập",
-    title: "Thêm bài tập",
+    label: "Thêm câu hỏi",
+    title: "Thêm câu hỏi",
   },
   {
     key: "comments",
@@ -82,8 +82,8 @@ const tabs = ref([
   },
   {
     key: "confirm",
-    label: "Phê duyệt bài tập",
-    title: "Phê duyệt bài tập",
+    label: "Phê duyệt câu hỏi",
+    title: "Phê duyệt câu hỏi",
   },
 ]);
 
@@ -185,16 +185,16 @@ const handleAddProblems = async () => {
       .post("questions", payload)
       .then(async (response) => {
         if (response.data.code === 200) {
-          message.success("Thêm bài tập thành công!");
+          message.success("Thêm câu hỏi thành công!");
           await fetchProblems(current_subject.value, pagination.current, pagination.pageSize, searchQuery.value);
         } else {
-          message.error("Lỗi khi thêm bài tập, vui lòng thử lại!");
+          message.error("Lỗi khi thêm câu hỏi, vui lòng thử lại!");
           console.log(response.data);
         }
       })
       .catch((error) => {
         console.error(error);
-        message.error("Lỗi khi thêm bài tập, vui lòng thử lại!");
+        message.error("Lỗi khi thêm câu hỏi, vui lòng thử lại!");
       });
 };
 onBeforeMount(async () => {
@@ -230,7 +230,7 @@ onBeforeMount(async () => {
       }));
     }
   } catch (error) {
-    message.error("Lỗi khi lấy dữ liệu dạng bài tập");
+    message.error("Lỗi khi lấy dữ liệu dạng câu hỏi");
     console.error(error);
   }
   try {
@@ -451,14 +451,14 @@ const handleSubjectChange = () => {
 };
 const showConfirm = () => {
   Modal.confirm({
-    title: 'Xác nhận thêm bài tập mới',
+    title: 'Xác nhận thêm câu hỏi mới',
     icon: createVNode(ExclamationCircleOutlined),
     content: createVNode(
         'div',
         {
           style: 'color:red;',
         },
-        'Hãy kiểm tra kỹ thông tin trước khi thêm bài tập mới!',
+        'Hãy kiểm tra kỹ thông tin trước khi thêm câu hỏi mới!',
     ),
     onOk() {
       handleAddProblems()
@@ -473,28 +473,28 @@ const handleDeleteProblem = async (questionID) => {
   await axios.delete(`/questions/${questionID}`)
       .then(async (response) => {
         if (response.data.code === 200) {
-          message.success("Xóa bài tập thành công!");
+          message.success("Xóa câu hỏi thành công!");
           await fetchProblems(current_subject.value, pagination.current, pagination.pageSize, searchQuery.value);
         } else {
-          message.error("Lỗi khi xóa bài tập, vui lòng thử lại!");
+          message.error("Lỗi khi xóa câu hỏi, vui lòng thử lại!");
           console.log(response.data);
         }
       })
       .catch((error) => {
         console.error(error.response.data);
-        message.error("Lỗi khi xóa bài tập, vui lòng thử lại!");
+        message.error("Lỗi khi xóa câu hỏi, vui lòng thử lại!");
       });
 }
 const deleteConfirm = (questionID) => {
   Modal.confirm({
-    title: 'Xác nhận xoá bài tập',
+    title: 'Xác nhận xoá câu hỏi',
     icon: createVNode(ExclamationCircleOutlined),
     content: createVNode(
         'div',
         {
           style: 'color:red;',
         },
-        'Bạn có chắc là muốn xoá bài tập này không?',
+        'Bạn có chắc là muốn xoá câu hỏi này không?',
     ),
     onOk() {
       handleDeleteProblem(questionID)
@@ -523,7 +523,7 @@ const handleEditProblem = async (problemAfterEdit, questionID) => {
     return;
   }
   if(!problemAfterEdit.code) {
-    message.error("Vui lòng nhập mã bài tập.");
+    message.error("Vui lòng nhập mã câu hỏi.");
     return;
   }
   if (!problemAfterEdit.name) {
@@ -602,16 +602,16 @@ const handleEditProblem = async (problemAfterEdit, questionID) => {
   await axios.put(`/questions/${questionID}`, payload)
       .then(async (response) => {
         if (response.data.code === 200) {
-          message.success("Cập nhật bài tập thành công!");
+          message.success("Cập nhật câu hỏi thành công!");
           await fetchProblems(current_subject.value, pagination.current, pagination.pageSize, searchQuery.value);
         } else {
-          message.error("Lỗi khi cập nhật bài tập, vui lòng thử lại!");
+          message.error("Lỗi khi cập nhật câu hỏi, vui lòng thử lại!");
           console.log(response.data);
         }
       })
       .catch((error) => {
         console.error(error.response.data);
-        message.error("Lỗi khi cập nhật bài tập, vui lòng thử lại!");
+        message.error("Lỗi khi cập nhật câu hỏi, vui lòng thử lại!");
       });
   handleOk();
 };
@@ -654,7 +654,7 @@ const fetchQuestionData = async (code) => {
       showModal();
     }
   } catch (error) {
-    message.error("Lỗi khi lấy dữ liệu bài tập");
+    message.error("Lỗi khi lấy dữ liệu câu hỏi");
     console.error(error);
   }
 };
@@ -821,7 +821,7 @@ const commentColumns = [
     ellipsis: true 
   },
   { 
-    title: 'Bài tập', 
+    title: 'Câu hỏi', 
     // Truy cập vào record.question.name
     dataIndex: ['question', 'name'], 
     key: 'question', 
@@ -866,7 +866,7 @@ watch(
 
 const navigateToProblem = (questionCode) => {
     if (!questionCode) {
-        message.error("Không có mã bài tập.");
+        message.error("Không có mã câu hỏi.");
         return;
     }
     router.push(`/problems/${questionCode}`);
@@ -881,7 +881,7 @@ const navigateToProblem = (questionCode) => {
     <div class="body">
       <div class="part-left">
         <div class="body-header">
-          <h2>Bài tập</h2>
+          <h2>Câu hỏi</h2>
           <div class="underline"></div>
           <div class="part-right">
             <div class="content-container">
@@ -897,7 +897,7 @@ const navigateToProblem = (questionCode) => {
                   class="problem-list-container"
               >
                 <p style="margin-top: 10px; font-size: 110%; font-weight: bold">
-                  Danh sách bài tập hiện có trên hệ thống:
+                  Danh sách câu hỏi hiện có trên hệ thống:
                 </p>
 
                 <div style="display: flex; align-items: center">
@@ -940,7 +940,7 @@ const navigateToProblem = (questionCode) => {
                     <a-button
                         type="primary"
                         @click="currentTab[0] = 'addProblem'"
-                    >Thêm bài tập
+                    >Thêm câu hỏi
                     </a-button>
                   </div>
                 </div>
@@ -1051,30 +1051,30 @@ const navigateToProblem = (questionCode) => {
                           <template #overlay>
                             <a-menu>
                               <a-menu-item type="primary" @click="fetchQuestionData(record.code)">Sửa</a-menu-item>
-                              <a-modal v-model:open="open" title="Sửa bài tập" width="1000px"
+                              <a-modal v-model:open="open" title="Sửa câu hỏi" width="1000px"
                                       @ok="handleEditProblem(problemDetail, record.id)"
                                       :mask="false">
                                 <a-form layout="vertical">
                                   <div class="form-container">
                                     <!-- Cột trái -->
                                     <div class="form-group">
-                                      <a-form-item label="Mã bài tập" required>
+                                      <a-form-item label="Mã câu hỏi" required>
                                         <a-input
                                             v-model:value="problemDetail.code"
-                                            placeholder="Nhập mã bài tập"
+                                            placeholder="Nhập mã câu hỏi"
                                             :rules="[
                                                     {
                                                       required: true,
-                                                      message: 'Vui lòng nhập mã bài tập',
+                                                      message: 'Vui lòng nhập mã câu hỏi',
                                                     },
                                                     {
                                                       pattern: /^[A-Za-z0-9_-]+$/u,
                                                       message:
-                                                        'Mã bài tập chỉ chứa chữ cái, số, dấu gạch dưới và dấu gạch ngang',
+                                                        'Mã câu hỏi chỉ chứa chữ cái, số, dấu gạch dưới và dấu gạch ngang',
                                                     },
                                                     {
                                                       max: 50,
-                                                      message: 'Mã bài tập không được quá 50 ký tự',
+                                                      message: 'Mã câu hỏi không được quá 50 ký tự',
                                                     },
                                                   ]"
                                         />
@@ -1180,7 +1180,7 @@ const navigateToProblem = (questionCode) => {
                                           <a-radio value="0">Riêng tư</a-radio>
                                         </a-radio-group>
                                       </a-form-item>
-                                      <a-form-item label="Loại bài tập" required>
+                                      <a-form-item label="Loại câu hỏi" required>
                                         <a-select
                                             v-model:value="problemDetail.type"
                                             placeholder="Chọn độ khó"
@@ -1255,29 +1255,29 @@ const navigateToProblem = (questionCode) => {
                   class="problem-list-container"
               >
                 <p style="margin-top: 10px; font-size: 110%; font-weight: bold">
-                  Thêm bài tập mới:
+                  Thêm câu hỏi mới:
                 </p>
                 <a-form layout="vertical">
                   <div class="form-container">
                     <!-- Cột trái -->
                     <div class="form-group">
-                      <a-form-item label="Mã bài tập" required>
+                      <a-form-item label="Mã câu hỏi" required>
                         <a-input
                             v-model:value="newProblems.code"
-                            placeholder="Nhập mã bài tập"
+                            placeholder="Nhập mã câu hỏi"
                             :rules="[
                             {
                               required: true,
-                              message: 'Vui lòng nhập mã bài tập',
+                              message: 'Vui lòng nhập mã câu hỏi',
                             },
                             {
                               pattern: /^[A-Za-z0-9_-]+$/u,
                               message:
-                                'Mã bài tập chỉ chứa chữ cái, số, dấu gạch dưới và dấu gạch ngang',
+                                'Mã câu hỏi chỉ chứa chữ cái, số, dấu gạch dưới và dấu gạch ngang',
                             },
                             {
                               max: 50,
-                              message: 'Mã bài tập không được quá 50 ký tự',
+                              message: 'Mã câu hỏi không được quá 50 ký tự',
                             },
                           ]"
                         />
@@ -1374,7 +1374,7 @@ const navigateToProblem = (questionCode) => {
                           <a-radio value="0">Riêng tư</a-radio>
                         </a-radio-group>
                       </a-form-item>
-                      <a-form-item label="Loại bài tập" required>
+                      <a-form-item label="Loại câu hỏi" required>
                         <a-select
                             v-model:value="newProblems.type"
                             placeholder="Chọn độ khó"

@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import {useRoute} from 'vue-router';
 import {useRouter} from 'vue-router';
 import {ref} from "vue";
@@ -93,7 +93,7 @@ const getAvatarName = (name) => {
              @click="goTo('/lecturer/contest/student')"
              @mouseover="addHoverEvent(event, path='/lecturer/contest/student')"
              @mouseout="removeHoverEvent(event, path='/lecturer/contest/student')">
-          Thực hành
+          Kiểm tra
         </div>
 
         <div class="nav-item"
@@ -102,7 +102,7 @@ const getAvatarName = (name) => {
              @mouseover="addHoverEvent(event, path='/lecturer/contest/student/problems')"
              @mouseout="removeHoverEvent(event, path='/lecturer/contest/student/problems')">
           <img src="../static/img/problem.svg">
-          Bài tập
+          Câu hỏi
         </div>
 
         <div class="nav-item"

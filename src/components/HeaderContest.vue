@@ -104,7 +104,7 @@ const getAvatarName = (name) => {
              @mouseover="addHoverEvent(event, path='/contest')"
              @mouseout="removeHoverEvent(event, path='/contest')">
           <img src="../static/img/thuc_hanh.svg">
-          Bài thi
+          Kiểm tra
         </div>
 
         <div class="nav-item"

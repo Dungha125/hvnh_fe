@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, onBeforeMount, onBeforeUnmount, reactive, ref } from 'vue';
 import axios from "@/configs/axios.js";
 import { LoadingOutlined } from "@ant-design/icons-vue";
@@ -105,7 +105,7 @@ const handleTableChange = (pag) => {
 
 const navigateToProblem = (questionId) => {
   if (!questionId) {
-    message.error("Không có ID bài tập.");
+    message.error("Không có ID câu hỏi.");
     return;
   }
   router.push(`/admin/problems/${questionId}`);
@@ -187,7 +187,7 @@ const antDesignTheme = {
                         </a>
                       </template>
                     </a-table-column>
-                    <a-table-column title="Bài tập" data-index="problem" :min-width="200">
+                    <a-table-column title="Câu hỏi" data-index="problem" :min-width="200">
                        <template #default="{ record }">
                          <a class="table-link" @click="navigateToProblem(record.question_id)">
                            {{ record.problem }}

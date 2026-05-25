@@ -221,6 +221,7 @@ const antDesignTheme = {
                 { title: 'STT', dataIndex: 'stt', key: 'stt', width: 80, align: 'center' },
                 { title: 'Từ', dataIndex: 'name', key: 'from', width: 200 },
                 { title: 'Tiêu đề', dataIndex: 'title', key: 'title' },
+                { title: 'Kiểm tra', dataIndex: 'contest_id', key: 'contest_id', width: 90, align: 'center' },
                 { title: 'Thời gian', dataIndex: 'created_at_formatted', key: 'time', width: 180, align: 'center' },
                 { title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 150, align: 'center' },
                 { title: 'Thao tác', key: 'action', width: 100, align: 'center' }
@@ -232,6 +233,9 @@ const antDesignTheme = {
               <template #bodyCell="{ column, record }">
                 <template v-if="column.key === 'title'">
                   <a class="table-link" @click="showSupportDetails(record)">{{ record.title }}</a>
+                </template>
+                <template v-if="column.key === 'contest_id'">
+                  {{ record.contest_id ?? '—' }}
                 </template>
                 <template v-if="column.key === 'status'">
                   <a-tag :color="getStatusTag(record.status).color">{{ getStatusTag(record.status).text }}</a-tag>

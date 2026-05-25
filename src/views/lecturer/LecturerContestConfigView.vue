@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import {ref, onBeforeMount, computed, watch, createVNode} from "vue";
 import axios from "@/configs/axios.js";
 import {message, Modal} from "ant-design-vue";
@@ -89,7 +89,7 @@ const fetchContests = async (subjectID, course_id) => {
     const resContests = await axiosInstance.get(
         `/contests?subject_id=${subjectID}&course_id=${course_id}`
     );
-    // console.log("Lấy danh sách bài thực hành:", resContests.data);
+    // console.log("Lấy danh sách kiểm tra:", resContests.data);
 
     if (resContests.data.code === 200 && resContests.data) {
       listContests.value = resContests.data.data.map((contest, index) => ({
@@ -107,7 +107,7 @@ const fetchContests = async (subjectID, course_id) => {
       }));
     }
   } catch (error) {
-    message.error("Lỗi khi tải danh sách bài thực hành");
+    message.error("Lỗi khi tải danh sách kiểm tra");
     console.error(error);
   }
 };
@@ -165,8 +165,8 @@ const fetchDetailsContest = async (contestID) => {
     }
     console.log("Fetched Contest Details:", contestDetails.value);
   } catch (error) {
-    console.error("Lỗi khi fetch chi tiết bài thực hành:", error);
-    message.error("Lỗi khi tải dữ liệu bài thực hành.");
+    console.error("Lỗi khi fetch chi tiết kiểm tra:", error);
+    message.error("Lỗi khi tải dữ liệu kiểm tra.");
   }
 };
 const persistCurrentCourseFromSelection = (compositeValue) => {
@@ -272,14 +272,14 @@ const handleCreateContest = async () => {
 };
 const showConfirm = () => {
   Modal.confirm({
-    title: "Xác nhận thêm bài thực hành mới",
+    title: "Xác nhận thêm kiểm tra mới",
     icon: createVNode(ExclamationCircleOutlined),
     content: createVNode(
         "div",
         {
           style: "color:red;",
         },
-        "Hãy kiểm tra kỹ thông tin trước khi thêm bài thực hành mới!"
+        "Hãy kiểm tra kỹ thông tin trước khi thêm kiểm tra mới!"
     ),
     onOk() {
       handleCreateContest();
@@ -380,13 +380,13 @@ const handleUpdateContest = async (contestID) => {
     console.log("Payload gửi đi:", payload);
     const res = await axios.put(`contests/${contestID}`, payload);
     if (res.data.code === 200) {
-      message.success("Cập nhật bài thực hành thành công");
+      message.success("Cập nhật kiểm tra thành công");
       await reloadContestTable();
     } else {
-      message.error("Cập nhật bài thực hành thất bại");
+      message.error("Cập nhật kiểm tra thất bại");
     }
   } catch (error) {
-    message.error("Lỗi khi cập nhật bài thực hành");
+    message.error("Lỗi khi cập nhật kiểm tra");
     console.error(error);
   }
   handleEditOK();
@@ -425,27 +425,27 @@ const handleDeleteContest = async (contestID) => {
   try {
     const res = await axios.delete(`contests/${contestID}`);
     if (res.data.code === 200) {
-      message.success("Xóa bài thực hành thành công");
+      message.success("Xóa kiểm tra thành công");
       await reloadContestTable();
     } else {
-      message.error("Xóa bài thực hành thất bại");
+      message.error("Xóa kiểm tra thất bại");
     }
   } catch (error) {
-    message.error("Lỗi khi xóa bài thực hành");
+    message.error("Lỗi khi xóa kiểm tra");
     console.error(error);
   }
 };
 const confirmDelete = (contestID) => {
   Modal.confirm({
-    title: "Xác nhận xóa bài thực hành",
-    content: "Bạn có chắc chắn muốn xóa bài thực hành này không?",
+    title: "Xác nhận xóa kiểm tra",
+    content: "Bạn có chắc chắn muốn xóa kiểm tra này không?",
     onOk: () => handleDeleteContest(contestID),
   });
 };
 
 const handleExportFile = async (contestIDs) => {
   if (!contestIDs.length) {
-    message.warning("Vui lòng chọn ít nhất một bài thực hành để xuất");
+    message.warning("Vui lòng chọn ít nhất một kiểm tra để xuất");
     return;
   }
   try {
@@ -518,11 +518,11 @@ const antDesignTheme = {
 <template>
   <div class="contest-config-container">
     <a-config-provider :theme="antDesignTheme">
-      <a-card title="Cấu hình thực hành">
+      <a-card title="Cấu hình kiểm tra">
         <div class="action-bar">
           <div class="action-buttons">
             <a-button type="primary" @click="showModal">Thêm mới</a-button>
-            <a-button @click="handleExportFile(contestIDs)">Xuất bài thực hành</a-button>
+            <a-button @click="handleExportFile(contestIDs)">Xuất kiểm tra</a-button>
           </div>
           <div class="filter-controls">
             <a-select v-model:value="selectedCourse" placeholder="Lọc theo môn học" style="width: 250px">
@@ -580,14 +580,14 @@ const antDesignTheme = {
                 <a-menu-item key="exam_room">Phòng thi</a-menu-item>
                 <a-menu-item v-if="record.icpc === 1 || record.ioi === 1" key="ranking">Bảng xếp hạng</a-menu-item>
                 <a-menu-item key="teacher">Giảng viên</a-menu-item>
-                <a-menu-item key="questions">Bài tập</a-menu-item>
+                <a-menu-item key="questions">Câu hỏi</a-menu-item>
                 <a-menu-item key="activity">Hoạt động</a-menu-item>
                 <a-menu-divider/>
                 <a-menu-item key="edit" @click="showEditModal(record.id)">
                   Sửa
                   <a-modal
                       v-model:open="isModalEditVisible"
-                      title="Sửa bài thực hành"
+                      title="Sửa kiểm tra"
                       @ok="handleUpdateContest(record.id)"
                       @cancel="handleEditCancel"
                       style="width: 1000px"
@@ -662,7 +662,7 @@ const antDesignTheme = {
 
                       <!-- Cột 2 -->
                       <div class="form-column">
-                        <a-form-item label="Bài thực hành số">
+                        <a-form-item label="Kiểm tra số">
                           <a-input-number
                               v-model:value="contestDetails.ordinal"
                               :min="1"
@@ -811,7 +811,7 @@ const antDesignTheme = {
 
       <!-- Cột 2 -->
       <div class="form-column">
-        <a-form-item label="Bài thực hành số">
+        <a-form-item label="Kiểm tra số">
           <a-input-number v-model:value="createContestDTO.ordinal" :min="1"/>
         </a-form-item>
         <a-form-item label="Trạng thái">
@@ -871,7 +871,7 @@ const antDesignTheme = {
 
 <style scoped>
 /*
-  CSS cho trang Cấu hình Thực hành - Chủ đề Neo-Futuristic Sáng
+  CSS cho trang Cấu hình Kiểm tra - Chủ đề Neo-Futuristic Sáng
   Đã được thiết kế lại và responsive.
 */
 

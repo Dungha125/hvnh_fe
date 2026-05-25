@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref, reactive, onBeforeMount, computed } from 'vue';
 import { restorePick } from "@/utils/selectionPersistence.js";
 import axios from "@/configs/axios.js";
@@ -269,7 +269,7 @@ onBeforeMount(async () => {
       }));
     }
   } catch (error) {
-    message.error("Lỗi khi lấy dữ liệu dạng bài tập");
+    message.error("Lỗi khi lấy dữ liệu dạng câu hỏi");
     console.error(error);
   }
 
@@ -364,7 +364,7 @@ const handleUpload = async () => {
             clearInterval(intervalId);
             uploading.value = false;
             if (result.value === 'AC') {
-              message.success('Chúc mừng bạn đã hoàn thành bài tập này!');
+              message.success('Chúc mừng bạn đã hoàn thành câu hỏi này!');
             } else {
               message.error('Rất tiếc, bài làm của bạn không đúng!');
             }
@@ -577,10 +577,10 @@ const openEditModal = async () => {
       openModal();
 
     } else {
-      console.error("Dữ liệu bài tập không hợp lệ!", response.data);
+      console.error("Dữ liệu câu hỏi không hợp lệ!", response.data);
     }
   } catch (error) {
-    console.error("Lỗi khi lấy dữ liệu bài tập:", error);
+    console.error("Lỗi khi lấy dữ liệu câu hỏi:", error);
   }
 
 };
@@ -596,7 +596,7 @@ const handleEditProblem = async (problemAfterEdit, questionID) => {
     return;
   }
   if (!problemDetailEdit.value.code) {
-    message.error("Vui lòng nhập mã bài tập.");
+    message.error("Vui lòng nhập mã câu hỏi.");
     return;
   }
   if (!problemDetailEdit.value.name) {
@@ -675,17 +675,17 @@ const handleEditProblem = async (problemAfterEdit, questionID) => {
   await axios.put(`/questions/${questionID}`, payload)
     .then(async (response) => {
       if (response.data.code === 200) {
-        message.success("Cập nhật bài tập thành công!");
+        message.success("Cập nhật câu hỏi thành công!");
         await fetchProblems(current_course.value);
         closeEditModal();
       } else {
-        message.error("Lỗi khi cập nhật bài tập, vui lòng thử lại!");
+        message.error("Lỗi khi cập nhật câu hỏi, vui lòng thử lại!");
         console.log(response.data);
       }
     })
     .catch((error) => {
       console.error(error.response.data);
-      message.error("Lỗi khi cập nhật bài tập, vui lòng thử lại!");
+      message.error("Lỗi khi cập nhật câu hỏi, vui lòng thử lại!");
     });
 };
 
@@ -793,7 +793,7 @@ const editForm = ref();
               <template #content>
                 <a-form-item>
                   <a-textarea
-                    placeholder="Sinh viên có thể đặt câu hỏi về bài tập, chia sẻ cách giải bài tập, nhưng không nên chia sẻ mã nguồn..."
+                    placeholder="Sinh viên có thể đặt câu hỏi về câu hỏi, chia sẻ cách giải câu hỏi, nhưng không nên chia sẻ mã nguồn..."
                     v-model:value="commentValue" :rows="4" />
                 </a-form-item>
                 <a-form-item>
@@ -914,27 +914,27 @@ const editForm = ref();
 
 
 
-        <!-- Popup cập nhật bài tập -->
-        <a-modal v-model:open="isEditModalVisible" title="Sửa bài tập" width="1000px"
+        <!-- Popup cập nhật câu hỏi -->
+        <a-modal v-model:open="isEditModalVisible" title="Sửa câu hỏi" width="1000px"
           @ok="handleEditProblem(problemDetailEdit, problemDetailEdit.id)" :mask="false">
           <a-form layout="vertical">
             <div class="form-container">
               <!-- Cột trái -->
               <div class="form-group">
-                <a-form-item label="Mã bài tập" required>
-                  <a-input v-model:value="problemDetailEdit.code" placeholder="Nhập mã bài tập" :rules="[
+                <a-form-item label="Mã câu hỏi" required>
+                  <a-input v-model:value="problemDetailEdit.code" placeholder="Nhập mã câu hỏi" :rules="[
                     {
                       required: true,
-                      message: 'Vui lòng nhập mã bài tập',
+                      message: 'Vui lòng nhập mã câu hỏi',
                     },
                     {
                       pattern: /^[A-Za-z0-9_-]+$/u,
                       message:
-                        'Mã bài tập chỉ chứa chữ cái, số, dấu gạch dưới và dấu gạch ngang',
+                        'Mã câu hỏi chỉ chứa chữ cái, số, dấu gạch dưới và dấu gạch ngang',
                     },
                     {
                       max: 50,
-                      message: 'Mã bài tập không được quá 50 ký tự',
+                      message: 'Mã câu hỏi không được quá 50 ký tự',
                     },
                   ]" />
                 </a-form-item>
@@ -1009,7 +1009,7 @@ const editForm = ref();
                     <a-radio value="0">Riêng tư</a-radio>
                   </a-radio-group>
                 </a-form-item>
-                <a-form-item label="Loại bài tập" required>
+                <a-form-item label="Loại câu hỏi" required>
                   <a-select v-model:value="problemDetailEdit.type" placeholder="Chọn độ khó" :options="typeProblems.map((item) => ({
                     label: item.code,
                     value: item.value,
@@ -1106,7 +1106,7 @@ const editForm = ref();
 
             <a-table-column width="20%" data-index="problem">
               <template #title>
-                <span style="font-weight: bold">Bài tập</span>
+                <span style="font-weight: bold">Câu hỏi</span>
               </template>
             </a-table-column>
 

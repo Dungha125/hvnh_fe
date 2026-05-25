@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axiosInstance from "@/configs/axios.js";
@@ -11,10 +11,18 @@ import {
 import {
   UploadOutlined,
   LoadingOutlined,
-  FieldTimeOutlined, UserOutlined,
+  FieldTimeOutlined,
+  UserOutlined,
+  LockOutlined,
 } from '@ant-design/icons-vue';
 import HeaderContest from '@/components/HeaderContest.vue';
+import ContestExamSupportButton from '@/components/ContestExamSupportButton.vue';
 import MonacoEditor from 'monaco-editor-vue3';
+import {
+  fetchExamTemporaryLockStatus,
+  isSessionExamLocked,
+  setSessionExamLocked,
+} from '@/api/contestExamSupport.js';
 
 //--- Core Setup ---//
 const route = useRoute();
@@ -40,6 +48,9 @@ const isHistoryLoading = ref(false);
 const isOpenCodeEditor = ref(false);
 const submittedCode = ref('');
 const selectedSubmission = ref(null);
+const examAccountLocked = ref(false);
+const lockReason = ref('');
+const activeContestId = ref('');
 
 //--- Timer IDs for Cleanup ---//
 let pollTimeoutId = null;
@@ -60,6 +71,7 @@ onMounted(async () => {
     router.push('/');
     return;
   }
+  activeContestId.value = contestId;
 
   const stRaw = sessionStorage.getItem("submit_type");
   contestSubmitType.value =
@@ -75,8 +87,30 @@ onMounted(async () => {
   if (contestSubmitType.value == null) {
     await fetchContestSubmitType(contestId);
   }
+  await checkExamLockStatus(contestId);
   await fetchQuestionDetails(route.params.id, contestId);
 });
+
+const checkExamLockStatus = async (contestId) => {
+  if (isSessionExamLocked(contestId)) {
+    examAccountLocked.value = true;
+  }
+  try {
+    const st = await fetchExamTemporaryLockStatus(contestId);
+    examAccountLocked.value = st.locked;
+    if (st.locked) {
+      setSessionExamLocked(contestId, true);
+      lockReason.value = st.reason || '';
+    }
+  } catch {
+    /* giữ trạng thái session nếu có */
+  }
+};
+
+const onExamLocked = () => {
+  examAccountLocked.value = true;
+  lockReason.value = 'Đã yêu cầu tạm khóa tài khoản khi gửi hỗ trợ.';
+};
 
 onUnmounted(() => {
   // Dọn dẹp tất cả các tiến trình chạy ngầm khi rời khỏi trang
@@ -120,7 +154,7 @@ const fetchQuestionDetails = async (questionId, contestId) => {
     await fetchUserSubmissions(contestId);
 
   } catch (error) {
-    message.error("Không thể tải chi tiết bài tập.");
+    message.error("Không thể tải chi tiết câu hỏi.");
     router.push('/not-found');
   } finally {
     isLoading.value = false;
@@ -269,6 +303,12 @@ async function buildFilePayloadFields(file) {
 }
 
 const handleUpload = async () => {
+  if (examAccountLocked.value) {
+    message.warning(
+      'Tài khoản đang bị khóa tạm thời. Vui lòng chờ giám thị mở khóa hoặc gửi yêu cầu hỗ trợ.'
+    );
+    return;
+  }
   uploading.value = true;
   result.value = null; // Reset kết quả
 
@@ -295,7 +335,7 @@ const handleUpload = async () => {
       if (!Number.isFinite(contestIdNum) || contestIdNum <= 0) {
         uploading.value = false;
         message.error(
-          "Không tìm thấy contest_id. Vào lại từ danh sách thực hành."
+          "Không tìm thấy contest_id. Vào lại từ danh sách kiểm tra."
         );
         return;
       }
@@ -352,7 +392,7 @@ const handleUpload = async () => {
         : NaN;
     if (!Number.isFinite(contestIdNum) || contestIdNum <= 0) {
       uploading.value = false;
-      message.error("Không tìm thấy contest_id. Vào lại từ danh sách thực hành.");
+      message.error("Không tìm thấy contest_id. Vào lại từ danh sách kiểm tra.");
       return;
     }
 
@@ -518,11 +558,34 @@ const getResultTag = (resultCode) => {
             <UserOutlined />
             <span>{{ currentUser.last_name }} {{ currentUser.first_name }} ({{ currentUser.username }})</span>
           </div>
-          <div class="timer">
-            <FieldTimeOutlined />
-            <span>{{ countdown }}</span>
+          <div class="countdown-actions">
+            <ContestExamSupportButton
+              block
+              :contest-id="activeContestId"
+              :question-id="questionDetail?.id"
+              :question-code="questionDetail?.code"
+              @locked="onExamLocked"
+            />
+            <div class="timer">
+              <FieldTimeOutlined />
+              <span>{{ countdown }}</span>
+            </div>
           </div>
         </div>
+        <a-alert
+          v-if="examAccountLocked"
+          type="warning"
+          show-icon
+          class="exam-lock-banner"
+        >
+          <template #message>
+            <span><LockOutlined /> Tài khoản đang bị khóa tạm thời</span>
+          </template>
+          <template #description>
+            Bạn không thể nộp bài cho đến khi giám thị mở khóa. Thao tác khóa đã được ghi nhật ký để hậu kiểm.
+            <span v-if="lockReason"> Lý do: {{ lockReason }}</span>
+          </template>
+        </a-alert>
           <h2 class="question-title">{{ questionDetail.name.toUpperCase() }}</h2>
           <div class="underline"></div>
 
@@ -558,7 +621,12 @@ const getResultTag = (resultCode) => {
                   <a-tag v-if="result" :color="getResultTag(result).color">{{ getResultTag(result).text.split(' (')[0] }}</a-tag>
                   <span v-else>Chưa nộp</span>
                 </p>
-                <a-button type="primary" :loading="uploading" @click="handleUpload" :disabled="fileList.length === 0">
+                <a-button
+                  type="primary"
+                  :loading="uploading"
+                  @click="handleUpload"
+                  :disabled="fileList.length === 0 || examAccountLocked"
+                >
                   Nộp bài
                 </a-button>
               </div>
@@ -754,12 +822,21 @@ const getResultTag = (resultCode) => {
   margin-bottom: 24px;
   box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
 }
+.countdown-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
 .user-info, .timer {
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 1.1rem;
   font-weight: 600;
+}
+.exam-lock-banner {
+  margin-bottom: 16px;
 }
 .timer {
   font-family: 'monospace';

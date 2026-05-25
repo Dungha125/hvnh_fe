@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref, onMounted, h } from 'vue';
 import axios from '@/configs/axios.js';
 import { useRouter } from 'vue-router';
@@ -17,7 +17,7 @@ const fetchContests = async () => {
       contestList.value = response.data.data.data;
     }
   } catch (error) {
-    message.error('Lỗi khi lấy danh sách thực hành!');
+    message.error('Lỗi khi lấy danh sách kiểm tra!');
   } finally {
     isLoading.value = false;
   }
@@ -50,7 +50,7 @@ const getCountdown = (startTime) => {
 
 const columns = [
   { title: 'STT', dataIndex: 'index', key: 'index' },
-  { title: 'Thực hành', dataIndex: 'name', key: 'name' },
+  { title: 'Kiểm tra', dataIndex: 'name', key: 'name' },
   { title: 'Bắt đầu', dataIndex: 'start_time', key: 'start_time' },
   { title: 'Kết thúc', dataIndex: 'end_time', key: 'end_time' },
   {
@@ -76,7 +76,7 @@ onMounted(fetchContests);
     <div class="body">
       <div class="part-left">
         <div class="body-header">
-          <h2>Thực hành</h2>
+          <h2>Kiểm tra</h2>
           <a-spin :spinning="isLoading">
             <a-table
               :columns="columns"

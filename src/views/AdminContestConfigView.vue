@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import {reactive, ref, toRaw, onBeforeMount, computed, watch, createVNode} from 'vue';
 import axios from "@/configs/axios.js";
 import {message, Modal} from "ant-design-vue";
@@ -131,14 +131,14 @@ const handleCreateContest = async () => {
 };
 const showConfirm = () => {
   Modal.confirm({
-    title: 'Xác nhận thêm bài thực hành mới',
+    title: 'Xác nhận thêm kiểm tra mới',
     icon: createVNode(ExclamationCircleOutlined),
     content: createVNode(
         'div',
         {
           style: 'color:red;',
         },
-        'Hãy kiểm tra kỹ thông tin trước khi thêm bài thực hành mới!',
+        'Hãy kiểm tra kỹ thông tin trước khi thêm kiểm tra mới!',
     ),
     onOk() {
       handleCreateContest()
@@ -154,8 +154,8 @@ const showConfirm = () => {
 <template>
   <div class="contest-config-container">
     <div class="header-section">
-      <h2 class="section-title">Thêm bài thực hành mới</h2>
-      <p class="section-description">Điền đầy đủ thông tin để tạo bài thực hành mới</p>
+      <h2 class="section-title">Thêm kiểm tra mới</h2>
+      <p class="section-description">Điền đầy đủ thông tin để tạo kiểm tra mới</p>
     </div>
 
     <div class="form-container">
@@ -164,8 +164,8 @@ const showConfirm = () => {
         <div class="form-section">
           <h3 class="form-section-title">Thông tin cơ bản</h3>
           
-          <a-form-item label="Tên bài thực hành">
-            <a-input v-model:value="createContestDTO.name" placeholder="Nhập tên bài thực hành"/>
+          <a-form-item label="Tên kiểm tra">
+            <a-input v-model:value="createContestDTO.name" placeholder="Nhập tên kiểm tra"/>
           </a-form-item>
 
           <a-form-item label="Địa điểm">
@@ -222,7 +222,7 @@ const showConfirm = () => {
         <div class="form-section">
           <h3 class="form-section-title">Cấu hình chung</h3>
 
-          <a-form-item label="Bài thực hành số">
+          <a-form-item label="Kiểm tra số">
             <a-input-number v-model:value="createContestDTO.ordinal" :min="1" class="full-width"/>
           </a-form-item>
 
@@ -295,7 +295,7 @@ const showConfirm = () => {
     <div class="form-actions">
       <a-button type="primary" size="large" @click="showConfirm">
         <template #icon><PlusOutlined /></template>
-        Thêm bài thực hành
+        Thêm kiểm tra
       </a-button>
     </div>
   </div>

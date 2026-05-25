@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="class-config-container">
     <a-config-provider :theme="antDesignTheme">
       <a-table
@@ -23,7 +23,7 @@
               </a-button>
               <template #overlay>
                 <a-menu @click="({ key }) => handleAction(key, record)">
-                  <a-menu-item key="contest">Thực Hành</a-menu-item>
+                  <a-menu-item key="contest">Kiểm tra</a-menu-item>
                   <a-menu-item key="student">Sinh Viên</a-menu-item>
                   <a-menu-item key="lecturer">Giảng viên</a-menu-item>
                   <a-menu-divider/>

@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 
 import {computed, reactive, ref, watch, onUnmounted, onBeforeMount} from 'vue';
 import {useRouter} from 'vue-router';
@@ -101,7 +101,7 @@ const fetchProblems = async () =>
 				root?.message || 'Không tải được danh sách bài trong contest.'
 			);
 		} else if (!listProblems.length) {
-			message.warning('Contest chưa có bài tập.');
+			message.warning('Contest chưa có câu hỏi.');
 		} else {
 		let subGroup = new Set();
 
@@ -382,7 +382,7 @@ onUnmounted(() => {
 					<h2 style="color: #a71d1d; font-size:36px">{{User.last_name}} {{ User.first_name }} ({{ User.username }}) {{countdown}}</h2>
 				</div>
 				<div class="underline"></div>
-					<h2>Thực hành</h2>
+					<h2>Kiểm tra</h2>
 					<div class="underline"></div>
 					<div class="problem-container">
 						<div class="table-container">

@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import Header from '../components/Header.vue';
 import {
   SolutionOutlined,
@@ -320,7 +320,7 @@ const navigateToProblem = code => {
                        </a>
                      </template>
                   </a-table-column>
-                  <a-table-column title="Bài tập" data-index="problem" width="20%">
+                  <a-table-column title="Câu hỏi" data-index="problem" width="20%">
                      <template #default="{ record }">
                        <a class="table-link" @click="navigateToProblem(record.code)">{{ record.problem }}</a>
                      </template>

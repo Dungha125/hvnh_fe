@@ -1,7 +1,7 @@
-import { ckeditorFileRepositoryUploadAdapterPlugin } from '@/utils/ckeditorUploadAdapter.js';
+﻿import { ckeditorFileRepositoryUploadAdapterPlugin } from '@/utils/ckeditorUploadAdapter.js';
 
 /**
- * CKEditor 5 cho ô "Nội dung" bài tập: tiếng Việt, chèn ảnh (upload + URL qua insertImage).
+ * CKEditor 5 cho ô "Nội dung" câu hỏi: tiếng Việt, chèn ảnh (upload + URL qua insertImage).
  * Không thể trùng hộp thoại CKEditor 4 trong ảnh mẫu — đó là CK4.
  */
 export function buildProblemRichTextEditorConfig(cloudData, licenseKey) {
